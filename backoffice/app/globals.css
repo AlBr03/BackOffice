@@ -1,0 +1,81 @@
+:root {
+  --intersport-blue: #164196;
+  --intersport-dark-blue: #082d78;
+  --intersport-red: #e30613;
+  --background: #f4f7fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3fb;
+  --text: #132033;
+  --text-soft: #5b6b84;
+  --border: #d9e2f0;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--intersport-blue);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+input,
+textarea,
+button,
+select {
+  font: inherit;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid rgba(22, 65, 150, 0.15);
+  border-color: var(--intersport-blue);
+}
+
+button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--intersport-blue);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  background: var(--intersport-dark-blue);
+}
+
+table {
+  color: var(--text);
+}
+
+th,
+td {
+  color: var(--text);
+}
