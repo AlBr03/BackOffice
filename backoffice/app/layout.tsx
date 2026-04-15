@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Intersport Backoffice MVP",
-  description: "Store, office and print dashboard",
+  title: "INTERSPORT Backoffice",
+  description: "Backoffice voor winkels, hoofdkantoor en printafdeling",
 };
 
 export default function RootLayout({

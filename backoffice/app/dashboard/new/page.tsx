@@ -4,6 +4,7 @@ import { OrderForm } from '@/components/order-form'
 
 export default async function NewOrderPage() {
   const supabase = await createClient()
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -16,5 +17,16 @@ export default async function NewOrderPage() {
     .eq('id', user.id)
     .single()
 
-  return <OrderForm storeId={profile?.store_id ?? null} />
+  const { data: stores } = await supabase
+    .from('stores')
+    .select('id, name')
+    .order('name')
+
+  return (
+    <OrderForm
+      role={profile?.role ?? null}
+      storeId={profile?.store_id ?? null}
+      stores={stores ?? []}
+    />
+  )
 }

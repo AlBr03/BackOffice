@@ -8,40 +8,59 @@ type StoreOption = {
   name: string
 }
 
-export function OrderForm({
+type OrderData = {
+  id: string
+  club_name: string
+  accepted_by: string | null
+  wefact_reference: string | null
+  logo_action: string | null
+  supplier: string | null
+  product_description: string
+  print_instructions: string | null
+  quantity: number
+  has_print: boolean
+  deadline: string | null
+  delivery_date: string | null
+  notes: string | null
+  store_id: string
+}
+
+export function OrderEditForm({
   role,
-  storeId,
   stores,
+  order,
 }: {
   role?: string | null
-  storeId?: string | null
   stores: StoreOption[]
+  order: OrderData
 }) {
   const supabase = createClient()
-
   const isStoreUser = role === 'store'
 
-  const [selectedStoreId, setSelectedStoreId] = useState(storeId ?? '')
-  const [clubName, setClubName] = useState('')
-  const [acceptedBy, setAcceptedBy] = useState('')
-  const [wefactReference, setWefactReference] = useState('')
-  const [logoAction, setLogoAction] = useState('')
-  const [supplier, setSupplier] = useState('')
-  const [productDescription, setProductDescription] = useState('')
-  const [printInstructions, setPrintInstructions] = useState('')
-  const [quantity, setQuantity] = useState(1)
-  const [hasPrint, setHasPrint] = useState(false)
-  const [deadline, setDeadline] = useState('')
-  const [deliveryDate, setDeliveryDate] = useState('')
-  const [notes, setNotes] = useState('')
+  const [selectedStoreId, setSelectedStoreId] = useState(order.store_id ?? '')
+  const [clubName, setClubName] = useState(order.club_name ?? '')
+  const [acceptedBy, setAcceptedBy] = useState(order.accepted_by ?? '')
+  const [wefactReference, setWefactReference] = useState(order.wefact_reference ?? '')
+  const [logoAction, setLogoAction] = useState(order.logo_action ?? '')
+  const [supplier, setSupplier] = useState(order.supplier ?? '')
+  const [productDescription, setProductDescription] = useState(order.product_description ?? '')
+  const [printInstructions, setPrintInstructions] = useState(order.print_instructions ?? '')
+  const [quantity, setQuantity] = useState(order.quantity ?? 1)
+  const [hasPrint, setHasPrint] = useState(order.has_print ?? false)
+  const [deadline, setDeadline] = useState(order.deadline ?? '')
+  const [deliveryDate, setDeliveryDate] = useState(order.delivery_date ?? '')
+  const [notes, setNotes] = useState(order.notes ?? '')
   const [error, setError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setIsSaving(true)
 
     if (!selectedStoreId) {
       setError('Selecteer een winkel.')
+      setIsSaving(false)
       return
     }
 
@@ -49,12 +68,9 @@ export function OrderForm({
       data: { user },
     } = await supabase.auth.getUser()
 
-    const orderNumber = `ORD-${Date.now()}`
-
-    const { data: insertedOrder, error: insertError } = await supabase
+    const { error: updateError } = await supabase
       .from('orders')
-      .insert({
-        order_number: orderNumber,
+      .update({
         store_id: selectedStoreId,
         club_name: clubName,
         accepted_by: acceptedBy || null,
@@ -69,32 +85,28 @@ export function OrderForm({
         delivery_date: deliveryDate || null,
         notes: notes || null,
       })
-      .select('id')
-      .single()
+      .eq('id', order.id)
 
-    if (insertError || !insertedOrder) {
-      setError(insertError?.message ?? 'De order kon niet worden opgeslagen.')
+    if (updateError) {
+      setError(updateError.message)
+      setIsSaving(false)
       return
     }
 
-    const activityDescription = hasPrint
-      ? 'Order aangemaakt met printwerk'
-      : 'Order aangemaakt'
-
     const { error: activityError } = await supabase.from('order_activity_log').insert({
-      order_id: insertedOrder.id,
-      action_type: 'created',
-      description: activityDescription,
-      new_status: 'new',
+      order_id: order.id,
+      action_type: 'order_updated',
+      description: 'Ordergegevens bijgewerkt',
       performed_by: user?.id ?? null,
     })
 
     if (activityError) {
       setError(activityError.message)
+      setIsSaving(false)
       return
     }
 
-    window.location.href = '/dashboard'
+    window.location.href = `/dashboard/orders/${order.id}`
   }
 
   return (
@@ -111,7 +123,7 @@ export function OrderForm({
         border: '1px solid #d9e2f0',
       }}
     >
-      <h2 style={{ margin: 0, color: '#082D78', fontSize: 34 }}>Nieuwe order</h2>
+      <h2 style={{ margin: 0, color: '#082D78', fontSize: 34 }}>Order bewerken</h2>
 
       {!isStoreUser ? (
         <div>
@@ -224,7 +236,24 @@ export function OrderForm({
         rows={5}
       />
 
-      <button type="submit">Order opslaan</button>
+      <div style={{ display: 'flex', gap: 12 }}>
+        <button type="submit" disabled={isSaving}>
+          {isSaving ? 'Opslaan...' : 'Wijzigingen opslaan'}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = `/dashboard/orders/${order.id}`
+          }}
+          style={{
+            background: '#eef3fb',
+            color: '#164196',
+          }}
+        >
+          Annuleren
+        </button>
+      </div>
 
       {error ? (
         <p style={{ color: '#b00012', margin: 0, fontWeight: 600 }}>{error}</p>

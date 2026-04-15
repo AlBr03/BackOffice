@@ -53,9 +53,9 @@ export default function LoginPage() {
           >
             INTERSPORT
           </div>
-          <h1 style={{ margin: 0, color: '#082D78' }}>Login</h1>
+          <h1 style={{ margin: 0, color: '#082D78' }}>Inloggen</h1>
           <p style={{ margin: '8px 0 0 0', color: '#5b6b84' }}>
-            Sign in to the backoffice dashboard
+            Log in op het backoffice dashboard
           </p>
         </div>
 
@@ -63,16 +63,16 @@ export default function LoginPage() {
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
+            placeholder="E-mailadres"
             type="email"
           />
           <input
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
+            placeholder="Wachtwoord"
             type="password"
           />
-          <button type="submit">Log in</button>
+          <button type="submit">Inloggen</button>
           {error ? <p style={{ color: '#b00012', margin: 0 }}>{error}</p> : null}
         </form>
       </div>
