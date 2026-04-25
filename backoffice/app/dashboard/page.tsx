@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { DashboardLiveTable } from '@/components/dashboard-live-table'
-import { OrderDetailLiveShell } from '@/components/order-detail-live-shell'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -69,6 +68,11 @@ export default async function DashboardPage({
       club_name,
       product_description,
       quantity,
+      order_items (
+        product,
+        quantity,
+        product_code
+      ),
       has_print,
       status,
       created_at,

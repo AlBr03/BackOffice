@@ -34,6 +34,7 @@ export default async function EditOrderPage({ params }: PageProps) {
       wefact_reference,
       logo_action,
       supplier,
+      customer_email,
       product_description,
       print_instructions,
       quantity,
@@ -41,7 +42,12 @@ export default async function EditOrderPage({ params }: PageProps) {
       deadline,
       delivery_date,
       notes,
-      store_id
+      store_id,
+      order_items (
+        product,
+        quantity,
+        product_code
+      )
     `)
     .eq('id', id)
     .single()

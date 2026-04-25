@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { parseProductDescription } from '@/lib/order-fields'
 
 function translateStatus(status?: string | null) {
   switch (status) {
@@ -50,6 +51,11 @@ type OrderRow = {
   club_name: string
   product_description: string
   quantity: number
+  order_items?: {
+    product: string
+    quantity: number
+    product_code: string | null
+  }[] | null
   has_print: boolean
   status: string
   stores?: {
@@ -68,8 +74,8 @@ export function DashboardLiveTable({ orders }: { orders: OrderRow[] }) {
       router.refresh()
     }, 5000)
 
-  return () => clearInterval(interval)
-}, [router])
+    return () => clearInterval(interval)
+  }, [router])
 
   return (
     <section
@@ -115,6 +121,15 @@ export function DashboardLiveTable({ orders }: { orders: OrderRow[] }) {
           ) : (
             orders.map((order) => {
               const badgeStyle = getStatusBadgeStyle(order.status)
+              const productLines = order.order_items?.length
+                ? order.order_items.map((item) => ({
+                    product: item.product,
+                    quantity: item.quantity,
+                    productCode: item.product_code ?? '',
+                  }))
+                : parseProductDescription(order.product_description, order.quantity)
+              const primaryProduct = productLines[0]
+              const extraProducts = productLines.length - 1
 
               return (
                 <tr key={order.id} style={{ borderTop: '1px solid #e6edf7' }}>
@@ -125,7 +140,14 @@ export function DashboardLiveTable({ orders }: { orders: OrderRow[] }) {
                   </td>
                   <td style={{ padding: 14 }}>{order.stores?.name ?? '-'}</td>
                   <td style={{ padding: 14 }}>{order.club_name}</td>
-                  <td style={{ padding: 14 }}>{order.product_description}</td>
+                  <td style={{ padding: 14 }}>
+                    <div style={{ fontWeight: 600 }}>{primaryProduct?.product ?? '-'}</div>
+                    {extraProducts > 0 ? (
+                      <div style={{ color: '#5b6b84', fontSize: 13 }}>
+                        + {extraProducts} extra product{extraProducts > 1 ? 'en' : ''}
+                      </div>
+                    ) : null}
+                  </td>
                   <td style={{ padding: 14 }}>{order.quantity}</td>
                   <td style={{ padding: 14 }}>
                     {order.has_print ? (

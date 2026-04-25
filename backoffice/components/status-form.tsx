@@ -76,7 +76,43 @@ export function StatusForm({
       performed_by: user?.id ?? null,
     })
 
-    setMessage('Status succesvol bijgewerkt.')
+    try {
+      const response = await fetch(`/api/orders/${orderId}/notify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'status_changed',
+          oldStatus: currentStatus,
+          newStatus: status,
+        }),
+      })
+
+      if (!response.ok) {
+        setMessage('Status bijgewerkt, maar de klantmail kon niet worden verstuurd.')
+        setIsSaving(false)
+        window.location.reload()
+        return
+      }
+
+      const result = (await response.json()) as { skipped?: boolean }
+
+      if (result.skipped) {
+        setMessage('Status bijgewerkt. Er is geen klantmail verstuurd.')
+        setIsSaving(false)
+        window.location.reload()
+        return
+      }
+    } catch (notificationError) {
+      console.error('Statusmail kon niet worden verstuurd', notificationError)
+      setMessage('Status bijgewerkt, maar de klantmail kon niet worden verstuurd.')
+      setIsSaving(false)
+      window.location.reload()
+      return
+    }
+
+    setMessage('Status succesvol bijgewerkt en klantmail verstuurd.')
     setIsSaving(false)
     window.location.reload()
   }

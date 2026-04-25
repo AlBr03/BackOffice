@@ -5,6 +5,8 @@ import { UploadForm } from '@/components/upload-form'
 import { StatusForm } from '@/components/status-form'
 import { OrderDetailLiveShell } from '@/components/order-detail-live-shell'
 import { DeleteOrderButton } from '@/components/delete-order-button'
+import { CopyTrackingLinkButton } from '@/components/copy-tracking-link-button'
+import { parseProductDescription } from '@/lib/order-fields'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -118,11 +120,13 @@ export default async function OrderDetailPage({ params }: PageProps) {
     .select(`
       id,
       order_number,
+      tracking_token,
       club_name,
       accepted_by,
       wefact_reference,
       logo_action,
       supplier,
+      customer_email,
       product_description,
       print_instructions,
       quantity,
@@ -133,6 +137,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
       notes,
       created_at,
       updated_at,
+      order_items (
+        product,
+        quantity,
+        product_code
+      ),
       stores (
         id,
         name
@@ -171,6 +180,18 @@ export default async function OrderDetailPage({ params }: PageProps) {
     .order('created_at', { ascending: false })
 
   const statusStyle = getStatusStyle(order.status)
+  const publicAppUrl = process.env.NEXT_PUBLIC_APP_URL
+  const trackingUrl =
+    publicAppUrl && order.tracking_token
+      ? `${publicAppUrl.replace(/\/$/, '')}/bestelstatus/${order.tracking_token}`
+      : null
+  const productLines = order.order_items?.length
+    ? order.order_items.map((item) => ({
+        product: item.product,
+        quantity: item.quantity,
+        productCode: item.product_code ?? '',
+      }))
+    : parseProductDescription(order.product_description, order.quantity)
 
   return (
     <OrderDetailLiveShell>
@@ -285,6 +306,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
               >
                 <InfoField label="Winkel" value={order.stores?.name ?? '-'} />
                 <InfoField label="Naam klant / vereniging" value={order.club_name} />
+                <InfoField label="E-mail klant" value={order.customer_email || '-'} />
                 <InfoField label="Aangenomen door" value={order.accepted_by || '-'} />
                 <InfoField label="Wefact" value={order.wefact_reference || '-'} />
                 <InfoField label="Aangemaakt" value={formatDate(order.created_at)} />
@@ -292,6 +314,41 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   label="Laatst bijgewerkt"
                   value={formatDate(order.updated_at)}
                 />
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: 'white',
+                borderRadius: 18,
+                padding: 24,
+                boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
+                border: '1px solid #d9e2f0',
+              }}
+            >
+              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78' }}>
+                Producten
+              </h2>
+
+              <div style={{ display: 'grid', gap: 12 }}>
+                {productLines.map((line, index) => (
+                  <div
+                    key={`${line.product}-${index}`}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'minmax(0, 2fr) 120px minmax(0, 1fr)',
+                      gap: 16,
+                      padding: 14,
+                      borderRadius: 12,
+                      background: '#f8faff',
+                      border: '1px solid #e6edf7',
+                    }}
+                  >
+                    <InfoField label="Product" value={line.product} />
+                    <InfoField label="Aantal" value={line.quantity} />
+                    <InfoField label="Productcode" value={line.productCode || '-'} />
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -315,9 +372,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   gap: 16,
                 }}
               >
-                <InfoField label="Product" value={order.product_description} />
                 <InfoField label="Leverancier" value={order.supplier || '-'} />
-                <InfoField label="Aantal" value={order.quantity} />
+                <InfoField label="Totaal aantal" value={order.quantity} />
                 <InfoField
                   label="Print nodig"
                   value={order.has_print ? 'Ja' : 'Nee'}
@@ -454,6 +510,78 @@ export default async function OrderDetailPage({ params }: PageProps) {
           </div>
 
           <div style={{ display: 'grid', gap: 20, alignSelf: 'start' }}>
+            <div
+              style={{
+                background: 'white',
+                borderRadius: 18,
+                padding: 24,
+                boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
+                border: '1px solid #d9e2f0',
+              }}
+            >
+              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78' }}>
+                Track & trace link
+              </h2>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gap: 12,
+                  padding: 16,
+                  borderRadius: 14,
+                  background: '#f8faff',
+                  border: '1px solid #e6edf7',
+                }}
+              >
+                <div style={{ color: '#5b6b84', lineHeight: 1.6 }}>
+                  Gebruik deze link in klantmails om de publieke bestelstatus te tonen.
+                </div>
+
+                {trackingUrl ? (
+                  <>
+                    <a
+                      href={trackingUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        fontWeight: 700,
+                        wordBreak: 'break-all',
+                      }}
+                    >
+                      {trackingUrl}
+                    </a>
+
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <CopyTrackingLinkButton url={trackingUrl} />
+                      <a
+                        href={trackingUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minHeight: 40,
+                          padding: '0 14px',
+                          borderRadius: 10,
+                          background: '#eef3fb',
+                          color: '#164196',
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        Openen
+                      </a>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ color: '#8a6514', fontWeight: 600 }}>
+                    Stel `NEXT_PUBLIC_APP_URL` in om een volledige publieke link te tonen.
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div
               style={{
                 background: 'white',
