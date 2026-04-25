@@ -22,7 +22,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   const body = (await request.json()) as
-    | { type?: 'created' | 'status_changed'; oldStatus?: string; newStatus?: string }
+    | { type?: 'created' | 'status_changed'; changeSummary?: string }
     | undefined
 
   const { data: order, error } = await supabase
@@ -33,7 +33,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       tracking_token,
       club_name,
       customer_email,
-      status,
+      article_status,
+      print_status,
       notes,
       delivery_date,
       deadline,
@@ -54,8 +55,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Order niet gevonden.' }, { status: 404 })
   }
 
-  if (body?.type === 'status_changed' && body.oldStatus && body.newStatus) {
-    const result = await sendOrderStatusChangedEmail(order, body.oldStatus, body.newStatus)
+  if (body?.type === 'status_changed' && body.changeSummary) {
+    const result = await sendOrderStatusChangedEmail(order, body.changeSummary)
     return NextResponse.json({ ok: true, ...result })
   }
 

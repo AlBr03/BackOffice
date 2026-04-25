@@ -10,6 +10,7 @@ import {
   serializeProductLines,
   type ProductLine,
 } from '@/lib/order-fields'
+import { deriveLegacyStatus, getInitialPrintStatus } from '@/lib/order-status'
 
 type StoreOption = {
   id: string
@@ -21,9 +22,15 @@ type OrderData = {
   club_name: string
   accepted_by: string | null
   wefact_reference: string | null
+  wefact_quote_reference: string | null
+  wefact_quote_url: string | null
+  wefact_invoice_reference: string | null
+  wefact_invoice_url: string | null
   logo_action: string | null
   supplier: string | null
   customer_email: string | null
+  article_status: string | null
+  print_status: string | null
   product_description: string
   print_instructions: string | null
   quantity: number
@@ -55,7 +62,14 @@ export function OrderEditForm({
   const [clubName, setClubName] = useState(order.club_name ?? '')
   const [customerEmail, setCustomerEmail] = useState(order.customer_email ?? '')
   const [acceptedBy, setAcceptedBy] = useState(order.accepted_by ?? '')
-  const [wefactReference, setWefactReference] = useState(order.wefact_reference ?? '')
+  const [wefactQuoteReference, setWefactQuoteReference] = useState(
+    order.wefact_quote_reference ?? order.wefact_reference ?? ''
+  )
+  const [wefactQuoteUrl, setWefactQuoteUrl] = useState(order.wefact_quote_url ?? '')
+  const [wefactInvoiceReference, setWefactInvoiceReference] = useState(
+    order.wefact_invoice_reference ?? ''
+  )
+  const [wefactInvoiceUrl, setWefactInvoiceUrl] = useState(order.wefact_invoice_url ?? '')
   const [logoAction, setLogoAction] = useState(order.logo_action ?? '')
   const [supplier, setSupplier] = useState(order.supplier ?? '')
   const [productLines, setProductLines] = useState<ProductLine[]>(
@@ -134,7 +148,11 @@ export function OrderEditForm({
         store_id: selectedStoreId,
         club_name: clubName,
         accepted_by: acceptedBy || null,
-        wefact_reference: wefactReference || null,
+        wefact_reference: wefactQuoteReference || null,
+        wefact_quote_reference: wefactQuoteReference || null,
+        wefact_quote_url: wefactQuoteUrl.trim() || null,
+        wefact_invoice_reference: wefactInvoiceReference || null,
+        wefact_invoice_url: wefactInvoiceUrl.trim() || null,
         logo_action: logoAction || null,
         supplier: supplier || null,
         customer_email: customerEmail || null,
@@ -142,6 +160,12 @@ export function OrderEditForm({
         print_instructions: printInstructions || null,
         quantity: getTotalQuantity(normalizedProductLines),
         has_print: hasPrint,
+        print_status: hasPrint ? order.print_status ?? getInitialPrintStatus(true) : null,
+        status: deriveLegacyStatus(
+          order.article_status ?? 'new',
+          hasPrint,
+          hasPrint ? order.print_status ?? getInitialPrintStatus(true) : null
+        ),
         deadline: deadline || null,
         delivery_date: deliveryDate || null,
         notes: notes.trim() || null,
@@ -287,11 +311,41 @@ export function OrderEditForm({
             onChange={(e) => setAcceptedBy(e.target.value)}
             placeholder="Aangenomen door medewerker"
           />
-          <input
-            value={wefactReference}
-            onChange={(e) => setWefactReference(e.target.value)}
-            placeholder="Wefact referentie"
-          />
+          <div />
+        </div>
+
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ color: '#5b6b84', fontWeight: 700, fontSize: 14 }}>Wefact offerte</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+            <input
+              value={wefactQuoteReference}
+              onChange={(e) => setWefactQuoteReference(e.target.value)}
+              placeholder="Offerte referentie / nummer"
+            />
+            <input
+              value={wefactQuoteUrl}
+              onChange={(e) => setWefactQuoteUrl(e.target.value)}
+              placeholder="Offerte link in Wefact"
+              type="url"
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ color: '#5b6b84', fontWeight: 700, fontSize: 14 }}>Wefact factuur</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+            <input
+              value={wefactInvoiceReference}
+              onChange={(e) => setWefactInvoiceReference(e.target.value)}
+              placeholder="Factuur referentie / nummer"
+            />
+            <input
+              value={wefactInvoiceUrl}
+              onChange={(e) => setWefactInvoiceUrl(e.target.value)}
+              placeholder="Factuurlink in Wefact"
+              type="url"
+            />
+          </div>
         </div>
       </section>
 

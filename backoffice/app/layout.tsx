@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { HeaderProfileMenu } from "@/components/header-profile-menu";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,11 +20,20 @@ export const metadata: Metadata = {
   description: "Backoffice voor winkels, hoofdkantoor en printafdeling",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("role").eq("id", user.id).single()
+    : { data: null };
+
   return (
     <html
       lang="en"
@@ -37,18 +48,31 @@ export default function RootLayout({
             boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
           }}
         >
-          <Link
-            href="/dashboard"
+          <div
             style={{
-              color: "white",
-              textDecoration: "none",
-              fontWeight: 800,
-              fontSize: 30,
-              letterSpacing: 0.3,
+              maxWidth: 1400,
+              margin: "0 auto",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 16,
             }}
           >
-            INTERSPORT Backoffice
-          </Link>
+            <Link
+              href="/dashboard"
+              style={{
+                color: "white",
+                textDecoration: "none",
+                fontWeight: 800,
+                fontSize: 30,
+                letterSpacing: 0.3,
+              }}
+            >
+              INTERSPORT Backoffice
+            </Link>
+
+            <HeaderProfileMenu role={profile?.role ?? null} />
+          </div>
         </header>
 
         <main

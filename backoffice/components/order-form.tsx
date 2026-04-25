@@ -8,6 +8,7 @@ import {
   normalizeProductLines,
   serializeProductLines,
 } from '@/lib/order-fields'
+import { deriveLegacyStatus, getInitialPrintStatus } from '@/lib/order-status'
 
 type StoreOption = {
   id: string
@@ -31,7 +32,10 @@ export function OrderForm({
   const [clubName, setClubName] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
   const [acceptedBy, setAcceptedBy] = useState('')
-  const [wefactReference, setWefactReference] = useState('')
+  const [wefactQuoteReference, setWefactQuoteReference] = useState('')
+  const [wefactQuoteUrl, setWefactQuoteUrl] = useState('')
+  const [wefactInvoiceReference, setWefactInvoiceReference] = useState('')
+  const [wefactInvoiceUrl, setWefactInvoiceUrl] = useState('')
   const [logoAction, setLogoAction] = useState('')
   const [supplier, setSupplier] = useState('')
   const [productLines, setProductLines] = useState([createEmptyProductLine()])
@@ -100,7 +104,11 @@ export function OrderForm({
         store_id: selectedStoreId,
         club_name: clubName,
         accepted_by: acceptedBy || null,
-        wefact_reference: wefactReference || null,
+        wefact_reference: wefactQuoteReference || null,
+        wefact_quote_reference: wefactQuoteReference || null,
+        wefact_quote_url: wefactQuoteUrl.trim() || null,
+        wefact_invoice_reference: wefactInvoiceReference || null,
+        wefact_invoice_url: wefactInvoiceUrl.trim() || null,
         logo_action: logoAction || null,
         supplier: supplier || null,
         customer_email: customerEmail || null,
@@ -108,6 +116,9 @@ export function OrderForm({
         print_instructions: printInstructions || null,
         quantity: getTotalQuantity(normalizedProductLines),
         has_print: hasPrint,
+        article_status: 'new',
+        print_status: getInitialPrintStatus(hasPrint),
+        status: deriveLegacyStatus('new', hasPrint, getInitialPrintStatus(hasPrint)),
         deadline: deadline || null,
         delivery_date: deliveryDate || null,
         notes: notes.trim() || null,
@@ -257,11 +268,41 @@ export function OrderForm({
             onChange={(e) => setAcceptedBy(e.target.value)}
             placeholder="Aangenomen door medewerker"
           />
-          <input
-            value={wefactReference}
-            onChange={(e) => setWefactReference(e.target.value)}
-            placeholder="Wefact referentie"
-          />
+          <div />
+        </div>
+
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ color: '#5b6b84', fontWeight: 700, fontSize: 14 }}>Wefact offerte</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+            <input
+              value={wefactQuoteReference}
+              onChange={(e) => setWefactQuoteReference(e.target.value)}
+              placeholder="Offerte referentie / nummer"
+            />
+            <input
+              value={wefactQuoteUrl}
+              onChange={(e) => setWefactQuoteUrl(e.target.value)}
+              placeholder="Offerte link in Wefact"
+              type="url"
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ color: '#5b6b84', fontWeight: 700, fontSize: 14 }}>Wefact factuur</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+            <input
+              value={wefactInvoiceReference}
+              onChange={(e) => setWefactInvoiceReference(e.target.value)}
+              placeholder="Factuur referentie / nummer"
+            />
+            <input
+              value={wefactInvoiceUrl}
+              onChange={(e) => setWefactInvoiceUrl(e.target.value)}
+              placeholder="Factuurlink in Wefact"
+              type="url"
+            />
+          </div>
         </div>
       </section>
 

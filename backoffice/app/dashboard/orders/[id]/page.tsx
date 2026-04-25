@@ -7,6 +7,12 @@ import { OrderDetailLiveShell } from '@/components/order-detail-live-shell'
 import { DeleteOrderButton } from '@/components/delete-order-button'
 import { CopyTrackingLinkButton } from '@/components/copy-tracking-link-button'
 import { parseProductDescription } from '@/lib/order-fields'
+import {
+  getArticleStatusStyle,
+  getPrintStatusStyle,
+  translateArticleStatus,
+  translatePrintStatus,
+} from '@/lib/order-status'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -14,6 +20,76 @@ export const revalidate = 0
 type PageProps = {
   params: Promise<{ id: string }>
 }
+
+const ORDER_DETAIL_SELECT = `
+  id,
+  order_number,
+  tracking_token,
+  club_name,
+  accepted_by,
+  wefact_reference,
+  wefact_quote_reference,
+  wefact_quote_url,
+  wefact_invoice_reference,
+  wefact_invoice_url,
+  logo_action,
+  supplier,
+  customer_email,
+  article_status,
+  print_status,
+  product_description,
+  print_instructions,
+  quantity,
+  has_print,
+  status,
+  deadline,
+  delivery_date,
+  notes,
+  created_at,
+  updated_at,
+  order_items (
+    product,
+    quantity,
+    product_code
+  ),
+  stores (
+    id,
+    name
+  )
+`
+
+const ORDER_DETAIL_SELECT_LEGACY = `
+  id,
+  order_number,
+  tracking_token,
+  club_name,
+  accepted_by,
+  wefact_reference,
+  logo_action,
+  supplier,
+  customer_email,
+  article_status,
+  print_status,
+  product_description,
+  print_instructions,
+  quantity,
+  has_print,
+  status,
+  deadline,
+  delivery_date,
+  notes,
+  created_at,
+  updated_at,
+  order_items (
+    product,
+    quantity,
+    product_code
+  ),
+  stores (
+    id,
+    name
+  )
+`
 
 function formatDate(value?: string | null) {
   if (!value) return '-'
@@ -29,21 +105,6 @@ function formatDateTime(value?: string | null) {
   return date.toLocaleString('nl-NL')
 }
 
-function translateStatus(status?: string | null) {
-  switch (status) {
-    case 'new':
-      return 'Nieuw'
-    case 'in_progress':
-      return 'In behandeling'
-    case 'waiting_print':
-      return 'Wacht op print'
-    case 'completed':
-      return 'Afgerond'
-    default:
-      return status ?? '-'
-  }
-}
-
 function translateLogoAction(value?: string | null) {
   switch (value) {
     case 'bestellen':
@@ -57,29 +118,24 @@ function translateLogoAction(value?: string | null) {
   }
 }
 
-function getStatusStyle(status?: string | null) {
-  switch (status) {
-    case 'completed':
-      return {
-        background: '#e8f7ee',
-        color: '#167c3a',
-      }
-    case 'waiting_print':
-      return {
-        background: '#fff1f2',
-        color: '#b00012',
-      }
-    case 'in_progress':
-      return {
-        background: '#eef3fb',
-        color: '#164196',
-      }
-    default:
-      return {
-        background: '#f4f6f8',
-        color: '#42526b',
-      }
+function renderWefactValue(reference?: string | null, url?: string | null) {
+  const trimmedReference = reference?.trim()
+  const trimmedUrl = url?.trim()
+
+  if (!trimmedReference && !trimmedUrl) {
+    return '-'
   }
+
+  return (
+    <div style={{ display: 'grid', gap: 6 }}>
+      <div>{trimmedReference || '-'}</div>
+      {trimmedUrl ? (
+        <a href={trimmedUrl} target="_blank" rel="noreferrer" style={{ color: '#164196' }}>
+          Open in Wefact
+        </a>
+      ) : null}
+    </div>
+  )
 }
 
 function InfoField({
@@ -115,40 +171,32 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   const canDelete = profile?.role === 'office' || profile?.role === 'admin'
 
-  const { data: order, error } = await supabase
+  let { data: order, error } = await supabase
     .from('orders')
-    .select(`
-      id,
-      order_number,
-      tracking_token,
-      club_name,
-      accepted_by,
-      wefact_reference,
-      logo_action,
-      supplier,
-      customer_email,
-      product_description,
-      print_instructions,
-      quantity,
-      has_print,
-      status,
-      deadline,
-      delivery_date,
-      notes,
-      created_at,
-      updated_at,
-      order_items (
-        product,
-        quantity,
-        product_code
-      ),
-      stores (
-        id,
-        name
-      )
-    `)
+    .select(ORDER_DETAIL_SELECT)
     .eq('id', id)
     .single()
+
+  if (error && /wefact_(quote|invoice)_/i.test(error.message)) {
+    const fallbackResult = await supabase
+      .from('orders')
+      .select(ORDER_DETAIL_SELECT_LEGACY)
+      .eq('id', id)
+      .single()
+
+    error = fallbackResult.error
+    order = fallbackResult.data
+
+    if (order) {
+      order = {
+        ...order,
+        wefact_quote_reference: order.wefact_reference ?? null,
+        wefact_quote_url: null,
+        wefact_invoice_reference: null,
+        wefact_invoice_url: null,
+      }
+    }
+  }
 
   if (error || !order) {
     notFound()
@@ -179,7 +227,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
     .eq('order_id', id)
     .order('created_at', { ascending: false })
 
-  const statusStyle = getStatusStyle(order.status)
+  const articleStatusStyle = getArticleStatusStyle(order.article_status)
+  const printStatusStyle = getPrintStatusStyle(order.print_status)
   const publicAppUrl = process.env.NEXT_PUBLIC_APP_URL
   const trackingUrl =
     publicAppUrl && order.tracking_token
@@ -263,15 +312,36 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
             <div
               style={{
-                background: statusStyle.background,
-                color: statusStyle.color,
-                padding: '8px 14px',
-                borderRadius: 999,
-                fontWeight: 700,
-                fontSize: 14,
+                display: 'grid',
+                gap: 8,
               }}
             >
-              {translateStatus(order.status)}
+              <div
+                style={{
+                  background: articleStatusStyle.background,
+                  color: articleStatusStyle.color,
+                  padding: '8px 14px',
+                  borderRadius: 999,
+                  fontWeight: 700,
+                  fontSize: 14,
+                }}
+              >
+                Artikelen: {translateArticleStatus(order.article_status)}
+              </div>
+              {order.has_print ? (
+                <div
+                  style={{
+                    background: printStatusStyle.background,
+                    color: printStatusStyle.color,
+                    padding: '8px 14px',
+                    borderRadius: 999,
+                    fontWeight: 700,
+                    fontSize: 14,
+                  }}
+                >
+                  Print: {translatePrintStatus(order.print_status)}
+                </div>
+              ) : null}
             </div>
           </div>
         </section>
@@ -308,7 +378,20 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 <InfoField label="Naam klant / vereniging" value={order.club_name} />
                 <InfoField label="E-mail klant" value={order.customer_email || '-'} />
                 <InfoField label="Aangenomen door" value={order.accepted_by || '-'} />
-                <InfoField label="Wefact" value={order.wefact_reference || '-'} />
+                <InfoField
+                  label="Wefact offerte"
+                  value={renderWefactValue(
+                    order.wefact_quote_reference ?? order.wefact_reference,
+                    order.wefact_quote_url
+                  )}
+                />
+                <InfoField
+                  label="Wefact factuur"
+                  value={renderWefactValue(
+                    order.wefact_invoice_reference,
+                    order.wefact_invoice_url
+                  )}
+                />
                 <InfoField label="Aangemaakt" value={formatDate(order.created_at)} />
                 <InfoField
                   label="Laatst bijgewerkt"
@@ -592,10 +675,15 @@ export default async function OrderDetailPage({ params }: PageProps) {
               }}
             >
               <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78' }}>
-                Status
+                Statussen
               </h2>
 
-              <StatusForm orderId={order.id} currentStatus={order.status} />
+              <StatusForm
+                orderId={order.id}
+                currentArticleStatus={order.article_status}
+                currentPrintStatus={order.print_status}
+                hasPrint={order.has_print}
+              />
             </div>
 
             <div

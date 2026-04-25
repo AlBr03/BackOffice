@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -75,6 +76,10 @@ export default function LoginPage() {
           <button type="submit">Inloggen</button>
           {error ? <p style={{ color: '#b00012', margin: 0 }}>{error}</p> : null}
         </form>
+
+        <div style={{ marginTop: 18, color: '#5b6b84' }}>
+          Nog geen account? <Link href="/register">Account aanmaken</Link>
+        </div>
       </div>
     </div>
   )

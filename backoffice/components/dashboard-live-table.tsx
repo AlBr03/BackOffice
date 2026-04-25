@@ -4,46 +4,12 @@ import Link from 'next/link'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { parseProductDescription } from '@/lib/order-fields'
-
-function translateStatus(status?: string | null) {
-  switch (status) {
-    case 'new':
-      return 'Nieuw'
-    case 'in_progress':
-      return 'In behandeling'
-    case 'waiting_print':
-      return 'Wacht op print'
-    case 'completed':
-      return 'Afgerond'
-    default:
-      return status ?? '-'
-  }
-}
-
-function getStatusBadgeStyle(status?: string | null) {
-  switch (status) {
-    case 'completed':
-      return {
-        background: '#e8f7ee',
-        color: '#167c3a',
-      }
-    case 'waiting_print':
-      return {
-        background: '#fff1f2',
-        color: '#b00012',
-      }
-    case 'in_progress':
-      return {
-        background: '#eef3fb',
-        color: '#164196',
-      }
-    default:
-      return {
-        background: '#f4f6f8',
-        color: '#42526b',
-      }
-  }
-}
+import {
+  getArticleStatusStyle,
+  getPrintStatusStyle,
+  translateArticleStatus,
+  translatePrintStatus,
+} from '@/lib/order-status'
 
 type OrderRow = {
   id: string
@@ -51,6 +17,8 @@ type OrderRow = {
   club_name: string
   product_description: string
   quantity: number
+  article_status?: string | null
+  print_status?: string | null
   order_items?: {
     product: string
     quantity: number
@@ -63,7 +31,13 @@ type OrderRow = {
   } | null
 }
 
-export function DashboardLiveTable({ orders }: { orders: OrderRow[] }) {
+export function DashboardLiveTable({
+  orders,
+  showStoreColumn,
+}: {
+  orders: OrderRow[]
+  showStoreColumn?: boolean
+}) {
   const router = useRouter()
 
   useEffect(() => {
@@ -103,7 +77,9 @@ export function DashboardLiveTable({ orders }: { orders: OrderRow[] }) {
         <thead>
           <tr style={{ background: '#f8faff' }}>
             <th style={{ textAlign: 'left', padding: 14 }}>Order</th>
-            <th style={{ textAlign: 'left', padding: 14 }}>Winkel</th>
+            {showStoreColumn !== false ? (
+              <th style={{ textAlign: 'left', padding: 14 }}>Winkel</th>
+            ) : null}
             <th style={{ textAlign: 'left', padding: 14 }}>Club</th>
             <th style={{ textAlign: 'left', padding: 14 }}>Product</th>
             <th style={{ textAlign: 'left', padding: 14 }}>Aantal</th>
@@ -114,13 +90,12 @@ export function DashboardLiveTable({ orders }: { orders: OrderRow[] }) {
         <tbody>
           {orders.length === 0 ? (
             <tr>
-              <td colSpan={7} style={{ padding: 20, color: '#5b6b84' }}>
+              <td colSpan={showStoreColumn !== false ? 7 : 6} style={{ padding: 20, color: '#5b6b84' }}>
                 Geen orders gevonden.
               </td>
             </tr>
           ) : (
             orders.map((order) => {
-              const badgeStyle = getStatusBadgeStyle(order.status)
               const productLines = order.order_items?.length
                 ? order.order_items.map((item) => ({
                     product: item.product,
@@ -138,7 +113,9 @@ export function DashboardLiveTable({ orders }: { orders: OrderRow[] }) {
                       {order.order_number}
                     </Link>
                   </td>
-                  <td style={{ padding: 14 }}>{order.stores?.name ?? '-'}</td>
+                  {showStoreColumn !== false ? (
+                    <td style={{ padding: 14 }}>{order.stores?.name ?? '-'}</td>
+                  ) : null}
                   <td style={{ padding: 14 }}>{order.club_name}</td>
                   <td style={{ padding: 14 }}>
                     <div style={{ fontWeight: 600 }}>{primaryProduct?.product ?? '-'}</div>
@@ -179,18 +156,40 @@ export function DashboardLiveTable({ orders }: { orders: OrderRow[] }) {
                     )}
                   </td>
                   <td style={{ padding: 14 }}>
-                    <span
-                      style={{
-                        background: badgeStyle.background,
-                        color: badgeStyle.color,
-                        padding: '4px 10px',
-                        borderRadius: 999,
-                        fontSize: 13,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {translateStatus(order.status)}
-                    </span>
+                    <div style={{ display: 'grid', gap: 8 }}>
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          width: 'fit-content',
+                          background: getArticleStatusStyle(order.article_status).background,
+                          color: getArticleStatusStyle(order.article_status).color,
+                          padding: '4px 10px',
+                          borderRadius: 999,
+                          fontSize: 13,
+                          fontWeight: 700,
+                        }}
+                      >
+                        Artikelen: {translateArticleStatus(order.article_status)}
+                      </span>
+                      {order.has_print ? (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            width: 'fit-content',
+                            background: getPrintStatusStyle(order.print_status).background,
+                            color: getPrintStatusStyle(order.print_status).color,
+                            padding: '4px 10px',
+                            borderRadius: 999,
+                            fontSize: 13,
+                            fontWeight: 700,
+                          }}
+                        >
+                          Print: {translatePrintStatus(order.print_status)}
+                        </span>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               )

@@ -1,4 +1,5 @@
 import { sendMail } from '@/lib/mail'
+import { translateArticleStatus, translatePrintStatus } from '@/lib/order-status'
 
 type OrderNotificationItem = {
   product: string
@@ -11,7 +12,8 @@ type OrderNotificationOrder = {
   tracking_token?: string | null
   club_name: string
   customer_email: string | null
-  status: string | null
+  article_status: string | null
+  print_status: string | null
   notes: string | null
   delivery_date: string | null
   deadline: string | null
@@ -19,21 +21,6 @@ type OrderNotificationOrder = {
     name?: string | null
   } | null
   order_items?: OrderNotificationItem[] | null
-}
-
-function translateStatus(status?: string | null) {
-  switch (status) {
-    case 'new':
-      return 'Nieuw'
-    case 'in_progress':
-      return 'In behandeling'
-    case 'waiting_print':
-      return 'Wacht op print'
-    case 'completed':
-      return 'Afgerond'
-    default:
-      return status ?? '-'
-  }
 }
 
 function formatDate(value?: string | null) {
@@ -81,7 +68,8 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
     '',
     `Ordernummer: ${order.order_number}`,
     `Naam: ${order.club_name}`,
-    `Status: ${translateStatus(order.status)}`,
+    `Artikelenstatus: ${translateArticleStatus(order.article_status)}`,
+    `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status) : 'Niet van toepassing'}`,
     `Deadline: ${formatDate(order.deadline)}`,
     `Uitleverdatum: ${formatDate(order.delivery_date)}`,
     '',
@@ -109,8 +97,7 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
 
 export async function sendOrderStatusChangedEmail(
   order: OrderNotificationOrder,
-  oldStatus: string,
-  newStatus: string
+  changeSummary: string
 ) {
   if (!order.customer_email) {
     return { skipped: true, reason: 'Geen klantmail aanwezig.' }
@@ -124,8 +111,10 @@ export async function sendOrderStatusChangedEmail(
     '',
     `Er is een nieuwe update voor uw order ${order.order_number}.`,
     '',
-    `Vorige status: ${translateStatus(oldStatus)}`,
-    `Nieuwe status: ${translateStatus(newStatus)}`,
+    `${changeSummary}`,
+    '',
+    `Artikelenstatus nu: ${translateArticleStatus(order.article_status)}`,
+    `Printstatus nu: ${order.print_status ? translatePrintStatus(order.print_status) : 'Niet van toepassing'}`,
     '',
     'Bestelde producten:',
     formatItems(order.order_items),

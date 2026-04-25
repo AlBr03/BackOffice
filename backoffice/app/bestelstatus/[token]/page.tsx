@@ -2,6 +2,14 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { parseProductDescription } from '@/lib/order-fields'
+import {
+  ARTICLE_STATUS_OPTIONS,
+  PRINT_STATUS_OPTIONS,
+  getArticleStatusStyle,
+  getPrintStatusStyle,
+  translateArticleStatus,
+  translatePrintStatus,
+} from '@/lib/order-status'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -9,25 +17,6 @@ export const revalidate = 0
 type PageProps = {
   params: Promise<{ token: string }>
 }
-
-const STATUS_STEPS = [
-  { value: 'new', label: 'Bestelling ontvangen', description: 'Uw order is goed ontvangen.' },
-  {
-    value: 'in_progress',
-    label: 'In behandeling',
-    description: 'We verwerken de bestelling en zetten de volgende stappen klaar.',
-  },
-  {
-    value: 'waiting_print',
-    label: 'Wacht op print',
-    description: 'De bestelling wacht op drukwerk of afwerking.',
-  },
-  {
-    value: 'completed',
-    label: 'Afgerond',
-    description: 'De bestelling is afgerond en klaar voor levering of afhalen.',
-  },
-]
 
 function formatDate(value?: string | null) {
   if (!value) return 'Nog niet bekend'
@@ -53,37 +42,37 @@ function formatDateTime(value?: string | null) {
   })
 }
 
-function getStatusIndex(status?: string | null) {
-  const index = STATUS_STEPS.findIndex((step) => step.value === status)
+function getStatusIndex(
+  options: readonly { value: string; label: string }[],
+  status?: string | null
+) {
+  const index = options.findIndex((step) => step.value === status)
   return index >= 0 ? index : 0
 }
 
-function getStatusMeta(status?: string | null) {
-  switch (status) {
+function getStepDescription(kind: 'article' | 'print', value: string) {
+  if (kind === 'article') {
+    switch (value) {
+      case 'ordered':
+        return 'De artikelen zijn besteld.'
+      case 'at_location':
+        return 'De artikelen zijn op locatie aangekomen.'
+      case 'completed':
+        return 'Het artikelgedeelte van de bestelling is afgerond.'
+      default:
+        return 'De bestelling is aangemaakt en wacht op verdere verwerking.'
+    }
+  }
+
+  switch (value) {
+    case 'logos_ordered':
+      return "De logo's zijn besteld."
+    case 'logos_at_location':
+      return "De logo's zijn op locatie aangekomen."
     case 'completed':
-      return {
-        label: 'Afgerond',
-        background: 'linear-gradient(135deg, #e8f7ee 0%, #f4fff7 100%)',
-        color: '#167c3a',
-      }
-    case 'waiting_print':
-      return {
-        label: 'Wacht op print',
-        background: 'linear-gradient(135deg, #fff1f2 0%, #fff7f7 100%)',
-        color: '#b00012',
-      }
-    case 'in_progress':
-      return {
-        label: 'In behandeling',
-        background: 'linear-gradient(135deg, #eef3fb 0%, #f7faff 100%)',
-        color: '#164196',
-      }
+      return 'Het printgedeelte is afgerond.'
     default:
-      return {
-        label: 'Ontvangen',
-        background: 'linear-gradient(135deg, #f4f6f8 0%, #fbfcfd 100%)',
-        color: '#42526b',
-      }
+      return 'Printwerk is nog niet verder in behandeling genomen.'
   }
 }
 
@@ -97,7 +86,8 @@ export default async function OrderTrackingPage({ params }: PageProps) {
       `
       order_number,
       club_name,
-      status,
+      article_status,
+      print_status,
       notes,
       created_at,
       updated_at,
@@ -140,8 +130,10 @@ export default async function OrderTrackingPage({ params }: PageProps) {
     notFound()
   }
 
-  const statusIndex = getStatusIndex(order.status)
-  const statusMeta = getStatusMeta(order.status)
+  const articleStatusIndex = getStatusIndex(ARTICLE_STATUS_OPTIONS, order.article_status)
+  const printStatusIndex = getStatusIndex(PRINT_STATUS_OPTIONS, order.print_status)
+  const articleStatusStyle = getArticleStatusStyle(order.article_status)
+  const printStatusStyle = getPrintStatusStyle(order.print_status)
   const productLines = order.order_items?.length
     ? order.order_items.map((item) => ({
         product: item.product,
@@ -235,12 +227,28 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                 border: '1px solid rgba(255,255,255,0.14)',
               }}
             >
-              <div style={{ fontSize: 12, textTransform: 'uppercase', opacity: 0.72, marginBottom: 8 }}>
-                Huidige status
-              </div>
-              <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>{statusMeta.label}</div>
-              <div style={{ color: 'rgba(255,255,255,0.76)' }}>
-                Laatste update: {formatDateTime(order.updated_at) ?? formatDate(order.updated_at)}
+              <div style={{ display: 'grid', gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 12, textTransform: 'uppercase', opacity: 0.72, marginBottom: 6 }}>
+                    Artikelen
+                  </div>
+                  <div style={{ fontSize: 22, fontWeight: 800 }}>
+                    {translateArticleStatus(order.article_status)}
+                  </div>
+                </div>
+                {order.has_print ? (
+                  <div>
+                    <div style={{ fontSize: 12, textTransform: 'uppercase', opacity: 0.72, marginBottom: 6 }}>
+                      Print
+                    </div>
+                    <div style={{ fontSize: 22, fontWeight: 800 }}>
+                      {translatePrintStatus(order.print_status)}
+                    </div>
+                  </div>
+                ) : null}
+                <div style={{ color: 'rgba(255,255,255,0.76)' }}>
+                  Laatste update: {formatDateTime(order.updated_at) ?? formatDate(order.updated_at)}
+                </div>
               </div>
             </div>
           </div>
@@ -278,111 +286,151 @@ export default async function OrderTrackingPage({ params }: PageProps) {
               <div>
                 <h2 style={{ margin: 0, color: '#082D78', fontSize: 28 }}>Voortgang</h2>
                 <p style={{ margin: '6px 0 0 0', color: '#5b6b84' }}>
-                  Een overzicht zoals bij een bezorgdienst, maar dan voor uw bestelling.
+                  Artikelen en printwerk worden apart bijgehouden voor extra duidelijkheid.
                 </p>
-              </div>
-
-              <div
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: 999,
-                  background: statusMeta.background,
-                  color: statusMeta.color,
-                  fontWeight: 800,
-                }}
-              >
-                {statusMeta.label}
               </div>
             </div>
 
-            <div style={{ display: 'grid', gap: 18 }}>
-              {STATUS_STEPS.map((step, index) => {
-                const isCompleted = index < statusIndex
-                const isCurrent = index === statusIndex
-                const isUpcoming = index > statusIndex
-
-                return (
-                  <div
-                    key={step.value}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '56px 1fr',
-                      gap: 16,
-                      alignItems: 'start',
-                    }}
-                  >
-                    <div style={{ display: 'grid', justifyItems: 'center', gap: 8 }}>
-                      <div
-                        style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: '50%',
-                          display: 'grid',
-                          placeItems: 'center',
-                          background: isCompleted
-                            ? '#167c3a'
-                            : isCurrent
-                              ? '#164196'
-                              : '#d9e2f0',
-                          color: 'white',
-                          fontWeight: 800,
-                          boxShadow: isCurrent ? '0 0 0 8px rgba(22,65,150,0.12)' : 'none',
-                        }}
-                      >
-                        {isCompleted ? '✓' : index + 1}
-                      </div>
-                      {index < STATUS_STEPS.length - 1 ? (
-                        <div
-                          style={{
-                            width: 3,
-                            minHeight: 84,
-                            borderRadius: 999,
-                            background: isCompleted ? '#167c3a' : '#d9e2f0',
-                          }}
-                        />
-                      ) : null}
-                    </div>
-
+            <div style={{ display: 'grid', gap: 24 }}>
+              {[
+                {
+                  title: 'Artikelen',
+                  options: ARTICLE_STATUS_OPTIONS,
+                  currentIndex: articleStatusIndex,
+                  currentValue: order.article_status,
+                  currentLabel: translateArticleStatus(order.article_status),
+                  currentStyle: articleStatusStyle,
+                  visible: true,
+                  kind: 'article' as const,
+                },
+                {
+                  title: 'Print',
+                  options: PRINT_STATUS_OPTIONS,
+                  currentIndex: printStatusIndex,
+                  currentValue: order.print_status,
+                  currentLabel: translatePrintStatus(order.print_status),
+                  currentStyle: printStatusStyle,
+                  visible: order.has_print,
+                  kind: 'print' as const,
+                },
+              ]
+                .filter((section) => section.visible)
+                .map((section) => (
+                  <div key={section.title} style={{ display: 'grid', gap: 18 }}>
                     <div
                       style={{
-                        padding: 18,
-                        borderRadius: 20,
-                        background: isCurrent
-                          ? 'linear-gradient(135deg, #eef3fb 0%, #f7faff 100%)'
-                          : '#f8faff',
-                        border: isCurrent ? '1px solid #c8d8f2' : '1px solid #e6edf7',
-                        opacity: isUpcoming ? 0.72 : 1,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 16,
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                        <div>
-                          <div style={{ fontSize: 12, color: '#5b6b84', fontWeight: 800, letterSpacing: 1 }}>
-                            {isCompleted ? 'VOLTOOID' : isCurrent ? 'ACTUELE FASE' : 'VOLGENDE STAP'}
+                      <h3 style={{ margin: 0, color: '#082D78', fontSize: 24 }}>{section.title}</h3>
+                      <div
+                        style={{
+                          padding: '10px 14px',
+                          borderRadius: 999,
+                          background: section.currentStyle.background,
+                          color: section.currentStyle.color,
+                          fontWeight: 800,
+                        }}
+                      >
+                        {section.currentLabel}
+                      </div>
+                    </div>
+
+                    {section.options.map((step, index) => {
+                      const isCompleted = index < section.currentIndex
+                      const isCurrent = index === section.currentIndex
+                      const isUpcoming = index > section.currentIndex
+
+                      return (
+                        <div
+                          key={step.value}
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '56px 1fr',
+                            gap: 16,
+                            alignItems: 'start',
+                          }}
+                        >
+                          <div style={{ display: 'grid', justifyItems: 'center', gap: 8 }}>
+                            <div
+                              style={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: '50%',
+                                display: 'grid',
+                                placeItems: 'center',
+                                background: isCompleted
+                                  ? '#167c3a'
+                                  : isCurrent
+                                    ? '#164196'
+                                    : '#d9e2f0',
+                                color: 'white',
+                                fontWeight: 800,
+                                boxShadow: isCurrent ? '0 0 0 8px rgba(22,65,150,0.12)' : 'none',
+                              }}
+                            >
+                              {isCompleted ? '✓' : index + 1}
+                            </div>
+                            {index < section.options.length - 1 ? (
+                              <div
+                                style={{
+                                  width: 3,
+                                  minHeight: 84,
+                                  borderRadius: 999,
+                                  background: isCompleted ? '#167c3a' : '#d9e2f0',
+                                }}
+                              />
+                            ) : null}
                           </div>
-                          <h3 style={{ margin: '6px 0 8px 0', color: '#082D78', fontSize: 22 }}>
-                            {step.label}
-                          </h3>
-                        </div>
-                        {isCurrent ? (
+
                           <div
                             style={{
-                              alignSelf: 'start',
-                              padding: '8px 12px',
-                              borderRadius: 999,
-                              background: '#164196',
-                              color: 'white',
-                              fontWeight: 700,
+                              padding: 18,
+                              borderRadius: 20,
+                              background: isCurrent
+                                ? 'linear-gradient(135deg, #eef3fb 0%, #f7faff 100%)'
+                                : '#f8faff',
+                              border: isCurrent ? '1px solid #c8d8f2' : '1px solid #e6edf7',
+                              opacity: isUpcoming ? 0.72 : 1,
                             }}
                           >
-                            Nu actief
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                              <div>
+                                <div style={{ fontSize: 12, color: '#5b6b84', fontWeight: 800, letterSpacing: 1 }}>
+                                  {isCompleted ? 'VOLTOOID' : isCurrent ? 'ACTUELE FASE' : 'VOLGENDE STAP'}
+                                </div>
+                                <h3 style={{ margin: '6px 0 8px 0', color: '#082D78', fontSize: 22 }}>
+                                  {step.label}
+                                </h3>
+                              </div>
+                              {isCurrent ? (
+                                <div
+                                  style={{
+                                    alignSelf: 'start',
+                                    padding: '8px 12px',
+                                    borderRadius: 999,
+                                    background: '#164196',
+                                    color: 'white',
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  Nu actief
+                                </div>
+                              ) : null}
+                            </div>
+                            <p style={{ margin: 0, color: '#42526b', lineHeight: 1.6 }}>
+                              {getStepDescription(section.kind, step.value)}
+                            </p>
                           </div>
-                        ) : null}
-                      </div>
-                      <p style={{ margin: 0, color: '#42526b', lineHeight: 1.6 }}>{step.description}</p>
-                    </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                )
-              })}
+                ))}
             </div>
           </div>
 

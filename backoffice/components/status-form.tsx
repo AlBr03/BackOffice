@@ -2,39 +2,32 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-
-const STATUS_OPTIONS = [
-  { value: 'new', label: 'Nieuw' },
-  { value: 'in_progress', label: 'In behandeling' },
-  { value: 'waiting_print', label: 'Wacht op print' },
-  { value: 'completed', label: 'Afgerond' },
-]
-
-function translateStatus(status?: string | null) {
-  switch (status) {
-    case 'new':
-      return 'Nieuw'
-    case 'in_progress':
-      return 'In behandeling'
-    case 'waiting_print':
-      return 'Wacht op print'
-    case 'completed':
-      return 'Afgerond'
-    default:
-      return status ?? '-'
-  }
-}
+import {
+  ARTICLE_STATUS_OPTIONS,
+  PRINT_STATUS_OPTIONS,
+  deriveLegacyStatus,
+  getInitialPrintStatus,
+  translateArticleStatus,
+  translatePrintStatus,
+} from '@/lib/order-status'
 
 export function StatusForm({
   orderId,
-  currentStatus,
+  currentArticleStatus,
+  currentPrintStatus,
+  hasPrint,
 }: {
   orderId: string
-  currentStatus: string
+  currentArticleStatus: string | null
+  currentPrintStatus: string | null
+  hasPrint: boolean
 }) {
   const supabase = createClient()
 
-  const [status, setStatus] = useState(currentStatus)
+  const [articleStatus, setArticleStatus] = useState(currentArticleStatus ?? 'new')
+  const [printStatus, setPrintStatus] = useState(
+    hasPrint ? currentPrintStatus ?? getInitialPrintStatus(true) ?? 'new' : null
+  )
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -42,8 +35,13 @@ export function StatusForm({
     e.preventDefault()
     setMessage(null)
 
-    if (status === currentStatus) {
-      setMessage('De status is niet gewijzigd.')
+    const nextPrintStatus = hasPrint ? printStatus ?? getInitialPrintStatus(true) : null
+
+    if (
+      articleStatus === (currentArticleStatus ?? 'new') &&
+      nextPrintStatus === (hasPrint ? currentPrintStatus ?? getInitialPrintStatus(true) : null)
+    ) {
+      setMessage('De statussen zijn niet gewijzigd.')
       return
     }
 
@@ -55,7 +53,11 @@ export function StatusForm({
 
     const { error } = await supabase
       .from('orders')
-      .update({ status })
+      .update({
+        article_status: articleStatus,
+        print_status: nextPrintStatus,
+        status: deriveLegacyStatus(articleStatus, hasPrint, nextPrintStatus),
+      })
       .eq('id', orderId)
 
     if (error) {
@@ -64,15 +66,28 @@ export function StatusForm({
       return
     }
 
-    const oldLabel = translateStatus(currentStatus)
-    const newLabel = translateStatus(status)
+    const changes = []
+
+    if (articleStatus !== (currentArticleStatus ?? 'new')) {
+      changes.push(
+        `Artikelenstatus gewijzigd van ${translateArticleStatus(currentArticleStatus)} naar ${translateArticleStatus(articleStatus)}`
+      )
+    }
+
+    if (hasPrint && nextPrintStatus !== (currentPrintStatus ?? getInitialPrintStatus(true))) {
+      changes.push(
+        `Printstatus gewijzigd van ${translatePrintStatus(currentPrintStatus ?? getInitialPrintStatus(true))} naar ${translatePrintStatus(nextPrintStatus)}`
+      )
+    }
+
+    const changeDescription = changes.join(' | ')
 
     await supabase.from('order_activity_log').insert({
       order_id: orderId,
       action_type: 'status_changed',
-      description: `Status gewijzigd van ${oldLabel} naar ${newLabel}`,
-      old_status: currentStatus,
-      new_status: status,
+      description: changeDescription,
+      old_status: currentArticleStatus,
+      new_status: articleStatus,
       performed_by: user?.id ?? null,
     })
 
@@ -84,8 +99,7 @@ export function StatusForm({
         },
         body: JSON.stringify({
           type: 'status_changed',
-          oldStatus: currentStatus,
-          newStatus: status,
+          changeSummary: changeDescription,
         }),
       })
 
@@ -128,11 +142,11 @@ export function StatusForm({
             fontWeight: 600,
           }}
         >
-          Status wijzigen
+          Artikelenstatus
         </label>
 
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          {STATUS_OPTIONS.map((option) => (
+        <select value={articleStatus} onChange={(e) => setArticleStatus(e.target.value)}>
+          {ARTICLE_STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
@@ -140,8 +154,46 @@ export function StatusForm({
         </select>
       </div>
 
+      {hasPrint ? (
+        <div>
+          <label
+            style={{
+              display: 'block',
+              marginBottom: 8,
+              color: '#5b6b84',
+              fontWeight: 600,
+            }}
+          >
+            Printstatus
+          </label>
+
+          <select
+            value={printStatus ?? 'new'}
+            onChange={(e) => setPrintStatus(e.target.value)}
+          >
+            {PRINT_STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        <div
+          style={{
+            background: '#eef3fb',
+            color: '#164196',
+            padding: 14,
+            borderRadius: 12,
+            fontWeight: 600,
+          }}
+        >
+          Voor deze order is geen printstatus van toepassing.
+        </div>
+      )}
+
       <button type="submit" disabled={isSaving}>
-        {isSaving ? 'Opslaan...' : 'Status opslaan'}
+        {isSaving ? 'Opslaan...' : 'Statussen opslaan'}
       </button>
 
       {message ? (
