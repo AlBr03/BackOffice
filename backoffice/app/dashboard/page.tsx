@@ -62,18 +62,10 @@ export default async function DashboardPage({
 
   if (!profile?.role || profile.role === 'pending') {
     return (
-      <div style={{ display: 'grid', gap: 20 }}>
-        <section
-          style={{
-            background: 'white',
-            borderRadius: 18,
-            padding: 24,
-            boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-            border: '1px solid #d9e2f0',
-          }}
-        >
-          <h1 style={{ margin: 0, fontSize: 30, color: '#082D78' }}>Account in afwachting</h1>
-          <p style={{ margin: '10px 0 0 0', color: '#5b6b84', maxWidth: 700 }}>
+      <div className="ui-stack">
+        <section className="ui-card">
+          <h1 className="ui-title">Account in afwachting</h1>
+          <p className="ui-text-muted" style={{ marginTop: 10, maxWidth: 700 }}>
             Je account is aangemaakt, maar er is nog geen rol toegewezen. Een hoofdkantoor- of
             beheeraccount kan dit doen via accountbeheer. Zodra dat is gebeurd, krijg je toegang
             tot het dashboard.
@@ -148,30 +140,13 @@ export default async function DashboardPage({
   const { data: orders, error } = await query
 
   return (
-    <div style={{ display: 'grid', gap: 20 }}>
-      <section
-        style={{
-          background: 'white',
-          borderRadius: 18,
-          padding: 24,
-          boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-          border: '1px solid #d9e2f0',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 16,
-            flexWrap: 'wrap',
-          }}
-        >
+    <div className="ui-stack">
+      <section className="ui-card">
+        <div className="ui-card-header">
           <div>
-            <h1 style={{ margin: 0, fontSize: 30, color: '#082D78' }}>
-              Dashboard
-            </h1>
-            <p style={{ margin: '8px 0 0 0', color: '#5b6b84' }}>
+            <div className="ui-eyebrow">Orderoverzicht</div>
+            <h1 className="ui-title">Dashboard</h1>
+            <p className="ui-text-muted" style={{ marginTop: 8 }}>
               Welkom{profile?.full_name ? `, ${profile.full_name}` : ''} — rol:{' '}
               <strong style={{ color: '#164196' }}>
                 {translateRole(profile?.role)}
@@ -179,17 +154,11 @@ export default async function DashboardPage({
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <div className="ui-actions">
             <Link
               href="/dashboard/new"
-              style={{
-                background: '#164196',
-                color: 'white',
-                padding: '10px 14px',
-                borderRadius: 10,
-                fontWeight: 600,
-                textDecoration: 'none',
-              }}
+              className="ui-link-button"
+              style={{ background: 'var(--button-background)', color: 'white', border: 'none' }}
             >
               Nieuwe order
             </Link>
@@ -197,37 +166,18 @@ export default async function DashboardPage({
         </div>
       </section>
 
-      <section
-        style={{
-          background: 'white',
-          borderRadius: 18,
-          padding: 24,
-          boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-          border: '1px solid #d9e2f0',
-        }}
-      >
+      <section className="ui-card">
         <form
           method="get"
+          className="ui-filter-grid"
           style={{
-            display: 'grid',
             gridTemplateColumns: isOfficeLike
               ? '2fr 1fr 1fr 1fr 1fr auto'
               : '2fr 1fr 1fr 1fr auto',
-            gap: 12,
-            alignItems: 'end',
           }}
         >
           <div>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: 8,
-                color: '#5b6b84',
-                fontWeight: 600,
-              }}
-            >
-              Zoeken
-            </label>
+            <label className="ui-label">Zoeken</label>
             <input
               type="text"
               name="q"
@@ -237,16 +187,7 @@ export default async function DashboardPage({
           </div>
 
           <div>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: 8,
-                color: '#5b6b84',
-                fontWeight: 600,
-              }}
-            >
-              Artikelenstatus
-            </label>
+            <label className="ui-label">Artikelenstatus</label>
             <select name="article_status" defaultValue={selectedArticleStatus}>
               <option value="">Alle artikelstatussen</option>
               {ARTICLE_STATUS_OPTIONS.map((option) => (
@@ -258,16 +199,7 @@ export default async function DashboardPage({
           </div>
 
           <div>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: 8,
-                color: '#5b6b84',
-                fontWeight: 600,
-              }}
-              >
-              Print nodig
-            </label>
+            <label className="ui-label">Print nodig</label>
             <select name="print" defaultValue={selectedPrint}>
               <option value="">Alles</option>
               <option value="ja">Alleen print</option>
@@ -276,16 +208,7 @@ export default async function DashboardPage({
           </div>
 
           <div>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: 8,
-                color: '#5b6b84',
-                fontWeight: 600,
-              }}
-            >
-              Printstatus
-            </label>
+            <label className="ui-label">Printstatus</label>
             <select name="print_status" defaultValue={selectedPrintStatus}>
               <option value="">Alle printstatussen</option>
               {PRINT_STATUS_OPTIONS.map((option) => (
@@ -298,16 +221,7 @@ export default async function DashboardPage({
 
           {isOfficeLike ? (
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  marginBottom: 8,
-                  color: '#5b6b84',
-                  fontWeight: 600,
-                }}
-              >
-                Winkel
-              </label>
+              <label className="ui-label">Winkel</label>
               <select name="store" defaultValue={selectedStore}>
                 <option value="">Alle winkels</option>
                 {(stores ?? []).map((store) => (
@@ -319,22 +233,9 @@ export default async function DashboardPage({
             </div>
           ) : null}
 
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div className="ui-actions">
             <button type="submit">Filteren</button>
-            <Link
-              href="/dashboard"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '10px 14px',
-                borderRadius: 10,
-                background: '#eef3fb',
-                color: '#164196',
-                fontWeight: 600,
-                textDecoration: 'none',
-              }}
-            >
+            <Link href="/dashboard" className="ui-link-button">
               Wissen
             </Link>
           </div>
@@ -342,15 +243,7 @@ export default async function DashboardPage({
       </section>
 
       {error ? (
-        <section
-          style={{
-            background: '#fff5f5',
-            border: '1px solid #f3b3b8',
-            color: '#a61b25',
-            padding: 16,
-            borderRadius: 14,
-          }}
-        >
+        <section className="ui-message ui-message-error">
           {error.message}
         </section>
       ) : null}

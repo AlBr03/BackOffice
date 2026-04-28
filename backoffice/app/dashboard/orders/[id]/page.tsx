@@ -130,7 +130,12 @@ function renderWefactValue(reference?: string | null, url?: string | null) {
     <div style={{ display: 'grid', gap: 6 }}>
       <div>{trimmedReference || '-'}</div>
       {trimmedUrl ? (
-        <a href={trimmedUrl} target="_blank" rel="noreferrer" style={{ color: '#164196' }}>
+        <a
+          href={trimmedUrl}
+          target="_blank"
+          rel="noreferrer"
+          style={{ color: 'var(--intersport-blue)' }}
+        >
           Open in Wefact
         </a>
       ) : null}
@@ -147,7 +152,7 @@ function InfoField({
 }) {
   return (
     <div>
-      <div style={{ color: '#5b6b84', fontSize: 13, marginBottom: 4 }}>{label}</div>
+      <div style={{ color: 'var(--text-soft)', fontSize: 13, marginBottom: 4 }}>{label}</div>
       <div style={{ fontWeight: 600 }}>{value}</div>
     </div>
   )
@@ -244,16 +249,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   return (
     <OrderDetailLiveShell>
-      <div style={{ display: 'grid', gap: 20 }}>
-        <section
-          style={{
-            background: 'white',
-            borderRadius: 18,
-            padding: 24,
-            boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-            border: '1px solid #d9e2f0',
-          }}
-        >
+      <div className="ui-stack">
+        <section className="ui-card">
           <div
             style={{
               display: 'flex',
@@ -270,27 +267,17 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 </Link>
               </div>
 
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 800,
-                  letterSpacing: 1.1,
-                  color: '#E30613',
-                  marginBottom: 8,
-                }}
-              >
-                INTERSPORT ORDER
-              </div>
+              <div className="ui-eyebrow" style={{ marginBottom: 8 }}>Intersport order</div>
 
-              <h1 style={{ margin: 0, fontSize: 30, color: '#082D78' }}>
+              <h1 className="ui-title">
                 {order.order_number}
               </h1>
 
-              <p style={{ margin: '10px 0 12px 0', color: '#5b6b84' }}>
+              <p className="ui-text-muted" style={{ margin: '10px 0 12px 0' }}>
                 Bekeken door {profile?.full_name ?? 'gebruiker'}
               </p>
 
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <div className="ui-actions">
                 <Link
                   href={`/dashboard/orders/${order.id}/edit`}
                   style={{
@@ -298,10 +285,10 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: '10px 14px',
-                    borderRadius: 10,
-                    background: '#164196',
+                    borderRadius: 14,
+                    background: 'var(--button-background)',
                     color: 'white',
-                    fontWeight: 600,
+                    fontWeight: 700,
                     textDecoration: 'none',
                   }}
                 >
@@ -322,7 +309,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   color: articleStatusStyle.color,
                   padding: '8px 14px',
                   borderRadius: 999,
-                  fontWeight: 700,
+                  fontWeight: 800,
                   fontSize: 14,
                 }}
               >
@@ -335,7 +322,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     color: printStatusStyle.color,
                     padding: '8px 14px',
                     borderRadius: 999,
-                    fontWeight: 700,
+                    fontWeight: 800,
                     fontSize: 14,
                   }}
                 >
@@ -346,34 +333,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
           </div>
         </section>
 
-        <section
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '2fr 1fr',
-            gap: 20,
-          }}
-        >
-          <div style={{ display: 'grid', gap: 20 }}>
-            <div
-              style={{
-                background: 'white',
-                borderRadius: 18,
-                padding: 24,
-                boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-                border: '1px solid #d9e2f0',
-              }}
-            >
-              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78' }}>
+        <section className="ui-detail-layout">
+          <div className="ui-stack">
+            <div className="ui-card">
+              <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
                 Administratie
               </h2>
 
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                  gap: 16,
-                }}
-              >
+              <div className="ui-grid-two" style={{ gap: 16 }}>
                 <InfoField label="Winkel" value={order.stores?.name ?? '-'} />
                 <InfoField label="Naam klant / vereniging" value={order.club_name} />
                 <InfoField label="E-mail klant" value={order.customer_email || '-'} />
@@ -400,16 +367,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div
-              style={{
-                background: 'white',
-                borderRadius: 18,
-                padding: 24,
-                boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-                border: '1px solid #d9e2f0',
-              }}
-            >
-              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78' }}>
+            <div className="ui-card">
+              <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
                 Producten
               </h2>
 
@@ -417,15 +376,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 {productLines.map((line, index) => (
                   <div
                     key={`${line.product}-${index}`}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'minmax(0, 2fr) 120px minmax(0, 1fr)',
-                      gap: 16,
-                      padding: 14,
-                      borderRadius: 12,
-                      background: '#f8faff',
-                      border: '1px solid #e6edf7',
-                    }}
+                    className="ui-product-row"
+                    style={{ gridTemplateColumns: 'minmax(0, 2fr) 120px minmax(0, 1fr)', gap: 16 }}
                   >
                     <InfoField label="Product" value={line.product} />
                     <InfoField label="Aantal" value={line.quantity} />
@@ -435,26 +387,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div
-              style={{
-                background: 'white',
-                borderRadius: 18,
-                padding: 24,
-                boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-                border: '1px solid #d9e2f0',
-              }}
-            >
-              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78' }}>
+            <div className="ui-card">
+              <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
                 Print
               </h2>
 
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                  gap: 16,
-                }}
-              >
+              <div className="ui-grid-two" style={{ gap: 16 }}>
                 <InfoField label="Leverancier" value={order.supplier || '-'} />
                 <InfoField label="Totaal aantal" value={order.quantity} />
                 <InfoField
@@ -468,26 +406,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div
-              style={{
-                background: 'white',
-                borderRadius: 18,
-                padding: 24,
-                boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-                border: '1px solid #d9e2f0',
-              }}
-            >
-              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78' }}>
+            <div className="ui-card">
+              <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
                 Levering
               </h2>
 
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                  gap: 16,
-                }}
-              >
+              <div className="ui-grid-two" style={{ gap: 16 }}>
                 <InfoField label="Deadline" value={formatDate(order.deadline)} />
                 <InfoField
                   label="Datum uitlevering"
@@ -496,93 +420,43 @@ export default async function OrderDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div
-              style={{
-                background: 'white',
-                borderRadius: 18,
-                padding: 24,
-                boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-                border: '1px solid #d9e2f0',
-              }}
-            >
-              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78' }}>
+            <div className="ui-card">
+              <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
                 Opmerkingen
               </h2>
 
-              <div
-                style={{
-                  background: '#f8faff',
-                  border: '1px solid #e6edf7',
-                  borderRadius: 12,
-                  padding: 14,
-                  minHeight: 90,
-                  whiteSpace: 'pre-wrap',
-                }}
-              >
+              <div className="ui-card-soft" style={{ minHeight: 90, whiteSpace: 'pre-wrap' }}>
                 {order.notes?.trim() ? order.notes : 'Geen opmerkingen toegevoegd.'}
               </div>
             </div>
 
-            <div
-              style={{
-                background: 'white',
-                borderRadius: 18,
-                padding: 24,
-                boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-                border: '1px solid #d9e2f0',
-              }}
-            >
-              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78' }}>
+            <div className="ui-card">
+              <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
                 Printinstructies
               </h2>
 
-              <div
-                style={{
-                  background: '#f8faff',
-                  border: '1px solid #e6edf7',
-                  borderRadius: 12,
-                  padding: 14,
-                  minHeight: 90,
-                  whiteSpace: 'pre-wrap',
-                }}
-              >
+              <div className="ui-card-soft" style={{ minHeight: 90, whiteSpace: 'pre-wrap' }}>
                 {order.print_instructions?.trim()
                   ? order.print_instructions
                   : 'Geen printinstructies toegevoegd.'}
               </div>
             </div>
 
-            <div
-              style={{
-                background: 'white',
-                borderRadius: 18,
-                padding: 24,
-                boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-                border: '1px solid #d9e2f0',
-              }}
-            >
-              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78' }}>
+            <div className="ui-card">
+              <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
                 Activiteit
               </h2>
 
               {(activity ?? []).length === 0 ? (
-                <div style={{ color: '#5b6b84' }}>Nog geen activiteit beschikbaar.</div>
+                <div className="ui-text-muted">Nog geen activiteit beschikbaar.</div>
               ) : (
                 <div style={{ display: 'grid', gap: 12 }}>
                   {(activity ?? []).map((item) => (
-                    <div
-                      key={item.id}
-                      style={{
-                        background: '#f8faff',
-                        border: '1px solid #e6edf7',
-                        borderRadius: 12,
-                        padding: 14,
-                      }}
-                    >
+                    <div key={item.id} className="ui-card-soft">
                       <div style={{ fontWeight: 700, marginBottom: 4 }}>
                         {item.description}
                       </div>
-                      <div style={{ color: '#5b6b84', fontSize: 13 }}>
+                      <div style={{ color: 'var(--text-soft)', fontSize: 13 }}>
                         {formatDateTime(item.created_at)}
                       </div>
                     </div>
@@ -592,31 +466,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gap: 20, alignSelf: 'start' }}>
-            <div
-              style={{
-                background: 'white',
-                borderRadius: 18,
-                padding: 24,
-                boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-                border: '1px solid #d9e2f0',
-              }}
-            >
-              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78' }}>
+          <div className="ui-stack" style={{ alignSelf: 'start' }}>
+            <div className="ui-card">
+              <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
                 Track & trace link
               </h2>
 
-              <div
-                style={{
-                  display: 'grid',
-                  gap: 12,
-                  padding: 16,
-                  borderRadius: 14,
-                  background: '#f8faff',
-                  border: '1px solid #e6edf7',
-                }}
-              >
-                <div style={{ color: '#5b6b84', lineHeight: 1.6 }}>
+              <div className="ui-card-soft" style={{ display: 'grid', gap: 12 }}>
+                <div style={{ color: 'var(--text-soft)', lineHeight: 1.6 }}>
                   Gebruik deze link in klantmails om de publieke bestelstatus te tonen.
                 </div>
 
@@ -640,41 +497,22 @@ export default async function OrderDetailPage({ params }: PageProps) {
                         href={trackingUrl}
                         target="_blank"
                         rel="noreferrer"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          minHeight: 40,
-                          padding: '0 14px',
-                          borderRadius: 10,
-                          background: '#eef3fb',
-                          color: '#164196',
-                          fontWeight: 700,
-                          textDecoration: 'none',
-                        }}
+                        className="ui-link-button"
                       >
                         Openen
                       </a>
                     </div>
                   </>
                 ) : (
-                  <div style={{ color: '#8a6514', fontWeight: 600 }}>
+                  <div style={{ color: 'var(--text-soft)', fontWeight: 600 }}>
                     Stel `NEXT_PUBLIC_APP_URL` in om een volledige publieke link te tonen.
                   </div>
                 )}
               </div>
             </div>
 
-            <div
-              style={{
-                background: 'white',
-                borderRadius: 18,
-                padding: 24,
-                boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-                border: '1px solid #d9e2f0',
-              }}
-            >
-              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78' }}>
+            <div className="ui-card">
+              <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
                 Statussen
               </h2>
 
@@ -686,16 +524,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
               />
             </div>
 
-            <div
-              style={{
-                background: 'white',
-                borderRadius: 18,
-                padding: 24,
-                boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-                border: '1px solid #d9e2f0',
-              }}
-            >
-              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78' }}>
+            <div className="ui-card">
+              <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
                 Printbestanden
               </h2>
 
@@ -706,27 +536,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
               ) : null}
 
               {!order.has_print ? (
-                <div
-                  style={{
-                    background: '#eef3fb',
-                    color: '#164196',
-                    borderRadius: 12,
-                    padding: 14,
-                    fontWeight: 600,
-                  }}
-                >
+                <div className="ui-card-soft" style={{ fontWeight: 600 }}>
                   Voor deze order is geen print vereist.
                 </div>
               ) : signedFiles.length === 0 ? (
-                <div
-                  style={{
-                    background: '#fff8e8',
-                    color: '#8a6514',
-                    borderRadius: 12,
-                    padding: 14,
-                    fontWeight: 600,
-                  }}
-                >
+                <div className="ui-card-soft" style={{ fontWeight: 600 }}>
                   Er zijn nog geen printbestanden geüpload.
                 </div>
               ) : (
@@ -737,20 +551,13 @@ export default async function OrderDetailPage({ params }: PageProps) {
                       href={file.signedUrl ?? '#'}
                       target="_blank"
                       rel="noreferrer"
-                      style={{
-                        display: 'block',
-                        background: '#f8faff',
-                        border: '1px solid #e6edf7',
-                        borderRadius: 12,
-                        padding: 14,
-                        color: '#132033',
-                        textDecoration: 'none',
-                      }}
+                      className="ui-card-soft"
+                      style={{ display: 'block', color: 'var(--text)', textDecoration: 'none' }}
                     >
                       <div style={{ fontWeight: 700, marginBottom: 4 }}>
                         {file.file_name}
                       </div>
-                      <div style={{ color: '#5b6b84', fontSize: 13 }}>
+                      <div style={{ color: 'var(--text-soft)', fontSize: 13 }}>
                         {file.mime_type || 'Bestand'} · {formatDate(file.created_at)}
                       </div>
                     </a>
@@ -760,20 +567,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
             </div>
 
             {canDelete ? (
-              <div
-                style={{
-                  background: 'white',
-                  borderRadius: 18,
-                  padding: 24,
-                  boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-                  border: '1px solid #f3b3b8',
-                }}
-              >
+              <div className="ui-card" style={{ borderColor: 'rgba(176, 0, 18, 0.18)' }}>
                 <h2 style={{ marginTop: 0, marginBottom: 18, color: '#b00012' }}>
                   Gevaarzone
                 </h2>
 
-                <p style={{ marginTop: 0, color: '#5b6b84' }}>
+                <p style={{ marginTop: 0, color: 'var(--text-soft)' }}>
                   Verwijder deze order definitief uit het systeem.
                 </p>
 

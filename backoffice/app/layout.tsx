@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -20,12 +21,16 @@ export const metadata: Metadata = {
   description: "Backoffice voor winkels, hoofdkantoor en printafdeling",
 };
 
+const uiTheme = process.env.NEXT_PUBLIC_UI_THEME === "classic" ? "theme-classic" : "theme-modern";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const supabase = await createClient();
+  const cookieStore = await cookies();
+  const uiMode = cookieStore.get("ui-mode")?.value === "dark" ? "mode-dark" : "mode-light";
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -39,34 +44,12 @@ export default async function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full" style={{ margin: 0 }}>
-        <header
-          style={{
-            background: "linear-gradient(90deg, #082D78 0%, #164196 65%, #E30613 100%)",
-            color: "white",
-            padding: "18px 28px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-          }}
-        >
-          <div
-            style={{
-              maxWidth: 1400,
-              margin: "0 auto",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 16,
-            }}
-          >
+      <body className={`${uiTheme} ${uiMode} app-shell min-h-full`} style={{ margin: 0 }}>
+        <header className="app-header">
+          <div className="app-header__inner">
             <Link
               href="/dashboard"
-              style={{
-                color: "white",
-                textDecoration: "none",
-                fontWeight: 800,
-                fontSize: 30,
-                letterSpacing: 0.3,
-              }}
+              className="app-brand"
             >
               INTERSPORT Backoffice
             </Link>
@@ -75,13 +58,7 @@ export default async function RootLayout({
           </div>
         </header>
 
-        <main
-          style={{
-            padding: 24,
-            maxWidth: 1400,
-            margin: "0 auto",
-          }}
-        >
+        <main className="app-main">
           {children}
         </main>
       </body>

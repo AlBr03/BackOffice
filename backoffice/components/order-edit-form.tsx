@@ -221,60 +221,21 @@ export function OrderEditForm({
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      style={{
-        display: 'grid',
-        gap: 20,
-        maxWidth: 960,
-        background: 'white',
-        padding: 28,
-        borderRadius: 24,
-        boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-        border: '1px solid #d9e2f0',
-      }}
-    >
-      <div
-        style={{
-          display: 'grid',
-          gap: 6,
-          paddingBottom: 18,
-          borderBottom: '1px solid #e6edf7',
-        }}
-      >
-        <div
-          style={{
-            fontSize: 12,
-            fontWeight: 800,
-            letterSpacing: 1.1,
-            color: '#E30613',
-          }}
-        >
-          ORDERINVOER
-        </div>
-        <h2 style={{ margin: 0, color: '#082D78', fontSize: 34 }}>Order bewerken</h2>
-        <p style={{ margin: 0, color: '#5b6b84' }}>
+    <form onSubmit={onSubmit} className="ui-card ui-form-shell">
+      <div className="ui-form-header">
+        <div className="ui-eyebrow">Orderinvoer</div>
+        <h2 className="ui-title">Order bewerken</h2>
+        <p className="ui-text-muted">
           Werk klantgegevens en productregels per bestelling overzichtelijk bij.
         </p>
       </div>
 
-      <section
-        style={{
-          display: 'grid',
-          gap: 14,
-          padding: 20,
-          borderRadius: 18,
-          background: '#f8faff',
-          border: '1px solid #e6edf7',
-        }}
-      >
-        <h3 style={{ margin: 0, color: '#082D78', fontSize: 20 }}>Klantgegevens</h3>
+      <section className="ui-card-soft ui-form-section">
+        <h3 className="ui-section-title">Klantgegevens</h3>
 
         {!isStoreUser ? (
           <div>
-            <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
-              Winkel
-            </label>
+            <label className="ui-label">Winkel</label>
             <select
               value={selectedStoreId}
               onChange={(e) => setSelectedStoreId(e.target.value)}
@@ -290,7 +251,7 @@ export function OrderEditForm({
           </div>
         ) : null}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+        <div className="ui-grid-two">
           <input
             value={clubName}
             onChange={(e) => setClubName(e.target.value)}
@@ -305,7 +266,7 @@ export function OrderEditForm({
           />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+        <div className="ui-grid-two">
           <input
             value={acceptedBy}
             onChange={(e) => setAcceptedBy(e.target.value)}
@@ -349,16 +310,7 @@ export function OrderEditForm({
         </div>
       </section>
 
-      <section
-        style={{
-          display: 'grid',
-          gap: 14,
-          padding: 20,
-          borderRadius: 18,
-          background: '#f8faff',
-          border: '1px solid #e6edf7',
-        }}
-      >
+      <section className="ui-card-soft ui-form-section">
         <div
           style={{
             display: 'flex',
@@ -369,8 +321,8 @@ export function OrderEditForm({
           }}
         >
           <div>
-            <h3 style={{ margin: 0, color: '#082D78', fontSize: 20 }}>Producten</h3>
-            <p style={{ margin: '4px 0 0 0', color: '#5b6b84' }}>
+            <h3 className="ui-section-title">Producten</h3>
+            <p className="ui-text-muted" style={{ marginTop: 4 }}>
               Iedere regel bevat product, aantal en productcode.
             </p>
           </div>
@@ -378,6 +330,7 @@ export function OrderEditForm({
           <button
             type="button"
             onClick={addProductLine}
+            className="ui-subtle-button"
             style={{
               minWidth: 44,
               minHeight: 44,
@@ -394,18 +347,7 @@ export function OrderEditForm({
         </div>
 
         {productLines.map((line, index) => (
-          <div
-            key={index}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 2fr) 130px minmax(0, 1.2fr)',
-              gap: 12,
-              padding: 16,
-              borderRadius: 16,
-              background: 'white',
-              border: '1px solid #d9e2f0',
-            }}
-          >
+          <div key={index} className="ui-product-row">
             <input
               value={line.product}
               onChange={(e) => updateProductLine(index, 'product', e.target.value)}

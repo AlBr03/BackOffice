@@ -6,20 +6,17 @@ function statusRow(label: string, value: string | undefined, required = true) {
   return (
     <div
       key={label}
+      className="ui-card-soft"
       style={{
         display: 'grid',
         gridTemplateColumns: 'minmax(0, 1fr) auto',
         gap: 12,
-        padding: 14,
-        borderRadius: 14,
-        background: '#f8faff',
-        border: '1px solid #e6edf7',
         alignItems: 'center',
       }}
     >
       <div>
-        <div style={{ fontWeight: 700, color: '#082D78' }}>{label}</div>
-        <div style={{ color: '#5b6b84', fontSize: 14 }}>
+        <div style={{ fontWeight: 700, color: 'var(--text)' }}>{label}</div>
+        <div style={{ color: 'var(--text-soft)', fontSize: 14 }}>
           {required ? 'Verplicht voor klantmails' : 'Optioneel'}
         </div>
       </div>
@@ -37,19 +34,9 @@ export default function SettingsMailPage() {
       title="Mailinstellingen"
       description="Bekijk welke mailinstellingen al aanwezig zijn en wat nog nodig is om klantcommunicatie betrouwbaar te versturen."
     >
-      <section
-        style={{
-          background: 'white',
-          borderRadius: 18,
-          padding: 24,
-          border: '1px solid #d9e2f0',
-          boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-          display: 'grid',
-          gap: 14,
-        }}
-      >
-        <h2 style={{ margin: 0, color: '#082D78' }}>SMTP status</h2>
-        <p style={{ margin: 0, color: '#5b6b84' }}>
+      <section className="ui-card" style={{ display: 'grid', gap: 14 }}>
+        <h2 className="ui-section-title">SMTP status</h2>
+        <p className="ui-text-muted">
           Deze pagina laat alleen zien of de serverinstellingen gevuld zijn. De geheime waardes
           zelf worden hier bewust niet getoond.
         </p>

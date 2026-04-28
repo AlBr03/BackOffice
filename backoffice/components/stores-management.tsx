@@ -142,24 +142,14 @@ export function StoresManagement() {
   }
 
   return (
-    <div style={{ display: 'grid', gap: 20 }}>
-      <section
-        style={{
-          background: 'white',
-          borderRadius: 18,
-          padding: 24,
-          border: '1px solid #d9e2f0',
-          boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-          display: 'grid',
-          gap: 14,
-        }}
-      >
-        <h2 style={{ margin: 0, color: '#082D78' }}>Nieuwe winkel</h2>
-        <p style={{ margin: 0, color: '#5b6b84' }}>
+    <div className="ui-stack">
+      <section className="ui-card" style={{ display: 'grid', gap: 14 }}>
+        <h2 className="ui-section-title">Nieuwe winkel</h2>
+        <p className="ui-text-muted">
           Voeg winkels toe zodat accounts en orders aan de juiste locatie gekoppeld kunnen worden.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 12 }}>
+        <div className="ui-row-card-grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) auto' }}>
           <input
             value={newStoreName}
             onChange={(e) => setNewStoreName(e.target.value)}
@@ -170,41 +160,23 @@ export function StoresManagement() {
           </button>
         </div>
 
-        {message ? <div style={{ color: '#167c3a', fontWeight: 600 }}>{message}</div> : null}
-        {error ? <div style={{ color: '#b00012', fontWeight: 600 }}>{error}</div> : null}
+        {message ? <div className="ui-message ui-message-success">{message}</div> : null}
+        {error ? <div className="ui-message ui-message-error">{error}</div> : null}
       </section>
 
-      <section
-        style={{
-          background: 'white',
-          borderRadius: 18,
-          padding: 24,
-          border: '1px solid #d9e2f0',
-          boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-          display: 'grid',
-          gap: 16,
-        }}
-      >
-        <h2 style={{ margin: 0, color: '#082D78' }}>Bestaande winkels</h2>
+      <section className="ui-card" style={{ display: 'grid', gap: 16 }}>
+        <h2 className="ui-section-title">Bestaande winkels</h2>
 
         {stores.length === 0 ? (
-          <div style={{ color: '#5b6b84' }}>Er zijn nog geen winkels toegevoegd.</div>
+          <div className="ui-text-muted">Er zijn nog geen winkels toegevoegd.</div>
         ) : (
-          <div style={{ display: 'grid', gap: 14 }}>
+          <div className="ui-list">
             {stores.map((store) => (
-              <div
-                key={store.id}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'minmax(0, 1fr) auto auto',
-                  gap: 12,
-                  alignItems: 'center',
-                  padding: 14,
-                  borderRadius: 14,
-                  background: '#f8faff',
-                  border: '1px solid #e6edf7',
-                }}
-              >
+              <div key={store.id} className="ui-row-card">
+                <div
+                  className="ui-row-card-grid"
+                  style={{ gridTemplateColumns: 'minmax(0, 1fr) auto auto', alignItems: 'center' }}
+                >
                 <input
                   value={store.name}
                   onChange={(e) => updateStore(store.id, e.target.value)}
@@ -223,13 +195,12 @@ export function StoresManagement() {
                   type="button"
                   onClick={() => deleteStore(store)}
                   disabled={deletingId === store.id}
-                  style={{
-                    background: '#fff1f2',
-                    color: '#b00012',
-                  }}
+                  className="ui-subtle-button"
+                  style={{ color: '#b00012', background: '#fff1f2' }}
                 >
                   {deletingId === store.id ? 'Verwijderen...' : 'Verwijderen'}
                 </button>
+                </div>
               </div>
             ))}
           </div>

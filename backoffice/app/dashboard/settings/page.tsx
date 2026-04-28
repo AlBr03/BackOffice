@@ -3,6 +3,11 @@ import { SettingsShell } from '@/components/settings-shell'
 
 const cards = [
   {
+    href: '/dashboard/settings/appearance',
+    title: 'Weergave',
+    description: 'Kies tussen lichte en donkere modus voor een prettigere backoffice-ervaring.',
+  },
+  {
     href: '/dashboard/settings/accounts',
     title: 'Accounts',
     description: 'Beheer gebruikers, rollen en winkelkoppelingen voor nieuwe accounts.',
@@ -42,20 +47,12 @@ export default function SettingsPage() {
           <Link
             key={card.href}
             href={card.href}
-            style={{
-              display: 'grid',
-              gap: 10,
-              background: 'white',
-              borderRadius: 18,
-              padding: 24,
-              border: '1px solid #d9e2f0',
-              boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-              textDecoration: 'none',
-            }}
+            className="ui-card"
+            style={{ display: 'grid', gap: 10, textDecoration: 'none' }}
           >
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#082D78' }}>{card.title}</div>
-            <div style={{ color: '#5b6b84', lineHeight: 1.6 }}>{card.description}</div>
-            <div style={{ color: '#164196', fontWeight: 700 }}>Openen</div>
+            <div className="ui-section-title" style={{ fontSize: 22 }}>{card.title}</div>
+            <div className="ui-text-muted">{card.description}</div>
+            <div style={{ color: 'var(--intersport-blue)', fontWeight: 700 }}>Openen</div>
           </Link>
         ))}
       </section>

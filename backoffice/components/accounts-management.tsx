@@ -88,29 +88,20 @@ export function AccountsManagement() {
   }
 
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
+    <div className="ui-stack">
       <div>
-        <h1 style={{ margin: 0, color: '#082D78' }}>Accounts beheren</h1>
-        <p style={{ margin: '8px 0 0 0', color: '#5b6b84' }}>
+        <h2 className="ui-section-title">Accounts beheren</h2>
+        <p className="ui-text-muted" style={{ marginTop: 8 }}>
           Bekijk alle accounts en wijs rollen toe aan nieuwe gebruikers.
         </p>
       </div>
 
-      {message ? <div style={{ color: '#167c3a', fontWeight: 600 }}>{message}</div> : null}
-      {error ? <div style={{ color: '#b00012', fontWeight: 600 }}>{error}</div> : null}
+      {message ? <div className="ui-message ui-message-success">{message}</div> : null}
+      {error ? <div className="ui-message ui-message-error">{error}</div> : null}
 
-      <div style={{ display: 'grid', gap: 16 }}>
+      <div className="ui-list">
         {accounts.map((account) => (
-          <section
-            key={account.id}
-            style={{
-              background: 'white',
-              borderRadius: 18,
-              padding: 20,
-              border: '1px solid #d9e2f0',
-              boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-            }}
-          >
+          <section key={account.id} className="ui-card">
             <div style={{ display: 'grid', gap: 12 }}>
               <div>
                 <div style={{ fontWeight: 800, color: '#082D78' }}>
@@ -119,7 +110,10 @@ export function AccountsManagement() {
                 <div style={{ color: '#5b6b84' }}>{account.email}</div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr auto', gap: 12 }}>
+              <div
+                className="ui-row-card-grid"
+                style={{ gridTemplateColumns: '1.2fr 1fr 1fr auto' }}
+              >
                 <input
                   value={account.full_name ?? ''}
                   onChange={(e) => updateAccount(account.id, { full_name: e.target.value })}

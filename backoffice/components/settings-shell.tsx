@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 const NAV_ITEMS = [
   { href: '/dashboard/settings', label: 'Overzicht' },
+  { href: '/dashboard/settings/appearance', label: 'Weergave' },
   { href: '/dashboard/settings/accounts', label: 'Accounts' },
   { href: '/dashboard/settings/stores', label: 'Winkels' },
   { href: '/dashboard/settings/mail', label: 'Mail' },
@@ -20,55 +21,16 @@ export function SettingsShell({
   children: React.ReactNode
 }) {
   return (
-    <div style={{ display: 'grid', gap: 20 }}>
-      <section
-        style={{
-          background: 'white',
-          borderRadius: 18,
-          padding: 24,
-          boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-          border: '1px solid #d9e2f0',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            gap: 20,
-            flexWrap: 'wrap',
-          }}
-        >
+    <div className="ui-stack">
+      <section className="ui-card">
+        <div className="ui-card-header">
           <div style={{ display: 'grid', gap: 8 }}>
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 800,
-                letterSpacing: 1.1,
-                color: '#E30613',
-              }}
-            >
-              INSTELLINGEN
-            </div>
-            <h1 style={{ margin: 0, color: '#082D78', fontSize: 30 }}>{title}</h1>
-            <p style={{ margin: 0, color: '#5b6b84', maxWidth: 700 }}>{description}</p>
+            <div className="ui-eyebrow">Instellingen</div>
+            <h1 className="ui-title">{title}</h1>
+            <p className="ui-text-muted" style={{ maxWidth: 700 }}>{description}</p>
           </div>
 
-          <Link
-            href="/dashboard"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: 42,
-              padding: '0 14px',
-              borderRadius: 10,
-              background: '#eef3fb',
-              color: '#164196',
-              fontWeight: 700,
-              textDecoration: 'none',
-            }}
-          >
+          <Link href="/dashboard" className="ui-link-button">
             Terug naar dashboard
           </Link>
         </div>
@@ -82,17 +44,7 @@ export function SettingsShell({
           alignItems: 'start',
         }}
       >
-        <aside
-          style={{
-            background: 'white',
-            borderRadius: 18,
-            padding: 14,
-            boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-            border: '1px solid #d9e2f0',
-            display: 'grid',
-            gap: 8,
-          }}
-        >
+        <aside className="ui-card" style={{ padding: 14, display: 'grid', gap: 8 }}>
           {NAV_ITEMS.map((item) => {
             const isActive = currentPath === item.href
 
@@ -100,14 +52,13 @@ export function SettingsShell({
               <Link
                 key={item.href}
                 href={item.href}
+                className="ui-link-button ui-link-button--nav"
                 style={{
                   display: 'block',
-                  borderRadius: 12,
-                  padding: '12px 14px',
-                  textDecoration: 'none',
-                  fontWeight: 700,
-                  background: isActive ? '#164196' : '#f8faff',
+                  background: isActive ? 'var(--button-background)' : 'var(--surface-alt)',
                   color: isActive ? 'white' : '#164196',
+                  border: isActive ? 'none' : '1px solid rgba(125, 146, 182, 0.16)',
+                  boxShadow: isActive ? 'var(--button-shadow)' : 'none',
                 }}
               >
                 {item.label}

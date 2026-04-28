@@ -2,30 +2,117 @@
   --intersport-blue: #164196;
   --intersport-dark-blue: #082d78;
   --intersport-red: #e30613;
+}
+
+.theme-classic {
   --background: #f4f7fb;
   --surface: #ffffff;
   --surface-alt: #eef3fb;
   --text: #132033;
   --text-soft: #5b6b84;
   --border: #d9e2f0;
+  --focus-ring: rgba(22, 65, 150, 0.15);
+  --header-background: linear-gradient(90deg, #082d78 0%, #164196 65%, #e30613 100%);
+  --header-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --header-border: transparent;
+  --page-background:
+    radial-gradient(circle at top left, rgba(227, 6, 19, 0.06), transparent 28%),
+    linear-gradient(180deg, #f4f7fb 0%, #f4f7fb 100%);
+  --button-background: var(--intersport-blue);
+  --button-background-hover: var(--intersport-dark-blue);
+  --button-shadow: none;
+  --field-background: #ffffff;
+  --field-shadow: none;
+  --selection-background: rgba(22, 65, 150, 0.18);
+}
+
+.theme-modern {
+  --background: #f3f6fb;
+  --surface: rgba(255, 255, 255, 0.88);
+  --surface-alt: rgba(255, 255, 255, 0.72);
+  --text: #0f1d33;
+  --text-soft: #61708a;
+  --border: rgba(125, 146, 182, 0.22);
+  --focus-ring: rgba(22, 65, 150, 0.22);
+  --header-background:
+    radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.18), transparent 18%),
+    linear-gradient(135deg, #071c4d 0%, #12357c 48%, #0f5db2 82%, #e30613 135%);
+  --header-shadow: 0 16px 42px rgba(8, 28, 77, 0.22);
+  --header-border: 1px solid rgba(255, 255, 255, 0.08);
+  --page-background:
+    radial-gradient(circle at top left, rgba(227, 6, 19, 0.08), transparent 22%),
+    radial-gradient(circle at top right, rgba(18, 53, 124, 0.1), transparent 28%),
+    linear-gradient(180deg, #eff4fb 0%, #f7f9fc 100%);
+  --button-background: linear-gradient(135deg, #12357c 0%, #164196 58%, #0f5db2 100%);
+  --button-background-hover: linear-gradient(135deg, #0d2d6c 0%, #12357c 58%, #0a4e96 100%);
+  --button-shadow: 0 14px 28px rgba(18, 53, 124, 0.18);
+  --field-background: rgba(255, 255, 255, 0.92);
+  --field-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 8px 20px rgba(18, 53, 124, 0.05);
+  --selection-background: rgba(15, 93, 178, 0.22);
+}
+
+.mode-light {
+  color-scheme: light;
+}
+
+.mode-dark {
+  color-scheme: dark;
+  --background: #0a1220;
+  --surface: rgba(12, 23, 41, 0.86);
+  --surface-alt: rgba(17, 31, 55, 0.72);
+  --text: #edf3ff;
+  --text-soft: #9db0cc;
+  --border: rgba(120, 150, 194, 0.2);
+  --focus-ring: rgba(111, 176, 255, 0.28);
+  --header-background:
+    radial-gradient(circle at 14% 8%, rgba(255, 255, 255, 0.08), transparent 16%),
+    linear-gradient(135deg, #08142b 0%, #0d2346 45%, #173b70 78%, #86111b 140%);
+  --header-shadow: 0 18px 44px rgba(3, 8, 19, 0.45);
+  --header-border: 1px solid rgba(255, 255, 255, 0.06);
+  --page-background:
+    radial-gradient(circle at top left, rgba(227, 6, 19, 0.12), transparent 22%),
+    radial-gradient(circle at top right, rgba(15, 93, 178, 0.12), transparent 24%),
+    linear-gradient(180deg, #07111f 0%, #0b1424 55%, #0f1a2b 100%);
+  --button-background: linear-gradient(135deg, #2957a5 0%, #3972c6 56%, #468ae1 100%);
+  --button-background-hover: linear-gradient(135deg, #224a8e 0%, #315ea8 56%, #3e79c3 100%);
+  --button-shadow: 0 16px 28px rgba(4, 12, 28, 0.3);
+  --field-background: rgba(10, 20, 36, 0.86);
+  --field-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 10px 24px rgba(0, 0, 0, 0.18);
+  --selection-background: rgba(70, 138, 225, 0.28);
 }
 
 html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--background);
   color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  background: var(--page-background);
+  min-height: 100vh;
+  transition:
+    background 220ms ease,
+    color 220ms ease;
 }
 
 * {
   box-sizing: border-box;
 }
 
+*::selection {
+  background: var(--selection-background);
+}
+
 a {
   color: var(--intersport-blue);
   text-decoration: none;
+  transition: color 180ms ease, opacity 180ms ease;
 }
 
 a:hover {
@@ -43,32 +130,58 @@ input,
 textarea,
 select {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: 14px;
+  background: var(--field-background);
   color: var(--text);
+  box-shadow: var(--field-shadow);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    background 180ms ease;
 }
 
 input:focus,
 textarea:focus,
 select:focus {
-  outline: 2px solid rgba(22, 65, 150, 0.15);
+  outline: 2px solid var(--focus-ring);
   border-color: var(--intersport-blue);
+  transform: translateY(-1px);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 120px;
 }
 
 button {
-  padding: 10px 14px;
+  padding: 12px 16px;
   border: 0;
-  border-radius: 10px;
-  background: var(--intersport-blue);
+  border-radius: 14px;
+  background: var(--button-background);
   color: white;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: var(--button-shadow);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease,
+    opacity 180ms ease;
 }
 
 button:hover {
-  background: var(--intersport-dark-blue);
+  background: var(--button-background-hover);
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
 }
 
 table {
@@ -78,4 +191,374 @@ table {
 th,
 td {
   color: var(--text);
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--header-background);
+  color: white;
+  padding: 18px 28px;
+  box-shadow: var(--header-shadow);
+  backdrop-filter: blur(20px);
+  border-bottom: var(--header-border);
+}
+
+.app-header__inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.app-brand {
+  color: white;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: 0.02em;
+  text-shadow: 0 10px 24px rgba(5, 18, 51, 0.18);
+}
+
+.app-brand:hover {
+  text-decoration: none;
+  opacity: 0.92;
+}
+
+.app-main {
+  padding: 30px 24px 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.theme-modern .app-main {
+  position: relative;
+}
+
+.theme-modern .app-main::before {
+  content: '';
+  position: fixed;
+  inset: auto 0 0 auto;
+  width: 320px;
+  height: 320px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(15, 93, 178, 0.1), transparent 72%);
+  pointer-events: none;
+  filter: blur(8px);
+}
+
+.theme-modern section,
+.theme-modern form,
+.theme-modern table {
+  backdrop-filter: blur(14px);
+}
+
+.ui-stack {
+  display: grid;
+  gap: 20px;
+}
+
+.ui-card {
+  background: var(--surface);
+  border-radius: 24px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 38px rgba(14, 35, 73, 0.08);
+}
+
+.ui-card-soft {
+  background: var(--surface-alt);
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid rgba(125, 146, 182, 0.18);
+}
+
+.ui-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ui-eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--intersport-red);
+  text-transform: uppercase;
+}
+
+.ui-title {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.75rem, 2.2vw, 2.3rem);
+  line-height: 1.08;
+}
+
+.ui-section-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.2rem;
+}
+
+.ui-text-muted {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+
+.ui-link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(125, 146, 182, 0.2);
+  color: var(--intersport-blue);
+  text-decoration: none;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(18, 53, 124, 0.06);
+}
+
+.ui-link-button--nav {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.ui-link-button:hover {
+  text-decoration: none;
+}
+
+.ui-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ui-filter-grid {
+  display: grid;
+  gap: 12px;
+  align-items: end;
+}
+
+.ui-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-soft);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.ui-message {
+  padding: 14px 16px;
+  border-radius: 16px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.ui-message-success {
+  background: rgba(22, 124, 58, 0.09);
+  border-color: rgba(22, 124, 58, 0.16);
+  color: #167c3a;
+}
+
+.ui-message-error {
+  background: rgba(176, 0, 18, 0.08);
+  border-color: rgba(176, 0, 18, 0.14);
+  color: #b00012;
+}
+
+.ui-list {
+  display: grid;
+  gap: 16px;
+}
+
+.ui-row-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--surface-alt);
+  border: 1px solid rgba(125, 146, 182, 0.16);
+}
+
+.ui-row-card-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.ui-table-card {
+  overflow: hidden;
+}
+
+.ui-table-header {
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(238, 243, 251, 0.9));
+}
+
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ui-table thead tr {
+  background: rgba(238, 243, 251, 0.72);
+}
+
+.ui-table th {
+  text-align: left;
+  padding: 16px 14px;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ui-table td {
+  padding: 16px 14px;
+  border-top: 1px solid rgba(125, 146, 182, 0.16);
+  vertical-align: top;
+}
+
+.ui-table tbody tr {
+  transition: background 180ms ease;
+}
+
+.ui-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.44);
+}
+
+.ui-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ui-form-shell {
+  display: grid;
+  gap: 20px;
+  max-width: 960px;
+}
+
+.ui-form-section {
+  display: grid;
+  gap: 14px;
+}
+
+.ui-form-header {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(125, 146, 182, 0.16);
+}
+
+.ui-grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ui-detail-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.ui-product-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) 130px minmax(0, 1.2fr);
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(125, 146, 182, 0.16);
+}
+
+.ui-subtle-button {
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--intersport-blue);
+  border: 1px solid rgba(125, 146, 182, 0.18);
+  box-shadow: none;
+}
+
+.ui-subtle-button:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.mode-dark .ui-link-button {
+  background: rgba(10, 20, 36, 0.68);
+  color: #dbe7ff;
+  border-color: rgba(120, 150, 194, 0.16);
+}
+
+.mode-dark .ui-subtle-button {
+  background: rgba(10, 20, 36, 0.76);
+  color: #dbe7ff;
+  border-color: rgba(120, 150, 194, 0.16);
+}
+
+.mode-dark .ui-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.mode-dark .ui-table thead tr {
+  background: rgba(26, 40, 65, 0.78);
+}
+
+.mode-dark .ui-table-header {
+  background: linear-gradient(180deg, rgba(17, 31, 55, 0.74), rgba(10, 20, 36, 0.88));
+}
+
+.mode-dark .app-brand,
+.mode-dark .app-header {
+  color: #f7faff;
+}
+
+.mode-dark .ui-product-row {
+  background: rgba(10, 20, 36, 0.76);
+  border-color: rgba(120, 150, 194, 0.16);
+}
+
+@media (max-width: 900px) {
+  .app-header {
+    padding: 16px 18px;
+  }
+
+  .app-header__inner {
+    align-items: center;
+  }
+
+  .app-brand {
+    font-size: 24px;
+  }
+
+  .app-main {
+    padding: 22px 16px 32px;
+  }
+
+  .ui-grid-two,
+  .ui-product-row,
+  .ui-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-filter-grid,
+  .ui-row-card-grid {
+    grid-template-columns: 1fr !important;
+  }
 }

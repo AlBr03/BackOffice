@@ -52,45 +52,29 @@ export function DashboardLiveTable({
   }, [router])
 
   return (
-    <section
-      style={{
-        background: 'white',
-        borderRadius: 18,
-        overflow: 'hidden',
-        boxShadow: '0 6px 24px rgba(8,45,120,0.08)',
-        border: '1px solid #d9e2f0',
-      }}
-    >
-      <div
-        style={{
-          padding: '18px 20px',
-          borderBottom: '1px solid #d9e2f0',
-          background: '#eef3fb',
-        }}
-      >
-        <h2 style={{ margin: 0, color: '#082D78', fontSize: 20 }}>
-          Orderoverzicht
-        </h2>
+    <section className="ui-card ui-table-card" style={{ padding: 0 }}>
+      <div className="ui-table-header">
+        <h2 className="ui-section-title">Orderoverzicht</h2>
       </div>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table className="ui-table">
         <thead>
-          <tr style={{ background: '#f8faff' }}>
-            <th style={{ textAlign: 'left', padding: 14 }}>Order</th>
+          <tr>
+            <th>Order</th>
             {showStoreColumn !== false ? (
-              <th style={{ textAlign: 'left', padding: 14 }}>Winkel</th>
+              <th>Winkel</th>
             ) : null}
-            <th style={{ textAlign: 'left', padding: 14 }}>Club</th>
-            <th style={{ textAlign: 'left', padding: 14 }}>Product</th>
-            <th style={{ textAlign: 'left', padding: 14 }}>Aantal</th>
-            <th style={{ textAlign: 'left', padding: 14 }}>Print</th>
-            <th style={{ textAlign: 'left', padding: 14 }}>Status</th>
+            <th>Club</th>
+            <th>Product</th>
+            <th>Aantal</th>
+            <th>Print</th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody>
           {orders.length === 0 ? (
             <tr>
-              <td colSpan={showStoreColumn !== false ? 7 : 6} style={{ padding: 20, color: '#5b6b84' }}>
+              <td colSpan={showStoreColumn !== false ? 7 : 6} style={{ color: '#5b6b84' }}>
                 Geen orders gevonden.
               </td>
             </tr>
@@ -107,17 +91,17 @@ export function DashboardLiveTable({
               const extraProducts = productLines.length - 1
 
               return (
-                <tr key={order.id} style={{ borderTop: '1px solid #e6edf7' }}>
-                  <td style={{ padding: 14, fontWeight: 600 }}>
+                <tr key={order.id}>
+                  <td style={{ fontWeight: 700 }}>
                     <Link href={`/dashboard/orders/${order.id}`}>
                       {order.order_number}
                     </Link>
                   </td>
                   {showStoreColumn !== false ? (
-                    <td style={{ padding: 14 }}>{order.stores?.name ?? '-'}</td>
+                    <td>{order.stores?.name ?? '-'}</td>
                   ) : null}
-                  <td style={{ padding: 14 }}>{order.club_name}</td>
-                  <td style={{ padding: 14 }}>
+                  <td>{order.club_name}</td>
+                  <td>
                     <div style={{ fontWeight: 600 }}>{primaryProduct?.product ?? '-'}</div>
                     {extraProducts > 0 ? (
                       <div style={{ color: '#5b6b84', fontSize: 13 }}>
@@ -125,65 +109,35 @@ export function DashboardLiveTable({
                       </div>
                     ) : null}
                   </td>
-                  <td style={{ padding: 14 }}>{order.quantity}</td>
-                  <td style={{ padding: 14 }}>
+                  <td>{order.quantity}</td>
+                  <td>
                     {order.has_print ? (
-                      <span
-                        style={{
-                          background: '#ffe9eb',
-                          color: '#b00012',
-                          padding: '4px 10px',
-                          borderRadius: 999,
-                          fontSize: 13,
-                          fontWeight: 700,
-                        }}
-                      >
+                      <span className="ui-pill" style={{ background: '#ffe9eb', color: '#b00012' }}>
                         Ja
                       </span>
                     ) : (
-                      <span
-                        style={{
-                          background: '#eef3fb',
-                          color: '#164196',
-                          padding: '4px 10px',
-                          borderRadius: 999,
-                          fontSize: 13,
-                          fontWeight: 700,
-                        }}
-                      >
+                      <span className="ui-pill" style={{ background: '#eef3fb', color: '#164196' }}>
                         Nee
                       </span>
                     )}
                   </td>
-                  <td style={{ padding: 14 }}>
+                  <td>
                     <div style={{ display: 'grid', gap: 8 }}>
                       <span
+                        className="ui-pill"
                         style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          width: 'fit-content',
                           background: getArticleStatusStyle(order.article_status).background,
                           color: getArticleStatusStyle(order.article_status).color,
-                          padding: '4px 10px',
-                          borderRadius: 999,
-                          fontSize: 13,
-                          fontWeight: 700,
                         }}
                       >
                         Artikelen: {translateArticleStatus(order.article_status)}
                       </span>
                       {order.has_print ? (
                         <span
+                          className="ui-pill"
                           style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            width: 'fit-content',
                             background: getPrintStatusStyle(order.print_status).background,
                             color: getPrintStatusStyle(order.print_status).color,
-                            padding: '4px 10px',
-                            borderRadius: 999,
-                            fontSize: 13,
-                            fontWeight: 700,
                           }}
                         >
                           Print: {translatePrintStatus(order.print_status)}
