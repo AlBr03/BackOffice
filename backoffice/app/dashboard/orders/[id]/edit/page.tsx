@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { OrderEditForm } from '@/components/order-edit-form'
+import { isOfficeLikeRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -93,16 +94,17 @@ export default async function EditOrderPage({ params }: PageProps) {
       .single()
 
     error = fallbackResult.error
-    order = fallbackResult.data
 
-    if (order) {
+    if (fallbackResult.data) {
       order = {
-        ...order,
-        wefact_quote_reference: order.wefact_reference ?? null,
+        ...fallbackResult.data,
+        wefact_quote_reference: fallbackResult.data.wefact_reference ?? null,
         wefact_quote_url: null,
         wefact_invoice_reference: null,
         wefact_invoice_url: null,
       }
+    } else {
+      order = null
     }
   }
 
@@ -110,7 +112,7 @@ export default async function EditOrderPage({ params }: PageProps) {
     notFound()
   }
 
-  const isOfficeLike = profile?.role === 'office' || profile?.role === 'admin'
+  const isOfficeLike = isOfficeLikeRole(profile?.role)
 
   const { data: stores } = isOfficeLike
     ? await supabase.from('stores').select('id, name').order('name')

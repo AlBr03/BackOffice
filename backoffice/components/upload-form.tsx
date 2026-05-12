@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export function UploadForm({ orderId }: { orderId: string }) {
+  const router = useRouter()
   const supabase = createClient()
 
   const [file, setFile] = useState<File | null>(null)
@@ -59,7 +61,7 @@ export function UploadForm({ orderId }: { orderId: string }) {
 
       setMessage('Bestand succesvol geüpload.')
       setFile(null)
-      window.location.reload()
+      router.refresh()
     } catch {
       setMessage('Er ging iets mis tijdens het uploaden.')
     } finally {

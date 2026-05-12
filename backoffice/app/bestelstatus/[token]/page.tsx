@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { PublicLogoUploadForm } from '@/components/public-logo-upload-form'
+import { PublicPrintProofApprovalForm } from '@/components/public-print-proof-approval-form'
 import { parseProductDescription } from '@/lib/order-fields'
 import {
   ARTICLE_STATUS_OPTIONS,
@@ -76,55 +78,126 @@ function getStepDescription(kind: 'article' | 'print', value: string) {
   }
 }
 
+function getStoreName(stores?: { name?: string | null } | { name?: string | null }[] | null) {
+  const store = Array.isArray(stores) ? stores[0] : stores
+
+  return store?.name ?? 'Onbekend'
+}
+
+const ORDER_TRACKING_SELECT = `
+  order_number,
+  club_name,
+  article_status,
+  print_status,
+  notes,
+  created_at,
+  updated_at,
+  deadline,
+  delivery_date,
+  supplier,
+  product_description,
+  quantity,
+  has_print,
+  print_proof_status,
+  print_proof_feedback,
+  print_proof_responded_at,
+  stores (
+    name
+  ),
+  order_items (
+    product,
+    quantity,
+    product_code
+  ),
+  order_files (
+    id,
+    file_name,
+    file_path,
+    mime_type,
+    created_at
+  ),
+  order_activity_log (
+    id,
+    action_type,
+    description,
+    created_at
+  )
+`
+
+const ORDER_TRACKING_SELECT_WITHOUT_PRINT_PROOF = `
+  order_number,
+  club_name,
+  article_status,
+  print_status,
+  notes,
+  created_at,
+  updated_at,
+  deadline,
+  delivery_date,
+  supplier,
+  product_description,
+  quantity,
+  has_print,
+  stores (
+    name
+  ),
+  order_items (
+    product,
+    quantity,
+    product_code
+  ),
+  order_files (
+    id,
+    file_name,
+    file_path,
+    mime_type,
+    created_at
+  ),
+  order_activity_log (
+    id,
+    action_type,
+    description,
+    created_at
+  )
+`
+
+function withMissingPrintProofFields<T extends object>(order: T) {
+  return {
+    print_proof_status: 'pending',
+    print_proof_feedback: null,
+    print_proof_responded_at: null,
+    ...order,
+  }
+}
+
 export default async function OrderTrackingPage({ params }: PageProps) {
   const { token } = await params
   const supabase = createAdminClient()
 
-  const { data: order, error } = await supabase
+  let { data: order, error } = await supabase
     .from('orders')
-    .select(
-      `
-      order_number,
-      club_name,
-      article_status,
-      print_status,
-      notes,
-      created_at,
-      updated_at,
-      deadline,
-      delivery_date,
-      supplier,
-      product_description,
-      quantity,
-      stores (
-        name
-      ),
-      order_items (
-        product,
-        quantity,
-        product_code
-      ),
-      order_files (
-        id,
-        file_name,
-        file_path,
-        mime_type,
-        created_at
-      ),
-      order_activity_log (
-        id,
-        action_type,
-        description,
-        created_at
-      )
-    `
-    )
+    .select(ORDER_TRACKING_SELECT)
     .eq('tracking_token', token)
     .order('created_at', {
       referencedTable: 'order_activity_log',
       ascending: false,
     })
     .single()
+
+  if (error && /print_proof_/i.test(error.message)) {
+    const fallbackResult = await supabase
+      .from('orders')
+      .select(ORDER_TRACKING_SELECT_WITHOUT_PRINT_PROOF)
+      .eq('tracking_token', token)
+      .order('created_at', {
+        referencedTable: 'order_activity_log',
+        ascending: false,
+      })
+      .single()
+
+    error = fallbackResult.error
+    order = fallbackResult.data ? withMissingPrintProofFields(fallbackResult.data) : null
+  }
 
   if (error || !order) {
     notFound()
@@ -152,6 +225,9 @@ export default async function OrderTrackingPage({ params }: PageProps) {
         signedUrl: data?.signedUrl ?? null,
       }
     })
+  )
+  const hasPrintPreview = (order.order_files ?? []).some(
+    (file) => !file.file_path.includes('/customer-logos/')
   )
 
   return (
@@ -254,6 +330,35 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           </div>
         </div>
       </section>
+
+      {order.has_print ? (
+        <section
+          style={{
+            background: 'white',
+            borderRadius: 24,
+            padding: 28,
+            border: '1px solid #d9e2f0',
+            boxShadow: '0 10px 30px rgba(8,45,120,0.07)',
+          }}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: 18,
+            }}
+          >
+            <PublicLogoUploadForm token={token} />
+            {hasPrintPreview ? (
+              <PublicPrintProofApprovalForm
+                token={token}
+                initialStatus={order.print_proof_status}
+                initialFeedback={order.print_proof_feedback}
+              />
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       <section
         style={{
@@ -558,7 +663,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
               </div>
               <div>
                 <div style={{ color: '#5b6b84', fontSize: 13, marginBottom: 4 }}>Winkel</div>
-                <div style={{ fontWeight: 700 }}>{order.stores?.name ?? 'Onbekend'}</div>
+                <div style={{ fontWeight: 700 }}>{getStoreName(order.stores)}</div>
               </div>
               <div>
                 <div style={{ color: '#5b6b84', fontSize: 13, marginBottom: 4 }}>Aangemaakt</div>

@@ -7,6 +7,15 @@ type OrderNotificationItem = {
   product_code: string | null
 }
 
+type StoreRelation =
+  | {
+      name?: string | null
+    }
+  | {
+      name?: string | null
+    }[]
+  | null
+
 type OrderNotificationOrder = {
   order_number: string
   tracking_token?: string | null
@@ -17,10 +26,15 @@ type OrderNotificationOrder = {
   notes: string | null
   delivery_date: string | null
   deadline: string | null
-  stores?: {
-    name?: string | null
-  } | null
+  store_manager_email?: string | null
+  stores?: StoreRelation
   order_items?: OrderNotificationItem[] | null
+}
+
+function getStoreName(stores?: StoreRelation) {
+  const store = Array.isArray(stores) ? stores[0] : stores
+
+  return store?.name ?? 'onbekende winkel'
 }
 
 function formatDate(value?: string | null) {
@@ -58,7 +72,7 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
     return { skipped: true, reason: 'Geen klantmail aanwezig.' }
   }
 
-  const storeName = order.stores?.name ?? 'onbekende winkel'
+  const storeName = getStoreName(order.stores)
   const subject = `Bevestiging van uw order ${order.order_number}`
   const trackingUrl = getTrackingUrl(order.order_number, order.tracking_token)
   const text = [
@@ -90,6 +104,7 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
 
   return sendMail({
     to: order.customer_email,
+    replyTo: order.store_manager_email,
     subject,
     text,
   })
@@ -103,7 +118,7 @@ export async function sendOrderStatusChangedEmail(
     return { skipped: true, reason: 'Geen klantmail aanwezig.' }
   }
 
-  const storeName = order.stores?.name ?? 'onbekende winkel'
+  const storeName = getStoreName(order.stores)
   const subject = `Update over uw order ${order.order_number}`
   const trackingUrl = getTrackingUrl(order.order_number, order.tracking_token)
   const text = [
@@ -130,6 +145,7 @@ export async function sendOrderStatusChangedEmail(
 
   return sendMail({
     to: order.customer_email,
+    replyTo: order.store_manager_email,
     subject,
     text,
   })

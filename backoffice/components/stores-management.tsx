@@ -72,9 +72,11 @@ export function StoresManagement() {
       return
     }
 
-    setStores((current) => [...current, result.store].sort((a, b) => a.name.localeCompare(b.name)))
+    const createdStore = result.store
+
+    setStores((current) => [...current, createdStore].sort((a, b) => a.name.localeCompare(b.name)))
     setNewStoreName('')
-    setMessage(`Winkel ${result.store.name} is toegevoegd.`)
+    setMessage(`Winkel ${createdStore.name} is toegevoegd.`)
     setIsCreating(false)
   }
 

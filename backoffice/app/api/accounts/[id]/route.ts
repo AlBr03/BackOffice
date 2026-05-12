@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { isOfficeLikeRole, isStoreLikeRole } from '@/lib/roles'
+
+const ALLOWED_ROLES = new Set(['pending', 'store', 'store_manager', 'office', 'print', 'admin'])
 
 export async function PATCH(
   request: NextRequest,
@@ -22,7 +26,7 @@ export async function PATCH(
     .eq('id', user.id)
     .single()
 
-  if (!profile || (profile.role !== 'office' && profile.role !== 'admin')) {
+  if (!profile || !isOfficeLikeRole(profile.role)) {
     return NextResponse.json({ error: 'Geen toegang.' }, { status: 403 })
   }
 
@@ -31,9 +35,15 @@ export async function PATCH(
     | undefined
 
   const role = body?.role ?? 'pending'
-  const storeId = role === 'store' ? body?.store_id ?? null : null
 
-  const { error } = await supabase.from('profiles').upsert({
+  if (!ALLOWED_ROLES.has(role)) {
+    return NextResponse.json({ error: 'Ongeldige rol.' }, { status: 400 })
+  }
+
+  const storeId = isStoreLikeRole(role) ? body?.store_id ?? null : null
+  const admin = createAdminClient()
+
+  const { error } = await admin.from('profiles').upsert({
     id,
     full_name: body?.full_name?.trim() || null,
     role,

@@ -9,6 +9,7 @@ import {
   serializeProductLines,
 } from '@/lib/order-fields'
 import { deriveLegacyStatus, getInitialPrintStatus } from '@/lib/order-status'
+import { isStoreLikeRole } from '@/lib/roles'
 
 type StoreOption = {
   id: string
@@ -26,7 +27,7 @@ export function OrderForm({
 }) {
   const supabase = createClient()
 
-  const isStoreUser = role === 'store'
+  const isStoreUser = isStoreLikeRole(role)
 
   const [selectedStoreId, setSelectedStoreId] = useState(storeId ?? '')
   const [clubName, setClubName] = useState('')

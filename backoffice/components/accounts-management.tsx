@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { isStoreLikeRole, STORE_MANAGER_ROLE, STORE_ROLE } from '@/lib/roles'
 
 const ROLE_OPTIONS = [
   { value: 'pending', label: 'Nog niet toegewezen' },
-  { value: 'store', label: 'Winkel' },
+  { value: STORE_ROLE, label: 'Winkel' },
+  { value: STORE_MANAGER_ROLE, label: 'Hoofdverantwoordelijke winkel' },
   { value: 'office', label: 'Hoofdkantoor' },
   { value: 'print', label: 'Printafdeling' },
   { value: 'admin', label: 'Beheerder' },
@@ -71,7 +73,7 @@ export function AccountsManagement() {
       body: JSON.stringify({
         full_name: account.full_name ?? '',
         role: account.role || 'pending',
-        store_id: account.role === 'store' ? account.store_id || null : null,
+        store_id: isStoreLikeRole(account.role) ? account.store_id || null : null,
       }),
     })
 
@@ -125,7 +127,9 @@ export function AccountsManagement() {
                   onChange={(e) =>
                     updateAccount(account.id, {
                       role: e.target.value || 'pending',
-                      store_id: e.target.value === 'store' ? account.store_id ?? '' : null,
+                      store_id: isStoreLikeRole(e.target.value)
+                        ? account.store_id ?? ''
+                        : null,
                     })
                   }
                 >
@@ -139,7 +143,7 @@ export function AccountsManagement() {
                 <select
                   value={account.store_id ?? ''}
                   onChange={(e) => updateAccount(account.id, { store_id: e.target.value || null })}
-                  disabled={account.role !== 'store'}
+                  disabled={!isStoreLikeRole(account.role)}
                 >
                   <option value="">Geen winkel</option>
                   {stores.map((store) => (

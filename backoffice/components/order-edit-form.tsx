@@ -11,6 +11,7 @@ import {
   type ProductLine,
 } from '@/lib/order-fields'
 import { deriveLegacyStatus, getInitialPrintStatus } from '@/lib/order-status'
+import { isStoreLikeRole } from '@/lib/roles'
 
 type StoreOption = {
   id: string
@@ -56,7 +57,7 @@ export function OrderEditForm({
   order: OrderData
 }) {
   const supabase = createClient()
-  const isStoreUser = role === 'store'
+  const isStoreUser = isStoreLikeRole(role)
 
   const [selectedStoreId, setSelectedStoreId] = useState(order.store_id ?? '')
   const [clubName, setClubName] = useState(order.club_name ?? '')

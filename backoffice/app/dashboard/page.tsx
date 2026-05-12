@@ -4,26 +4,10 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { DashboardLiveTable } from '@/components/dashboard-live-table'
 import { ARTICLE_STATUS_OPTIONS, PRINT_STATUS_OPTIONS } from '@/lib/order-status'
+import { isOfficeLikeRole, isStoreLikeRole, translateRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-
-function translateRole(role?: string | null) {
-  switch (role) {
-    case 'pending':
-      return 'Nog niet toegewezen'
-    case 'store':
-      return 'Winkel'
-    case 'office':
-      return 'Hoofdkantoor'
-    case 'print':
-      return 'Printafdeling'
-    case 'admin':
-      return 'Beheerder'
-    default:
-      return 'Onbekend'
-  }
-}
 
 type DashboardPageProps = {
   searchParams?: Promise<{
@@ -58,7 +42,7 @@ export default async function DashboardPage({
     .eq('id', user.id)
     .single()
 
-  const isOfficeLike = profile?.role === 'office' || profile?.role === 'admin'
+  const isOfficeLike = isOfficeLikeRole(profile?.role)
 
   if (!profile?.role || profile.role === 'pending') {
     return (
@@ -108,6 +92,10 @@ export default async function DashboardPage({
 
   if (profile?.role === 'print') {
     query = query.eq('has_print', true)
+  }
+
+  if (isStoreLikeRole(profile?.role) && profile?.store_id) {
+    query = query.eq('store_id', profile.store_id)
   }
 
   if (selectedArticleStatus) {
@@ -250,7 +238,7 @@ export default async function DashboardPage({
 
       <DashboardLiveTable
         orders={orders ?? []}
-        showStoreColumn={profile?.role !== 'store'}
+        showStoreColumn={!isStoreLikeRole(profile?.role)}
       />
     </div>
   )

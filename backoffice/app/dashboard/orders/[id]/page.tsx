@@ -7,6 +7,7 @@ import { OrderDetailLiveShell } from '@/components/order-detail-live-shell'
 import { DeleteOrderButton } from '@/components/delete-order-button'
 import { CopyTrackingLinkButton } from '@/components/copy-tracking-link-button'
 import { parseProductDescription } from '@/lib/order-fields'
+import { isOfficeLikeRole } from '@/lib/roles'
 import {
   getArticleStatusStyle,
   getPrintStatusStyle,
@@ -22,6 +23,46 @@ type PageProps = {
 }
 
 const ORDER_DETAIL_SELECT = `
+  id,
+  order_number,
+  tracking_token,
+  club_name,
+  accepted_by,
+  wefact_reference,
+  wefact_quote_reference,
+  wefact_quote_url,
+  wefact_invoice_reference,
+  wefact_invoice_url,
+  logo_action,
+  supplier,
+  customer_email,
+  article_status,
+  print_status,
+  print_proof_status,
+  print_proof_feedback,
+  print_proof_responded_at,
+  product_description,
+  print_instructions,
+  quantity,
+  has_print,
+  status,
+  deadline,
+  delivery_date,
+  notes,
+  created_at,
+  updated_at,
+  order_items (
+    product,
+    quantity,
+    product_code
+  ),
+  stores (
+    id,
+    name
+  )
+`
+
+const ORDER_DETAIL_SELECT_WITHOUT_PRINT_PROOF = `
   id,
   order_number,
   tracking_token,
@@ -118,6 +159,23 @@ function translateLogoAction(value?: string | null) {
   }
 }
 
+function translatePrintProofStatus(value?: string | null) {
+  switch (value) {
+    case 'approved':
+      return 'Goedgekeurd'
+    case 'rejected':
+      return 'Afgewezen'
+    default:
+      return 'Nog niet beoordeeld'
+  }
+}
+
+function getStoreName(stores?: { name?: string | null } | { name?: string | null }[] | null) {
+  const store = Array.isArray(stores) ? stores[0] : stores
+
+  return store?.name ?? '-'
+}
+
 function renderWefactValue(reference?: string | null, url?: string | null) {
   const trimmedReference = reference?.trim()
   const trimmedUrl = url?.trim()
@@ -141,6 +199,15 @@ function renderWefactValue(reference?: string | null, url?: string | null) {
       ) : null}
     </div>
   )
+}
+
+function withMissingPrintProofFields<T extends object>(order: T) {
+  return {
+    print_proof_status: 'pending',
+    print_proof_feedback: null,
+    print_proof_responded_at: null,
+    ...order,
+  }
 }
 
 function InfoField({
@@ -174,13 +241,24 @@ export default async function OrderDetailPage({ params }: PageProps) {
     .eq('id', user.id)
     .single()
 
-  const canDelete = profile?.role === 'office' || profile?.role === 'admin'
+  const canDelete = isOfficeLikeRole(profile?.role)
 
   let { data: order, error } = await supabase
     .from('orders')
     .select(ORDER_DETAIL_SELECT)
     .eq('id', id)
     .single()
+
+  if (error && /print_proof_/i.test(error.message)) {
+    const fallbackResult = await supabase
+      .from('orders')
+      .select(ORDER_DETAIL_SELECT_WITHOUT_PRINT_PROOF)
+      .eq('id', id)
+      .single()
+
+    error = fallbackResult.error
+    order = fallbackResult.data ? withMissingPrintProofFields(fallbackResult.data) : null
+  }
 
   if (error && /wefact_(quote|invoice)_/i.test(error.message)) {
     const fallbackResult = await supabase
@@ -190,16 +268,18 @@ export default async function OrderDetailPage({ params }: PageProps) {
       .single()
 
     error = fallbackResult.error
-    order = fallbackResult.data
 
-    if (order) {
+    if (fallbackResult.data) {
       order = {
-        ...order,
-        wefact_quote_reference: order.wefact_reference ?? null,
+        ...withMissingPrintProofFields(fallbackResult.data),
+        ...fallbackResult.data,
+        wefact_quote_reference: fallbackResult.data.wefact_reference ?? null,
         wefact_quote_url: null,
         wefact_invoice_reference: null,
         wefact_invoice_url: null,
       }
+    } else {
+      order = null
     }
   }
 
@@ -341,7 +421,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
               </h2>
 
               <div className="ui-grid-two" style={{ gap: 16 }}>
-                <InfoField label="Winkel" value={order.stores?.name ?? '-'} />
+                <InfoField label="Winkel" value={getStoreName(order.stores)} />
                 <InfoField label="Naam klant / vereniging" value={order.club_name} />
                 <InfoField label="E-mail klant" value={order.customer_email || '-'} />
                 <InfoField label="Aangenomen door" value={order.accepted_by || '-'} />
@@ -403,7 +483,30 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   label="Logo's"
                   value={translateLogoAction(order.logo_action)}
                 />
+                {order.has_print ? (
+                  <>
+                    <InfoField
+                      label="Printvoorbeeld"
+                      value={translatePrintProofStatus(order.print_proof_status)}
+                    />
+                    <InfoField
+                      label="Beoordeeld op"
+                      value={formatDateTime(order.print_proof_responded_at)}
+                    />
+                  </>
+                ) : null}
               </div>
+
+              {order.has_print &&
+              order.print_proof_status === 'rejected' &&
+              order.print_proof_feedback?.trim() ? (
+                <div className="ui-card-soft" style={{ marginTop: 16, whiteSpace: 'pre-wrap' }}>
+                  <div style={{ color: 'var(--text-soft)', fontSize: 13, marginBottom: 6 }}>
+                    Feedback klant
+                  </div>
+                  <div style={{ fontWeight: 700 }}>{order.print_proof_feedback}</div>
+                </div>
+              ) : null}
             </div>
 
             <div className="ui-card">

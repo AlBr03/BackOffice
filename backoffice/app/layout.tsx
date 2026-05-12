@@ -41,7 +41,7 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="en"
+      lang="nl"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className={`${uiTheme} ${uiMode} app-shell min-h-full`} style={{ margin: 0 }}>

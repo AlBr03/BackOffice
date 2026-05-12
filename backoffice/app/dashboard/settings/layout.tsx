@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { isOfficeLikeRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -22,7 +23,7 @@ export default async function SettingsLayout({
     .eq('id', user.id)
     .single()
 
-  if (!profile || (profile.role !== 'office' && profile.role !== 'admin')) {
+  if (!profile || !isOfficeLikeRole(profile.role)) {
     redirect('/dashboard')
   }
 

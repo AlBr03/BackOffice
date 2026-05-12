@@ -26,9 +26,20 @@ type OrderRow = {
   }[] | null
   has_print: boolean
   status: string
-  stores?: {
-    name?: string | null
-  } | null
+  stores?:
+    | {
+        name?: string | null
+      }
+    | {
+        name?: string | null
+      }[]
+    | null
+}
+
+function getStoreName(stores?: OrderRow['stores']) {
+  const store = Array.isArray(stores) ? stores[0] : stores
+
+  return store?.name ?? '-'
 }
 
 export function DashboardLiveTable({
@@ -41,10 +52,7 @@ export function DashboardLiveTable({
   const router = useRouter()
 
   useEffect(() => {
-    console.log('Dashboard interval gestart')
-
     const interval = setInterval(() => {
-      console.log('Dashboard refresh uitgevoerd')
       router.refresh()
     }, 5000)
 
@@ -98,7 +106,7 @@ export function DashboardLiveTable({
                     </Link>
                   </td>
                   {showStoreColumn !== false ? (
-                    <td>{order.stores?.name ?? '-'}</td>
+                    <td>{getStoreName(order.stores)}</td>
                   ) : null}
                   <td>{order.club_name}</td>
                   <td>

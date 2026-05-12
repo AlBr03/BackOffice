@@ -4,6 +4,7 @@ type MailOptions = {
   to: string
   subject: string
   text: string
+  replyTo?: string | null
 }
 
 function parsePort() {
@@ -28,7 +29,7 @@ export function isMailConfigured() {
   )
 }
 
-export async function sendMail({ to, subject, text }: MailOptions) {
+export async function sendMail({ to, subject, text, replyTo }: MailOptions) {
   if (!isMailConfigured()) {
     return {
       skipped: true,
@@ -50,7 +51,7 @@ export async function sendMail({ to, subject, text }: MailOptions) {
   await transporter.sendMail({
     from: process.env.MAIL_FROM,
     to,
-    replyTo: process.env.MAIL_REPLY_TO || undefined,
+    replyTo: replyTo || process.env.MAIL_REPLY_TO || undefined,
     subject,
     text,
   })

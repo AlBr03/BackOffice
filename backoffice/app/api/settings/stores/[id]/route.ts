@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isOfficeLikeRole } from '@/lib/roles'
 
 async function requireOfficeLikeUser() {
   const supabase = await createClient()
@@ -20,7 +21,7 @@ async function requireOfficeLikeUser() {
     .eq('id', user.id)
     .single()
 
-  if (!profile || (profile.role !== 'office' && profile.role !== 'admin')) {
+  if (!profile || !isOfficeLikeRole(profile.role)) {
     return {
       supabase,
       error: NextResponse.json({ error: 'Geen toegang.' }, { status: 403 }),

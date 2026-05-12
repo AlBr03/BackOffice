@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   ARTICLE_STATUS_OPTIONS,
@@ -22,6 +23,7 @@ export function StatusForm({
   currentPrintStatus: string | null
   hasPrint: boolean
 }) {
+  const router = useRouter()
   const supabase = createClient()
 
   const [articleStatus, setArticleStatus] = useState(currentArticleStatus ?? 'new')
@@ -106,7 +108,7 @@ export function StatusForm({
       if (!response.ok) {
         setMessage('Status bijgewerkt, maar de klantmail kon niet worden verstuurd.')
         setIsSaving(false)
-        window.location.reload()
+        router.refresh()
         return
       }
 
@@ -115,20 +117,20 @@ export function StatusForm({
       if (result.skipped) {
         setMessage('Status bijgewerkt. Er is geen klantmail verstuurd.')
         setIsSaving(false)
-        window.location.reload()
+        router.refresh()
         return
       }
     } catch (notificationError) {
       console.error('Statusmail kon niet worden verstuurd', notificationError)
       setMessage('Status bijgewerkt, maar de klantmail kon niet worden verstuurd.')
       setIsSaving(false)
-      window.location.reload()
+      router.refresh()
       return
     }
 
     setMessage('Status succesvol bijgewerkt en klantmail verstuurd.')
     setIsSaving(false)
-    window.location.reload()
+    router.refresh()
   }
 
   return (

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { isOfficeLikeRole } from '@/lib/roles'
 
 export function HeaderProfileMenu({ role }: { role?: string | null }) {
   const supabase = createClient()
@@ -109,7 +110,7 @@ export function HeaderProfileMenu({ role }: { role?: string | null }) {
             PROFIEL
           </div>
 
-          {role === 'office' || role === 'admin' ? (
+          {isOfficeLikeRole(role) ? (
             <Link
               href="/dashboard/settings"
               onClick={() => setIsOpen(false)}
