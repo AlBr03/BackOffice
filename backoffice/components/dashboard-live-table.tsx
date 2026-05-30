@@ -72,7 +72,7 @@ export function DashboardLiveTable({
             {showStoreColumn !== false ? (
               <th>Winkel</th>
             ) : null}
-            <th>Club</th>
+            <th>Klant</th>
             <th>Product</th>
             <th>Aantal</th>
             <th>Print</th>

@@ -89,7 +89,6 @@ const ORDER_TRACKING_SELECT = `
   club_name,
   article_status,
   print_status,
-  notes,
   created_at,
   updated_at,
   deadline,
@@ -129,7 +128,6 @@ const ORDER_TRACKING_SELECT_WITHOUT_PRINT_PROOF = `
   club_name,
   article_status,
   print_status,
-  notes,
   created_at,
   updated_at,
   deadline,
@@ -214,8 +212,11 @@ export default async function OrderTrackingPage({ params }: PageProps) {
         productCode: item.product_code ?? '',
       }))
     : parseProductDescription(order.product_description, order.quantity)
+  const publicPrintFiles = (order.order_files ?? []).filter(
+    (file) => !file.file_path.includes('/customer-logos/')
+  )
   const signedFiles = await Promise.all(
-    (order.order_files ?? []).map(async (file) => {
+    publicPrintFiles.map(async (file) => {
       const { data } = await supabase.storage
         .from('print-files')
         .createSignedUrl(file.file_path, 60 * 60)
@@ -226,9 +227,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
       }
     })
   )
-  const hasPrintPreview = (order.order_files ?? []).some(
-    (file) => !file.file_path.includes('/customer-logos/')
-  )
+  const hasPrintPreview = publicPrintFiles.length > 0
 
   return (
     <div style={{ display: 'grid', gap: 24 }}>
@@ -720,30 +719,6 @@ export default async function OrderTrackingPage({ params }: PageProps) {
             </div>
           </div>
 
-          {order.notes?.trim() ? (
-            <div
-              style={{
-                background: 'white',
-                borderRadius: 24,
-                padding: 24,
-                border: '1px solid #d9e2f0',
-                boxShadow: '0 10px 30px rgba(8,45,120,0.07)',
-              }}
-            >
-              <h2 style={{ marginTop: 0, marginBottom: 14, color: '#082D78', fontSize: 24 }}>
-                Extra informatie
-              </h2>
-              <div
-                style={{
-                  whiteSpace: 'pre-wrap',
-                  lineHeight: 1.65,
-                  color: '#42526b',
-                }}
-              >
-                {order.notes}
-              </div>
-            </div>
-          ) : null}
         </div>
       </section>
 

@@ -43,6 +43,8 @@ export default async function DashboardPage({
     .single()
 
   const isOfficeLike = isOfficeLikeRole(profile?.role)
+  const isStoreLike = isStoreLikeRole(profile?.role)
+  const canCreateOrder = isOfficeLike || (isStoreLike && Boolean(profile?.store_id))
 
   if (!profile?.role || profile.role === 'pending') {
     return (
@@ -94,7 +96,7 @@ export default async function DashboardPage({
     query = query.eq('has_print', true)
   }
 
-  if (isStoreLikeRole(profile?.role) && profile?.store_id) {
+  if (isStoreLike && profile?.store_id) {
     query = query.eq('store_id', profile.store_id)
   }
 
@@ -135,24 +137,33 @@ export default async function DashboardPage({
             <div className="ui-eyebrow">Orderoverzicht</div>
             <h1 className="ui-title">Dashboard</h1>
             <p className="ui-text-muted" style={{ marginTop: 8 }}>
-              Welkom{profile?.full_name ? `, ${profile.full_name}` : ''} — rol:{' '}
+              Welkom{profile?.full_name ? `, ${profile.full_name}` : ''} - rol:{' '}
               <strong style={{ color: '#164196' }}>
                 {translateRole(profile?.role)}
               </strong>
             </p>
           </div>
 
-          <div className="ui-actions">
-            <Link
-              href="/dashboard/new"
-              className="ui-link-button"
-              style={{ background: 'var(--button-background)', color: 'white', border: 'none' }}
-            >
-              Nieuwe order
-            </Link>
-          </div>
+          {canCreateOrder ? (
+            <div className="ui-actions">
+              <Link
+                href="/dashboard/new"
+                className="ui-link-button"
+                style={{ background: 'var(--button-background)', color: 'white', border: 'none' }}
+              >
+                Nieuwe order
+              </Link>
+            </div>
+          ) : null}
         </div>
       </section>
+
+      {isStoreLike && !profile?.store_id ? (
+        <section className="ui-message ui-message-error">
+          Dit account heeft een winkelrol, maar is nog niet gekoppeld aan een winkel. Vraag
+          hoofdkantoor om dit aan te passen in accountbeheer.
+        </section>
+      ) : null}
 
       <section className="ui-card">
         <form
@@ -238,7 +249,7 @@ export default async function DashboardPage({
 
       <DashboardLiveTable
         orders={orders ?? []}
-        showStoreColumn={!isStoreLikeRole(profile?.role)}
+        showStoreColumn={!isStoreLike}
       />
     </div>
   )

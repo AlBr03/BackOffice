@@ -2,14 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import {
   ARTICLE_STATUS_OPTIONS,
   PRINT_STATUS_OPTIONS,
-  deriveLegacyStatus,
   getInitialPrintStatus,
-  translateArticleStatus,
-  translatePrintStatus,
 } from '@/lib/order-status'
 
 export function StatusForm({
@@ -17,14 +13,16 @@ export function StatusForm({
   currentArticleStatus,
   currentPrintStatus,
   hasPrint,
+  role,
 }: {
   orderId: string
   currentArticleStatus: string | null
   currentPrintStatus: string | null
   hasPrint: boolean
+  role?: string | null
 }) {
   const router = useRouter()
-  const supabase = createClient()
+  const isPrintOnly = role === 'print'
 
   const [articleStatus, setArticleStatus] = useState(currentArticleStatus ?? 'new')
   const [printStatus, setPrintStatus] = useState(
@@ -49,92 +47,46 @@ export function StatusForm({
 
     setIsSaving(true)
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const response = await fetch(`/api/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        articleStatus,
+        printStatus: nextPrintStatus,
+      }),
+    })
 
-    const { error } = await supabase
-      .from('orders')
-      .update({
-        article_status: articleStatus,
-        print_status: nextPrintStatus,
-        status: deriveLegacyStatus(articleStatus, hasPrint, nextPrintStatus),
-      })
-      .eq('id', orderId)
+    const result = (await response.json().catch(() => null)) as
+      | { error?: string; skipped?: boolean; reason?: string; mail?: { skipped?: boolean } }
+      | null
 
-    if (error) {
-      setMessage(error.message)
+    if (!response.ok) {
+      setMessage(result?.error ?? 'Status kon niet worden bijgewerkt.')
       setIsSaving(false)
       return
     }
 
-    const changes = []
-
-    if (articleStatus !== (currentArticleStatus ?? 'new')) {
-      changes.push(
-        `Artikelenstatus gewijzigd van ${translateArticleStatus(currentArticleStatus)} naar ${translateArticleStatus(articleStatus)}`
-      )
-    }
-
-    if (hasPrint && nextPrintStatus !== (currentPrintStatus ?? getInitialPrintStatus(true))) {
-      changes.push(
-        `Printstatus gewijzigd van ${translatePrintStatus(currentPrintStatus ?? getInitialPrintStatus(true))} naar ${translatePrintStatus(nextPrintStatus)}`
-      )
-    }
-
-    const changeDescription = changes.join(' | ')
-
-    await supabase.from('order_activity_log').insert({
-      order_id: orderId,
-      action_type: 'status_changed',
-      description: changeDescription,
-      old_status: currentArticleStatus,
-      new_status: articleStatus,
-      performed_by: user?.id ?? null,
-    })
-
-    try {
-      const response = await fetch(`/api/orders/${orderId}/notify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'status_changed',
-          changeSummary: changeDescription,
-        }),
-      })
-
-      if (!response.ok) {
-        setMessage('Status bijgewerkt, maar de klantmail kon niet worden verstuurd.')
-        setIsSaving(false)
-        router.refresh()
-        return
-      }
-
-      const result = (await response.json()) as { skipped?: boolean }
-
-      if (result.skipped) {
-        setMessage('Status bijgewerkt. Er is geen klantmail verstuurd.')
-        setIsSaving(false)
-        router.refresh()
-        return
-      }
-    } catch (notificationError) {
-      console.error('Statusmail kon niet worden verstuurd', notificationError)
-      setMessage('Status bijgewerkt, maar de klantmail kon niet worden verstuurd.')
+    if (result?.skipped) {
+      setMessage(result.reason ?? 'De statussen zijn niet gewijzigd.')
       setIsSaving(false)
       router.refresh()
       return
     }
 
-    setMessage('Status succesvol bijgewerkt en klantmail verstuurd.')
+    setMessage(
+      result?.mail?.skipped
+        ? 'Status bijgewerkt. Er is geen klantmail verstuurd.'
+        : 'Status succesvol bijgewerkt en klantmail verstuurd.'
+    )
     setIsSaving(false)
     router.refresh()
   }
 
   return (
     <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
+      {!isPrintOnly ? (
       <div>
         <label
           style={{
@@ -155,6 +107,7 @@ export function StatusForm({
           ))}
         </select>
       </div>
+      ) : null}
 
       {hasPrint ? (
         <div>

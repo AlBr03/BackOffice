@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 
 export function DeleteOrderButton({
   orderId,
@@ -10,7 +9,6 @@ export function DeleteOrderButton({
   orderId: string
   orderNumber: string
 }) {
-  const supabase = createClient()
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -24,10 +22,13 @@ export function DeleteOrderButton({
     setError(null)
     setIsDeleting(true)
 
-    const { error } = await supabase.from('orders').delete().eq('id', orderId)
+    const response = await fetch(`/api/orders/${orderId}`, {
+      method: 'DELETE',
+    })
 
-    if (error) {
-      setError(error.message)
+    if (!response.ok) {
+      const result = (await response.json().catch(() => null)) as { error?: string } | null
+      setError(result?.error ?? 'Order kon niet worden verwijderd.')
       setIsDeleting(false)
       return
     }

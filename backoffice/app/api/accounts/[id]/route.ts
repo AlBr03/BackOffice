@@ -41,6 +41,11 @@ export async function PATCH(
   }
 
   const storeId = isStoreLikeRole(role) ? body?.store_id ?? null : null
+
+  if (isStoreLikeRole(role) && !storeId) {
+    return NextResponse.json({ error: 'Selecteer een winkel voor deze rol.' }, { status: 400 })
+  }
+
   const admin = createAdminClient()
 
   const { error } = await admin.from('profiles').upsert({

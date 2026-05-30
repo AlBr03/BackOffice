@@ -5,7 +5,7 @@ import {
   sendOrderCreatedEmail,
   sendOrderStatusChangedEmail,
 } from '@/lib/order-notifications'
-import { STORE_MANAGER_ROLE } from '@/lib/roles'
+import { isOfficeLikeRole, isStoreLikeRole, STORE_MANAGER_ROLE } from '@/lib/roles'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -22,6 +22,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (!user) {
     return NextResponse.json({ error: 'Niet ingelogd.' }, { status: 401 })
   }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, store_id')
+    .eq('id', user.id)
+    .single()
 
   const body = (await request.json()) as
     | { type?: 'created' | 'status_changed'; changeSummary?: string }
@@ -41,6 +47,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       delivery_date,
       deadline,
       store_id,
+      has_print,
       stores (
         name
       ),
@@ -56,6 +63,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   if (error || !order) {
     return NextResponse.json({ error: 'Order niet gevonden.' }, { status: 404 })
+  }
+
+  const canNotify =
+    isOfficeLikeRole(profile?.role) ||
+    (profile?.role === 'print' && order.has_print) ||
+    (isStoreLikeRole(profile?.role) && profile?.store_id === order.store_id)
+
+  if (!canNotify) {
+    return NextResponse.json({ error: 'Geen toegang.' }, { status: 403 })
   }
 
   let storeManagerEmail: string | null = null

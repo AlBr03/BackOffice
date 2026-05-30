@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
+  if (process.env.ENABLE_PUBLIC_REGISTRATION !== 'true') {
+    return NextResponse.json(
+      { error: 'Registreren is tijdelijk uitgeschakeld. Vraag hoofdkantoor om een account.' },
+      { status: 403 }
+    )
+  }
+
   const body = (await request.json()) as
     | { fullName?: string; email?: string; password?: string }
     | undefined

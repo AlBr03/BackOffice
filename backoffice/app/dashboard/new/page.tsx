@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { OrderForm } from '@/components/order-form'
+import { isOfficeLikeRole, isStoreLikeRole } from '@/lib/roles'
 
 export default async function NewOrderPage() {
   const supabase = await createClient()
@@ -17,10 +18,21 @@ export default async function NewOrderPage() {
     .eq('id', user.id)
     .single()
 
-  const { data: stores } = await supabase
-    .from('stores')
-    .select('id, name')
-    .order('name')
+  const canCreateOrder =
+    isOfficeLikeRole(profile?.role) ||
+    (isStoreLikeRole(profile?.role) && Boolean(profile?.store_id))
+
+  if (!canCreateOrder) {
+    redirect('/dashboard')
+  }
+
+  const { data: stores } = isOfficeLikeRole(profile?.role)
+    ? await supabase.from('stores').select('id, name').order('name')
+    : {
+        data: profile?.store_id
+          ? [{ id: profile.store_id, name: 'Eigen winkel' }]
+          : [],
+      }
 
   return (
     <OrderForm

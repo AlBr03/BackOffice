@@ -93,7 +93,6 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
     trackingUrl
       ? `Volg uw bestelling op elk moment via deze persoonlijke bestelpagina:\n${trackingUrl}\n`
       : '',
-    order.notes?.trim() ? `Opmerkingen:\n${order.notes.trim()}\n` : '',
     'U ontvangt automatisch een bericht zodra de status van uw bestelling verandert.',
     '',
     'Met vriendelijke groet,',

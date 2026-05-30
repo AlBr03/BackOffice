@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { OrderEditForm } from '@/components/order-edit-form'
-import { isOfficeLikeRole } from '@/lib/roles'
+import { isOfficeLikeRole, isStoreLikeRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -113,6 +113,13 @@ export default async function EditOrderPage({ params }: PageProps) {
   }
 
   const isOfficeLike = isOfficeLikeRole(profile?.role)
+  const canEditOrder =
+    isOfficeLike ||
+    (isStoreLikeRole(profile?.role) && profile?.store_id === order.store_id)
+
+  if (!canEditOrder) {
+    notFound()
+  }
 
   const { data: stores } = isOfficeLike
     ? await supabase.from('stores').select('id, name').order('name')

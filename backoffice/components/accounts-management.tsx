@@ -32,6 +32,14 @@ export function AccountsManagement() {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
+  const [newAccount, setNewAccount] = useState({
+    full_name: '',
+    email: '',
+    password: '',
+    role: 'pending',
+    store_id: '',
+  })
 
   useEffect(() => {
     async function load() {
@@ -58,6 +66,47 @@ export function AccountsManagement() {
     setAccounts((current) =>
       current.map((account) => (account.id === id ? { ...account, ...changes } : account))
     )
+  }
+
+  function updateNewAccount(changes: Partial<typeof newAccount>) {
+    setNewAccount((current) => ({ ...current, ...changes }))
+  }
+
+  async function createAccount(e: React.FormEvent) {
+    e.preventDefault()
+    setMessage(null)
+    setError(null)
+    setIsCreating(true)
+
+    const response = await fetch('/api/accounts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...newAccount,
+        store_id: isStoreLikeRole(newAccount.role) ? newAccount.store_id || null : null,
+      }),
+    })
+
+    const result = (await response.json()) as { account?: Account; error?: string }
+
+    if (!response.ok || !result.account) {
+      setError(result.error ?? 'Account kon niet worden aangemaakt.')
+      setIsCreating(false)
+      return
+    }
+
+    setAccounts((current) => [result.account!, ...current])
+    setMessage(`Account van ${result.account.email} is aangemaakt.`)
+    setNewAccount({
+      full_name: '',
+      email: '',
+      password: '',
+      role: 'pending',
+      store_id: '',
+    })
+    setIsCreating(false)
   }
 
   async function saveAccount(account: Account) {
@@ -100,6 +149,72 @@ export function AccountsManagement() {
 
       {message ? <div className="ui-message ui-message-success">{message}</div> : null}
       {error ? <div className="ui-message ui-message-error">{error}</div> : null}
+
+      <form onSubmit={createAccount} className="ui-card" style={{ display: 'grid', gap: 12 }}>
+        <div>
+          <h3 className="ui-section-title">Nieuw account</h3>
+          <p className="ui-text-muted" style={{ marginTop: 8 }}>
+            Maak testgebruikers aan en wijs direct hun rol toe.
+          </p>
+        </div>
+
+        <div
+          className="ui-row-card-grid"
+          style={{ gridTemplateColumns: '1.2fr 1.2fr 1fr 1fr 1fr auto' }}
+        >
+          <input
+            value={newAccount.full_name}
+            onChange={(e) => updateNewAccount({ full_name: e.target.value })}
+            placeholder="Volledige naam"
+            required
+          />
+          <input
+            value={newAccount.email}
+            onChange={(e) => updateNewAccount({ email: e.target.value })}
+            placeholder="E-mailadres"
+            type="email"
+            required
+          />
+          <input
+            value={newAccount.password}
+            onChange={(e) => updateNewAccount({ password: e.target.value })}
+            placeholder="Tijdelijk wachtwoord"
+            type="password"
+            minLength={8}
+            required
+          />
+          <select
+            value={newAccount.role}
+            onChange={(e) =>
+              updateNewAccount({
+                role: e.target.value || 'pending',
+                store_id: isStoreLikeRole(e.target.value) ? newAccount.store_id : '',
+              })
+            }
+          >
+            {ROLE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={newAccount.store_id}
+            onChange={(e) => updateNewAccount({ store_id: e.target.value })}
+            disabled={!isStoreLikeRole(newAccount.role)}
+          >
+            <option value="">Geen winkel</option>
+            {stores.map((store) => (
+              <option key={store.id} value={store.id}>
+                {store.name}
+              </option>
+            ))}
+          </select>
+          <button type="submit" disabled={isCreating}>
+            {isCreating ? 'Aanmaken...' : 'Aanmaken'}
+          </button>
+        </div>
+      </form>
 
       <div className="ui-list">
         {accounts.map((account) => (

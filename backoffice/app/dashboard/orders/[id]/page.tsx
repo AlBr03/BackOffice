@@ -7,7 +7,7 @@ import { OrderDetailLiveShell } from '@/components/order-detail-live-shell'
 import { DeleteOrderButton } from '@/components/delete-order-button'
 import { CopyTrackingLinkButton } from '@/components/copy-tracking-link-button'
 import { parseProductDescription } from '@/lib/order-fields'
-import { isOfficeLikeRole } from '@/lib/roles'
+import { isOfficeLikeRole, isStoreLikeRole } from '@/lib/roles'
 import {
   getArticleStatusStyle,
   getPrintStatusStyle,
@@ -51,6 +51,7 @@ const ORDER_DETAIL_SELECT = `
   notes,
   created_at,
   updated_at,
+  store_id,
   order_items (
     product,
     quantity,
@@ -88,6 +89,7 @@ const ORDER_DETAIL_SELECT_WITHOUT_PRINT_PROOF = `
   notes,
   created_at,
   updated_at,
+  store_id,
   order_items (
     product,
     quantity,
@@ -121,6 +123,7 @@ const ORDER_DETAIL_SELECT_LEGACY = `
   notes,
   created_at,
   updated_at,
+  store_id,
   order_items (
     product,
     quantity,
@@ -287,6 +290,19 @@ export default async function OrderDetailPage({ params }: PageProps) {
     notFound()
   }
 
+  const canViewOrder =
+    isOfficeLikeRole(profile?.role) ||
+    (profile?.role === 'print' && order.has_print) ||
+    (isStoreLikeRole(profile?.role) && profile.store_id === order.store_id)
+
+  if (!canViewOrder) {
+    notFound()
+  }
+
+  const canEditOrder =
+    isOfficeLikeRole(profile?.role) ||
+    (isStoreLikeRole(profile?.role) && profile?.store_id === order.store_id)
+
   const { data: files } = await supabase
     .from('order_files')
     .select('id, file_name, file_path, mime_type, created_at')
@@ -357,24 +373,26 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 Bekeken door {profile?.full_name ?? 'gebruiker'}
               </p>
 
-              <div className="ui-actions">
-                <Link
-                  href={`/dashboard/orders/${order.id}/edit`}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '10px 14px',
-                    borderRadius: 14,
-                    background: 'var(--button-background)',
-                    color: 'white',
-                    fontWeight: 700,
-                    textDecoration: 'none',
-                  }}
-                >
-                  Order bewerken
-                </Link>
-              </div>
+              {canEditOrder ? (
+                <div className="ui-actions">
+                  <Link
+                    href={`/dashboard/orders/${order.id}/edit`}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '10px 14px',
+                      borderRadius: 14,
+                      background: 'var(--button-background)',
+                      color: 'white',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Order bewerken
+                  </Link>
+                </div>
+              ) : null}
             </div>
 
             <div
@@ -624,6 +642,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 currentArticleStatus={order.article_status}
                 currentPrintStatus={order.print_status}
                 hasPrint={order.has_print}
+                role={profile?.role}
               />
             </div>
 
@@ -671,10 +690,6 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
             {canDelete ? (
               <div className="ui-card" style={{ borderColor: 'rgba(176, 0, 18, 0.18)' }}>
-                <h2 style={{ marginTop: 0, marginBottom: 18, color: '#b00012' }}>
-                  Gevaarzone
-                </h2>
-
                 <p style={{ marginTop: 0, color: 'var(--text-soft)' }}>
                   Verwijder deze order definitief uit het systeem.
                 </p>
