@@ -79,6 +79,18 @@ export default function LoginPage() {
         <div style={{ marginTop: 18, color: '#5b6b84' }}>
           Nog geen account? Vraag hoofdkantoor om een account.
         </div>
+
+        <div
+          style={{
+            marginTop: 20,
+            color: '#98a3b3',
+            fontSize: 11,
+            lineHeight: 1.45,
+            textAlign: 'center',
+          }}
+        >
+          Ontworpen en ontwikkeld door Alexander Brinkman. Alle rechten voorbehouden.
+        </div>
       </div>
     </div>
   )

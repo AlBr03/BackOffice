@@ -7,7 +7,7 @@ import { OrderDetailLiveShell } from '@/components/order-detail-live-shell'
 import { DeleteOrderButton } from '@/components/delete-order-button'
 import { CopyTrackingLinkButton } from '@/components/copy-tracking-link-button'
 import { parseProductDescription } from '@/lib/order-fields'
-import { isOfficeLikeRole, isStoreLikeRole } from '@/lib/roles'
+import { isOfficeLikeRole, isStoreLikeRole, STORE_MANAGER_ROLE } from '@/lib/roles'
 import {
   getArticleStatusStyle,
   getPrintStatusStyle,
@@ -244,8 +244,6 @@ export default async function OrderDetailPage({ params }: PageProps) {
     .eq('id', user.id)
     .single()
 
-  const canDelete = isOfficeLikeRole(profile?.role)
-
   let { data: order, error } = await supabase
     .from('orders')
     .select(ORDER_DETAIL_SELECT)
@@ -298,6 +296,10 @@ export default async function OrderDetailPage({ params }: PageProps) {
   if (!canViewOrder) {
     notFound()
   }
+
+  const canDelete =
+    isOfficeLikeRole(profile?.role) ||
+    (profile?.role === STORE_MANAGER_ROLE && profile?.store_id === order.store_id)
 
   const canEditOrder =
     isOfficeLikeRole(profile?.role) ||

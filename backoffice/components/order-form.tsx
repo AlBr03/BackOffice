@@ -235,7 +235,7 @@ export function OrderForm({
 
         <div style={{ display: 'grid', gap: 12 }}>
           <div style={{ color: '#5b6b84', fontWeight: 700, fontSize: 14 }}>Wefact offerte</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+          <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
             <input
               value={wefactQuoteReference}
               onChange={(e) => setWefactQuoteReference(e.target.value)}
@@ -252,7 +252,7 @@ export function OrderForm({
 
         <div style={{ display: 'grid', gap: 12 }}>
           <div style={{ color: '#5b6b84', fontWeight: 700, fontSize: 14 }}>Wefact factuur</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+          <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
             <input
               value={wefactInvoiceReference}
               onChange={(e) => setWefactInvoiceReference(e.target.value)}
@@ -341,7 +341,7 @@ export function OrderForm({
       >
         <h3 style={{ margin: 0, color: '#082D78', fontSize: 20 }}>Orderdetails</h3>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+        <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
           <select value={logoAction} onChange={(e) => setLogoAction(e.target.value)}>
             <option value="">Logo&apos;s / actie</option>
             <option value="bestellen">Bestellen</option>
@@ -373,7 +373,7 @@ export function OrderForm({
           Inclusief printwerk
         </label>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
             <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
               Deadline

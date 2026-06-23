@@ -57,6 +57,167 @@ function formatItems(items?: OrderNotificationItem[] | null) {
     .join('\n')
 }
 
+function escapeHtml(value: string | number | null | undefined) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function htmlRows(rows: { label: string; value: string }[]) {
+  return rows
+    .map(
+      ({ label, value }) => `
+        <tr>
+          <td style="padding: 10px 0; color: #5b6472; font-size: 14px; border-bottom: 1px solid #e6ebf2;">${escapeHtml(label)}</td>
+          <td style="padding: 10px 0; color: #13233a; font-size: 14px; font-weight: 700; text-align: right; border-bottom: 1px solid #e6ebf2;">${escapeHtml(value)}</td>
+        </tr>
+      `
+    )
+    .join('')
+}
+
+function htmlItems(items?: OrderNotificationItem[] | null) {
+  if (!items?.length) {
+    return '<tr><td colspan="3" style="padding: 12px 0; color: #5b6472; font-size: 14px;">Geen productregels gevonden</td></tr>'
+  }
+
+  return items
+    .map(
+      (item) => `
+        <tr>
+          <td style="padding: 12px 0; color: #13233a; font-size: 14px; border-bottom: 1px solid #e6ebf2;">${escapeHtml(item.product)}</td>
+          <td style="padding: 12px 0; color: #13233a; font-size: 14px; text-align: center; border-bottom: 1px solid #e6ebf2;">${escapeHtml(item.quantity)}x</td>
+          <td style="padding: 12px 0; color: #5b6472; font-size: 14px; text-align: right; border-bottom: 1px solid #e6ebf2;">${escapeHtml(item.product_code || '-')}</td>
+        </tr>
+      `
+    )
+    .join('')
+}
+
+function htmlParagraphs(paragraphs: string[]) {
+  return paragraphs
+    .map(
+      (paragraph) =>
+        `<p style="margin: 0 0 14px; color: #2d3748; font-size: 15px; line-height: 1.6;">${escapeHtml(paragraph)}</p>`
+    )
+    .join('')
+}
+
+function emailLayout({
+  title,
+  preheader,
+  intro,
+  statusLabel,
+  statusValue,
+  order,
+  storeName,
+  trackingUrl,
+  footerNote,
+}: {
+  title: string
+  preheader: string
+  intro: string[]
+  statusLabel: string
+  statusValue: string
+  order: OrderNotificationOrder
+  storeName: string
+  trackingUrl: string | null
+  footerNote: string
+}) {
+  const orderRows = htmlRows([
+    { label: 'Ordernummer', value: order.order_number },
+    { label: 'Naam', value: order.club_name },
+    { label: 'Winkel', value: storeName },
+    { label: 'Artikelenstatus', value: translateArticleStatus(order.article_status) },
+    {
+      label: 'Printstatus',
+      value: order.print_status ? translatePrintStatus(order.print_status) : 'Niet van toepassing',
+    },
+    { label: 'Deadline', value: formatDate(order.deadline) },
+    { label: 'Uitleverdatum', value: formatDate(order.delivery_date) },
+  ])
+
+  return `<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="x-apple-disable-message-reformatting">
+    <title>${escapeHtml(title)}</title>
+  </head>
+  <body style="margin: 0; padding: 0; background: #f3f6fb; font-family: Arial, Helvetica, sans-serif;">
+    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0; color: transparent;">${escapeHtml(preheader)}</div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: #f3f6fb; padding: 28px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 640px; background: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #dce4ef;">
+            <tr>
+              <td style="background: #082d78; padding: 24px 28px;">
+                <div style="color: #ffffff; font-size: 12px; letter-spacing: 2px; font-weight: 800; text-transform: uppercase;">INTERSPORT</div>
+                <div style="color: #ffffff; font-size: 24px; line-height: 1.25; font-weight: 800; margin-top: 8px;">${escapeHtml(title)}</div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 28px;">
+                ${htmlParagraphs(intro)}
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 20px 0; background: #f7f9fc; border: 1px solid #e1e7f0; border-radius: 10px;">
+                  <tr>
+                    <td style="padding: 16px 18px;">
+                      <div style="color: #5b6472; font-size: 13px; font-weight: 700; text-transform: uppercase;">${escapeHtml(statusLabel)}</div>
+                      <div style="color: #082d78; font-size: 22px; line-height: 1.35; font-weight: 800; margin-top: 4px;">${escapeHtml(statusValue)}</div>
+                    </td>
+                  </tr>
+                </table>
+
+                <h2 style="margin: 0 0 10px; color: #13233a; font-size: 18px; line-height: 1.35;">Ordergegevens</h2>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
+                  ${orderRows}
+                </table>
+
+                <h2 style="margin: 26px 0 10px; color: #13233a; font-size: 18px; line-height: 1.35;">Bestelde producten</h2>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
+                  <tr>
+                    <th align="left" style="padding: 0 0 8px; color: #5b6472; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #dce4ef;">Product</th>
+                    <th align="center" style="padding: 0 0 8px; color: #5b6472; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #dce4ef;">Aantal</th>
+                    <th align="right" style="padding: 0 0 8px; color: #5b6472; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #dce4ef;">Productcode</th>
+                  </tr>
+                  ${htmlItems(order.order_items)}
+                </table>
+
+                ${
+                  trackingUrl
+                    ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin: 28px 0 18px;">
+                        <tr>
+                          <td style="background: #0f4ea8; border-radius: 8px;">
+                            <a href="${escapeHtml(trackingUrl)}" style="display: inline-block; padding: 13px 20px; color: #ffffff; font-size: 15px; font-weight: 800; text-decoration: none;">Bekijk bestelstatus</a>
+                          </td>
+                        </tr>
+                      </table>
+                      <p style="margin: 0 0 18px; color: #5b6472; font-size: 13px; line-height: 1.6;">Werkt de knop niet? Kopieer deze link in uw browser:<br><a href="${escapeHtml(trackingUrl)}" style="color: #0f4ea8; word-break: break-all;">${escapeHtml(trackingUrl)}</a></p>`
+                    : ''
+                }
+
+                <p style="margin: 22px 0 0; color: #2d3748; font-size: 15px; line-height: 1.6;">${escapeHtml(footerNote)}</p>
+                <p style="margin: 22px 0 0; color: #2d3748; font-size: 15px; line-height: 1.6;">Met vriendelijke groet,<br><strong>${escapeHtml(storeName)}</strong></p>
+              </td>
+            </tr>
+            <tr>
+              <td style="background: #f7f9fc; padding: 18px 28px; color: #697386; font-size: 12px; line-height: 1.6; border-top: 1px solid #e1e7f0;">
+                Deze e-mail is automatisch verzonden door INTERSPORT Veghel. Reageert u op dit bericht, dan komt uw reactie terecht bij de verantwoordelijke winkel.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`
+}
+
 function getTrackingUrl(orderNumber: string, trackingToken?: string | null) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL
 
@@ -75,6 +236,20 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
   const storeName = getStoreName(order.stores)
   const subject = `Bevestiging van uw order ${order.order_number}`
   const trackingUrl = getTrackingUrl(order.order_number, order.tracking_token)
+  const html = emailLayout({
+    title: 'Uw bestelling is ontvangen',
+    preheader: `Uw order ${order.order_number} is ontvangen door ${storeName}.`,
+    intro: [
+      'Beste klant,',
+      `Bedankt voor uw bestelling. Uw order is goed ontvangen door ${storeName}. Hieronder vindt u de belangrijkste gegevens en de link naar uw persoonlijke bestelstatus.`,
+    ],
+    statusLabel: 'Huidige status',
+    statusValue: translateArticleStatus(order.article_status),
+    order,
+    storeName,
+    trackingUrl,
+    footerNote: 'U ontvangt automatisch een bericht zodra de status van uw bestelling verandert.',
+  })
   const text = [
     `Beste klant,`,
     '',
@@ -106,6 +281,7 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
     replyTo: order.store_manager_email,
     subject,
     text,
+    html,
   })
 }
 
@@ -120,6 +296,17 @@ export async function sendOrderStatusChangedEmail(
   const storeName = getStoreName(order.stores)
   const subject = `Update over uw order ${order.order_number}`
   const trackingUrl = getTrackingUrl(order.order_number, order.tracking_token)
+  const html = emailLayout({
+    title: 'Update over uw bestelling',
+    preheader: `Er is een nieuwe update voor order ${order.order_number}.`,
+    intro: ['Beste klant,', `Er is een nieuwe update voor uw order ${order.order_number}.`, changeSummary],
+    statusLabel: 'Nieuwe status',
+    statusValue: translateArticleStatus(order.article_status),
+    order,
+    storeName,
+    trackingUrl,
+    footerNote: 'Heeft u vragen? Reageer gerust op deze e-mail en vermeld uw ordernummer.',
+  })
   const text = [
     `Beste klant,`,
     '',
@@ -147,5 +334,6 @@ export async function sendOrderStatusChangedEmail(
     replyTo: order.store_manager_email,
     subject,
     text,
+    html,
   })
 }

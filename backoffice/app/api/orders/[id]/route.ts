@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { isOfficeLikeRole } from '@/lib/roles'
+import { isOfficeLikeRole, STORE_MANAGER_ROLE } from '@/lib/roles'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -21,15 +21,29 @@ export async function DELETE(_: Request, context: RouteContext) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, store_id')
     .eq('id', user.id)
     .single()
 
-  if (!isOfficeLikeRole(profile?.role)) {
+  const admin = createAdminClient()
+  const { data: order, error: orderError } = await admin
+    .from('orders')
+    .select('store_id')
+    .eq('id', id)
+    .single()
+
+  if (orderError || !order) {
+    return NextResponse.json({ error: 'Order niet gevonden.' }, { status: 404 })
+  }
+
+  const canDelete =
+    isOfficeLikeRole(profile?.role) ||
+    (profile?.role === STORE_MANAGER_ROLE && profile.store_id === order.store_id)
+
+  if (!canDelete) {
     return NextResponse.json({ error: 'Geen toegang.' }, { status: 403 })
   }
 
-  const admin = createAdminClient()
   const { data: files } = await admin
     .from('order_files')
     .select('file_path')

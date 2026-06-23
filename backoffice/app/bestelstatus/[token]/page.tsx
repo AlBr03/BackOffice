@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PublicLogoUploadForm } from '@/components/public-logo-upload-form'
@@ -272,6 +271,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           </div>
 
           <div
+            className="ui-mobile-stack"
             style={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -332,15 +332,13 @@ export default async function OrderTrackingPage({ params }: PageProps) {
 
       {order.has_print ? (
         <section
+          className="ui-public-card"
           style={{
             background: 'white',
-            borderRadius: 24,
-            padding: 28,
-            border: '1px solid #d9e2f0',
-            boxShadow: '0 10px 30px rgba(8,45,120,0.07)',
           }}
         >
           <div
+            className="ui-mobile-grid-two"
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -360,21 +358,16 @@ export default async function OrderTrackingPage({ params }: PageProps) {
       ) : null}
 
       <section
+        className="ui-public-tracking-layout"
         style={{
           display: 'grid',
-          gridTemplateColumns: '2.1fr 1fr',
-          gap: 24,
-          alignItems: 'start',
         }}
       >
         <div style={{ display: 'grid', gap: 24 }}>
           <div
+            className="ui-public-card"
             style={{
               background: 'white',
-              borderRadius: 24,
-              padding: 28,
-              border: '1px solid #d9e2f0',
-              boxShadow: '0 10px 30px rgba(8,45,120,0.07)',
             }}
           >
             <div
@@ -451,6 +444,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
 
                       return (
                         <div
+                          className="ui-mobile-stack"
                           key={step.value}
                           style={{
                             display: 'grid',
@@ -539,12 +533,9 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           </div>
 
           <div
+            className="ui-public-card"
             style={{
               background: 'white',
-              borderRadius: 24,
-              padding: 28,
-              border: '1px solid #d9e2f0',
-              boxShadow: '0 10px 30px rgba(8,45,120,0.07)',
             }}
           >
             <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78', fontSize: 28 }}>
@@ -594,12 +585,9 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           </div>
 
           <div
+            className="ui-public-card"
             style={{
               background: 'white',
-              borderRadius: 24,
-              padding: 28,
-              border: '1px solid #d9e2f0',
-              boxShadow: '0 10px 30px rgba(8,45,120,0.07)',
             }}
           >
             <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78', fontSize: 28 }}>
@@ -643,12 +631,9 @@ export default async function OrderTrackingPage({ params }: PageProps) {
 
         <div style={{ display: 'grid', gap: 24 }}>
           <div
+            className="ui-public-card"
             style={{
               background: 'white',
-              borderRadius: 24,
-              padding: 24,
-              border: '1px solid #d9e2f0',
-              boxShadow: '0 10px 30px rgba(8,45,120,0.07)',
             }}
           >
             <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78', fontSize: 24 }}>
@@ -684,12 +669,9 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           </div>
 
           <div
+            className="ui-public-card"
             style={{
               background: 'white',
-              borderRadius: 24,
-              padding: 24,
-              border: '1px solid #d9e2f0',
-              boxShadow: '0 10px 30px rgba(8,45,120,0.07)',
             }}
           >
             <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78', fontSize: 24 }}>
@@ -743,24 +725,6 @@ export default async function OrderTrackingPage({ params }: PageProps) {
             Neem contact op met uw winkel en vermeld ordernummer {order.order_number}.
           </div>
         </div>
-
-        <Link
-          href="/login"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: 48,
-            padding: '0 18px',
-            borderRadius: 999,
-            background: '#164196',
-            color: 'white',
-            textDecoration: 'none',
-            fontWeight: 700,
-          }}
-        >
-          Naar backoffice
-        </Link>
       </section>
     </div>
   )

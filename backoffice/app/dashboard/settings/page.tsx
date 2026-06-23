@@ -37,6 +37,7 @@ export default function SettingsPage() {
       description="Beheer hier de vaste onderdelen van je backoffice, zodat accountbeheer, winkels, mail en koppelingen op een logische plek samenkomen."
     >
       <section
+        className="ui-mobile-grid-two"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
@@ -55,6 +56,33 @@ export default function SettingsPage() {
             <div style={{ color: 'var(--intersport-blue)', fontWeight: 700 }}>Openen</div>
           </Link>
         ))}
+      </section>
+
+      <section className="ui-card" style={{ display: 'grid', gap: 14 }}>
+        <div>
+          <div className="ui-eyebrow">Systeeminformatie</div>
+          <h2 className="ui-section-title" style={{ marginTop: 8 }}>
+            INTERSPORT Backoffice
+          </h2>
+        </div>
+
+        <div className="ui-card-soft" style={{ display: 'grid', gap: 10 }}>
+          <div>
+            <div style={{ color: 'var(--text-soft)', fontSize: 13, marginBottom: 4 }}>
+              Ontwerp en ontwikkeling
+            </div>
+            <div style={{ fontWeight: 800 }}>Alexander Brinkman</div>
+          </div>
+
+          <div>
+            <div style={{ color: 'var(--text-soft)', fontSize: 13, marginBottom: 4 }}>
+              Systeem
+            </div>
+            <div style={{ fontWeight: 700 }}>
+              Backoffice voor orderbeheer, klantcommunicatie en track & trace.
+            </div>
+          </div>
+        </div>
       </section>
     </SettingsShell>
   )

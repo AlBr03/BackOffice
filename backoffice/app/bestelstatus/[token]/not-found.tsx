@@ -1,5 +1,3 @@
-import Link from 'next/link'
-
 export default function TrackingNotFound() {
   return (
     <div
@@ -10,15 +8,12 @@ export default function TrackingNotFound() {
       }}
     >
       <section
+        className="ui-public-card"
         style={{
           width: '100%',
           maxWidth: 760,
-          padding: 36,
-          borderRadius: 30,
           background:
             'radial-gradient(circle at top right, rgba(227,6,19,0.08), transparent 28%), linear-gradient(180deg, #ffffff 0%, #f8faff 100%)',
-          border: '1px solid #d9e2f0',
-          boxShadow: '0 18px 40px rgba(8,45,120,0.08)',
           textAlign: 'center',
         }}
       >
@@ -50,33 +45,6 @@ export default function TrackingNotFound() {
           De link is ongeldig, verlopen of niet volledig gekopieerd. Controleer de link uit de mail
           of neem contact op met uw winkel.
         </p>
-
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 12,
-            flexWrap: 'wrap',
-          }}
-        >
-          <Link
-            href="/login"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: 48,
-              padding: '0 18px',
-              borderRadius: 999,
-              background: '#164196',
-              color: 'white',
-              textDecoration: 'none',
-              fontWeight: 700,
-            }}
-          >
-            Naar backoffice
-          </Link>
-        </div>
       </section>
     </div>
   )

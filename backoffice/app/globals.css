@@ -412,6 +412,32 @@ td {
   border-collapse: collapse;
 }
 
+.ui-mobile-stack,
+.ui-mobile-grid-two,
+.ui-mobile-grid-wide {
+  min-width: 0;
+}
+
+.ui-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ui-public-tracking-layout {
+  display: grid;
+  grid-template-columns: 2.1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.ui-public-card {
+  background: white;
+  border-radius: 24px;
+  padding: 28px;
+  border: 1px solid #d9e2f0;
+  box-shadow: 0 10px 30px rgba(8, 45, 120, 0.07);
+}
+
 .ui-table thead tr {
   background: rgba(238, 243, 251, 0.72);
 }
@@ -544,21 +570,107 @@ td {
   }
 
   .app-brand {
-    font-size: 24px;
+    font-size: 22px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
   }
 
   .app-main {
     padding: 22px 16px 32px;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .ui-card {
+    border-radius: 18px;
+    padding: 18px;
+  }
+
+  .ui-card-soft,
+  .ui-public-card {
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .ui-title {
+    font-size: 1.75rem;
+    line-height: 1.15;
+  }
+
+  .ui-actions {
+    width: 100%;
+  }
+
+  .ui-actions > * {
+    flex: 1 1 160px;
   }
 
   .ui-grid-two,
   .ui-product-row,
-  .ui-detail-layout {
-    grid-template-columns: 1fr;
+  .ui-detail-layout,
+  .ui-mobile-stack,
+  .ui-mobile-grid-two,
+  .ui-mobile-grid-wide,
+  .ui-public-tracking-layout {
+    grid-template-columns: 1fr !important;
   }
 
   .ui-filter-grid,
   .ui-row-card-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  .ui-table-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ui-table {
+    min-width: 760px;
+  }
+
+  .ui-link-button,
+  button {
+    min-height: 46px;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-header {
+    padding: 14px 12px;
+  }
+
+  .app-header__inner {
+    gap: 10px;
+  }
+
+  .app-brand {
+    font-size: 18px;
+  }
+
+  .app-main {
+    padding: 16px 10px 28px;
+  }
+
+  .ui-card,
+  .ui-public-card {
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .ui-card-header {
+    gap: 12px;
+  }
+
+  .ui-link-button,
+  button {
+    width: 100%;
+  }
+
+  input,
+  textarea,
+  select {
+    border-radius: 12px;
+    padding: 11px 12px;
   }
 }

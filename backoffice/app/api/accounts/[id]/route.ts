@@ -61,3 +61,51 @@ export async function PATCH(
 
   return NextResponse.json({ ok: true })
 }
+
+export async function DELETE(
+  _: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Niet ingelogd.' }, { status: 401 })
+  }
+
+  if (user.id === id) {
+    return NextResponse.json(
+      { error: 'Je kunt je eigen account niet verwijderen.' },
+      { status: 400 }
+    )
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || !isOfficeLikeRole(profile.role)) {
+    return NextResponse.json({ error: 'Geen toegang.' }, { status: 403 })
+  }
+
+  const admin = createAdminClient()
+  const { error: authError } = await admin.auth.admin.deleteUser(id)
+
+  if (authError) {
+    return NextResponse.json({ error: authError.message }, { status: 400 })
+  }
+
+  const { error: profileError } = await admin.from('profiles').delete().eq('id', id)
+
+  if (profileError) {
+    return NextResponse.json({ error: profileError.message }, { status: 400 })
+  }
+
+  return NextResponse.json({ ok: true })
+}

@@ -32,6 +32,7 @@ export function AccountsManagement() {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [newAccount, setNewAccount] = useState({
     full_name: '',
@@ -138,6 +139,34 @@ export function AccountsManagement() {
     setSavingId(null)
   }
 
+  async function deleteAccount(account: Account) {
+    const confirmed = window.confirm(
+      `Weet je zeker dat je het account van ${account.email} wilt verwijderen?\n\nDit kan niet ongedaan worden gemaakt.`
+    )
+
+    if (!confirmed) return
+
+    setMessage(null)
+    setError(null)
+    setDeletingId(account.id)
+
+    const response = await fetch(`/api/accounts/${account.id}`, {
+      method: 'DELETE',
+    })
+
+    const result = (await response.json().catch(() => null)) as { error?: string } | null
+
+    if (!response.ok) {
+      setError(result?.error ?? 'Account kon niet worden verwijderd.')
+      setDeletingId(null)
+      return
+    }
+
+    setAccounts((current) => current.filter((item) => item.id !== account.id))
+    setMessage(`Account van ${account.email} is verwijderd.`)
+    setDeletingId(null)
+  }
+
   return (
     <div className="ui-stack">
       <div>
@@ -229,7 +258,7 @@ export function AccountsManagement() {
 
               <div
                 className="ui-row-card-grid"
-                style={{ gridTemplateColumns: '1.2fr 1fr 1fr auto' }}
+                style={{ gridTemplateColumns: '1.2fr 1fr 1fr auto auto' }}
               >
                 <input
                   value={account.full_name ?? ''}
@@ -271,9 +300,19 @@ export function AccountsManagement() {
                 <button
                   type="button"
                   onClick={() => saveAccount(account)}
-                  disabled={savingId === account.id}
+                  disabled={savingId === account.id || deletingId === account.id}
                 >
                   {savingId === account.id ? 'Opslaan...' : 'Opslaan'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => deleteAccount(account)}
+                  disabled={deletingId === account.id || savingId === account.id}
+                  className="ui-subtle-button"
+                  style={{ color: '#b00012', background: '#fff1f2' }}
+                >
+                  {deletingId === account.id ? 'Verwijderen...' : 'Verwijderen'}
                 </button>
               </div>
             </div>

@@ -37,6 +37,7 @@ export function SettingsShell({
       </section>
 
       <div
+        className="ui-mobile-stack"
         style={{
           display: 'grid',
           gridTemplateColumns: '260px minmax(0, 1fr)',

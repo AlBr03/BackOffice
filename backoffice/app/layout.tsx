@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { AppBrand } from "@/components/app-brand";
 import { HeaderProfileMenu } from "@/components/header-profile-menu";
 import "./globals.css";
 
@@ -47,12 +47,7 @@ export default async function RootLayout({
       <body className={`${uiTheme} ${uiMode} app-shell min-h-full`} style={{ margin: 0 }}>
         <header className="app-header">
           <div className="app-header__inner">
-            <Link
-              href="/dashboard"
-              className="app-brand"
-            >
-              INTERSPORT Backoffice
-            </Link>
+            <AppBrand />
 
             <HeaderProfileMenu role={profile?.role ?? null} />
           </div>
