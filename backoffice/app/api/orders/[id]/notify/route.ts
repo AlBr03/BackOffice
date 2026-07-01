@@ -2,10 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
+  sendOrderCompletedEmail,
+  sendOrderManagerOrderCreatedEmail,
+  sendOrderReadyForPickupEmail,
+  sendPrintOrderCreatedEmail,
   sendOrderCreatedEmail,
   sendOrderStatusChangedEmail,
+  shouldSendOrderCompletedEmail,
+  shouldSendOrderReadyForPickupEmail,
 } from '@/lib/order-notifications'
-import { isOfficeLikeRole, isStoreLikeRole, STORE_MANAGER_ROLE } from '@/lib/roles'
+import { getPublicAppUrl } from '@/lib/public-url'
+import {
+  isOfficeLikeRole,
+  isStoreLikeRole,
+  ORDER_MANAGER_ROLE,
+  PRINT_ROLE,
+  STORE_MANAGER_ROLE,
+} from '@/lib/roles'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -42,7 +55,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       club_name,
       customer_email,
       article_status,
+      article_order_responsibility,
       print_status,
+      print_instructions,
       notes,
       delivery_date,
       deadline,
@@ -105,13 +120,85 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const notificationOrder = {
     ...order,
     store_manager_email: storeManagerEmail,
+    order_detail_url: getPublicAppUrl()
+      ? `${getPublicAppUrl()}/dashboard/orders/${id}`
+      : null,
   }
 
   if (body?.type === 'status_changed' && body.changeSummary) {
-    const result = await sendOrderStatusChangedEmail(notificationOrder, body.changeSummary)
+    const result = shouldSendOrderCompletedEmail(notificationOrder)
+      ? await sendOrderCompletedEmail(notificationOrder)
+      : shouldSendOrderReadyForPickupEmail(notificationOrder)
+        ? await sendOrderReadyForPickupEmail(notificationOrder)
+        : await sendOrderStatusChangedEmail(notificationOrder, body.changeSummary)
     return NextResponse.json({ ok: true, ...result })
   }
 
-  const result = await sendOrderCreatedEmail(notificationOrder)
-  return NextResponse.json({ ok: true, ...result })
+  const customerResult = await sendOrderCreatedEmail(notificationOrder)
+  let orderManagerResults:
+    | {
+        total: number
+        sent: number
+        failed: number
+      }
+    | undefined
+  let printResults:
+    | {
+        total: number
+        sent: number
+        failed: number
+      }
+    | undefined
+
+  async function sendRoleNotification(
+    role: string,
+    sender: (email: string) => Promise<unknown>
+  ) {
+    const admin = createAdminClient()
+    const { data: profiles, error: profilesError } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('role', role)
+
+    if (profilesError) {
+      console.error(`Profielen voor rol ${role} konden niet worden opgehaald`, profilesError)
+      return { total: 0, sent: 0, failed: 1 }
+    }
+
+    const emails = (
+      await Promise.all(
+        (profiles ?? []).map(async (profile) => {
+          const { data } = await admin.auth.admin.getUserById(profile.id)
+          return data.user?.email ?? null
+        })
+      )
+    ).filter((email): email is string => Boolean(email))
+
+    const results = await Promise.allSettled(emails.map(sender))
+
+    return {
+      total: emails.length,
+      sent: results.filter((result) => result.status === 'fulfilled').length,
+      failed: results.filter((result) => result.status === 'rejected').length,
+    }
+  }
+
+  if (order.article_order_responsibility === ORDER_MANAGER_ROLE) {
+    orderManagerResults = await sendRoleNotification(ORDER_MANAGER_ROLE, (email) =>
+      sendOrderManagerOrderCreatedEmail(email, notificationOrder)
+    )
+  }
+
+  if (order.has_print) {
+    printResults = await sendRoleNotification(PRINT_ROLE, (email) =>
+      sendPrintOrderCreatedEmail(email, notificationOrder)
+    )
+  }
+
+  return NextResponse.json({
+    ok: true,
+    customer: customerResult,
+    orderManager: orderManagerResults,
+    print: printResults,
+  })
 }

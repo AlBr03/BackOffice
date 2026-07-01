@@ -7,6 +7,10 @@ import { OrderDetailLiveShell } from '@/components/order-detail-live-shell'
 import { DeleteOrderButton } from '@/components/delete-order-button'
 import { CopyTrackingLinkButton } from '@/components/copy-tracking-link-button'
 import { parseProductDescription } from '@/lib/order-fields'
+import {
+  getArticleOrderResponsibility,
+  getArticleOrderResponsibilityStyle,
+} from '@/lib/article-order-responsibility'
 import { getPublicOrderTrackingUrl } from '@/lib/public-url'
 import { isOfficeLikeRole, isStoreLikeRole, STORE_MANAGER_ROLE } from '@/lib/roles'
 import {
@@ -35,6 +39,7 @@ const ORDER_DETAIL_SELECT = `
   wefact_invoice_reference,
   wefact_invoice_url,
   logo_action,
+  article_order_responsibility,
   supplier,
   customer_email,
   article_status,
@@ -76,6 +81,7 @@ const ORDER_DETAIL_SELECT_WITHOUT_PRINT_PROOF = `
   wefact_invoice_reference,
   wefact_invoice_url,
   logo_action,
+  article_order_responsibility,
   supplier,
   customer_email,
   article_status,
@@ -110,6 +116,7 @@ const ORDER_DETAIL_SELECT_LEGACY = `
   accepted_by,
   wefact_reference,
   logo_action,
+  article_order_responsibility,
   supplier,
   customer_email,
   article_status,
@@ -332,6 +339,10 @@ export default async function OrderDetailPage({ params }: PageProps) {
     .order('created_at', { ascending: false })
 
   const articleStatusStyle = getArticleStatusStyle(order.article_status)
+  const articleResponsibility = getArticleOrderResponsibility(order.article_order_responsibility)
+  const articleResponsibilityStyle = getArticleOrderResponsibilityStyle(
+    order.article_order_responsibility
+  )
   const printStatusStyle = getPrintStatusStyle(order.print_status)
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const productLines = order.order_items?.length
@@ -492,6 +503,25 @@ export default async function OrderDetailPage({ params }: PageProps) {
               <div className="ui-grid-two" style={{ gap: 16 }}>
                 <InfoField label="Leverancier" value={order.supplier || '-'} />
                 <InfoField label="Totaal aantal" value={order.quantity} />
+                <InfoField
+                  label="Artikelen bestellen door"
+                  value={
+                    <div style={{ display: 'grid', gap: 6 }}>
+                      <span
+                        className="ui-pill"
+                        style={{
+                          background: articleResponsibilityStyle.background,
+                          color: articleResponsibilityStyle.color,
+                        }}
+                      >
+                        {articleResponsibility.label}
+                      </span>
+                      <span style={{ color: 'var(--text-soft)', fontSize: 13, fontWeight: 500 }}>
+                        {articleResponsibility.description}
+                      </span>
+                    </div>
+                  }
+                />
                 <InfoField
                   label="Print nodig"
                   value={order.has_print ? 'Ja' : 'Nee'}

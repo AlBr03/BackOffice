@@ -1,12 +1,14 @@
 export const STORE_MANAGER_ROLE = 'store_manager'
 export const STORE_ROLE = 'store'
+export const PRINT_ROLE = 'print'
+export const ORDER_MANAGER_ROLE = 'order_manager'
 
 export function isStoreLikeRole(role?: string | null) {
   return role === STORE_ROLE || role === STORE_MANAGER_ROLE
 }
 
 export function isOfficeLikeRole(role?: string | null) {
-  return role === 'office' || role === 'admin'
+  return role === 'office' || role === 'admin' || role === ORDER_MANAGER_ROLE
 }
 
 export function translateRole(role?: string | null) {
@@ -19,7 +21,9 @@ export function translateRole(role?: string | null) {
       return 'Hoofdverantwoordelijke winkel'
     case 'office':
       return 'Hoofdkantoor'
-    case 'print':
+    case ORDER_MANAGER_ROLE:
+      return 'Bestelverantwoordelijke'
+    case PRINT_ROLE:
       return 'Printafdeling'
     case 'admin':
       return 'Beheerder'

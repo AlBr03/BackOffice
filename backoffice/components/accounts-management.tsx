@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { isStoreLikeRole, STORE_MANAGER_ROLE, STORE_ROLE } from '@/lib/roles'
+import { isStoreLikeRole, ORDER_MANAGER_ROLE, STORE_MANAGER_ROLE, STORE_ROLE } from '@/lib/roles'
 
 const ROLE_OPTIONS = [
   { value: 'pending', label: 'Nog niet toegewezen' },
   { value: STORE_ROLE, label: 'Winkel' },
   { value: STORE_MANAGER_ROLE, label: 'Hoofdverantwoordelijke winkel' },
   { value: 'office', label: 'Hoofdkantoor' },
+  { value: ORDER_MANAGER_ROLE, label: 'Bestelverantwoordelijke' },
   { value: 'print', label: 'Printafdeling' },
   { value: 'admin', label: 'Beheerder' },
 ]

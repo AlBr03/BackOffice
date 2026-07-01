@@ -97,7 +97,6 @@ export function DashboardLiveTable({
                 : parseProductDescription(order.product_description, order.quantity)
               const primaryProduct = productLines[0]
               const extraProducts = productLines.length - 1
-
               return (
                 <tr key={order.id}>
                   <td style={{ fontWeight: 700 }}>

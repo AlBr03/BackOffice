@@ -3,7 +3,15 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isOfficeLikeRole, isStoreLikeRole } from '@/lib/roles'
 
-const ALLOWED_ROLES = new Set(['pending', 'store', 'store_manager', 'office', 'print', 'admin'])
+const ALLOWED_ROLES = new Set([
+  'pending',
+  'store',
+  'store_manager',
+  'office',
+  'order_manager',
+  'print',
+  'admin',
+])
 
 async function requireOfficeLikeUser() {
   const supabase = await createClient()

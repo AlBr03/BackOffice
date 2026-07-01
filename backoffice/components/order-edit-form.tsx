@@ -12,6 +12,10 @@ import {
 } from '@/lib/order-fields'
 import { deriveLegacyStatus, getInitialPrintStatus } from '@/lib/order-status'
 import { isStoreLikeRole } from '@/lib/roles'
+import {
+  ARTICLE_ORDER_RESPONSIBILITY_OPTIONS,
+  getArticleOrderResponsibility,
+} from '@/lib/article-order-responsibility'
 
 type StoreOption = {
   id: string
@@ -28,6 +32,7 @@ type OrderData = {
   wefact_invoice_reference: string | null
   wefact_invoice_url: string | null
   logo_action: string | null
+  article_order_responsibility?: string | null
   supplier: string | null
   customer_email: string | null
   article_status: string | null
@@ -72,6 +77,9 @@ export function OrderEditForm({
   )
   const [wefactInvoiceUrl, setWefactInvoiceUrl] = useState(order.wefact_invoice_url ?? '')
   const [logoAction, setLogoAction] = useState(order.logo_action ?? '')
+  const [articleOrderResponsibility, setArticleOrderResponsibility] = useState<string>(
+    getArticleOrderResponsibility(order.article_order_responsibility).value
+  )
   const [supplier, setSupplier] = useState(order.supplier ?? '')
   const [productLines, setProductLines] = useState<ProductLine[]>(
     order.order_items?.length
@@ -155,6 +163,7 @@ export function OrderEditForm({
         wefact_invoice_reference: wefactInvoiceReference || null,
         wefact_invoice_url: wefactInvoiceUrl.trim() || null,
         logo_action: logoAction || null,
+        article_order_responsibility: articleOrderResponsibility,
         supplier: supplier || null,
         customer_email: customerEmail || null,
         product_description: productDescription,
@@ -385,19 +394,31 @@ export function OrderEditForm({
         <h3 style={{ margin: 0, color: '#082D78', fontSize: 20 }}>Orderdetails</h3>
 
         <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+          <select
+            value={articleOrderResponsibility}
+            onChange={(e) => setArticleOrderResponsibility(e.target.value)}
+            aria-label="Artikelen bestellen door"
+          >
+            {ARTICLE_ORDER_RESPONSIBILITY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                Artikelen: {option.label}
+              </option>
+            ))}
+          </select>
+
           <select value={logoAction} onChange={(e) => setLogoAction(e.target.value)}>
             <option value="">Logo&apos;s / actie</option>
             <option value="bestellen">Bestellen</option>
             <option value="aanwezig">Aanwezig</option>
             <option value="niet_nodig">Niet nodig</option>
           </select>
-
-          <input
-            value={supplier}
-            onChange={(e) => setSupplier(e.target.value)}
-            placeholder="Leverancier"
-          />
         </div>
+
+        <input
+          value={supplier}
+          onChange={(e) => setSupplier(e.target.value)}
+          placeholder="Leverancier"
+        />
 
         <textarea
           value={printInstructions}

@@ -23,11 +23,15 @@ type OrderNotificationOrder = {
   club_name: string
   customer_email: string | null
   article_status: string | null
+  article_order_responsibility?: string | null
   print_status: string | null
+  has_print?: boolean | null
   notes: string | null
+  print_instructions?: string | null
   delivery_date: string | null
   deadline: string | null
   store_manager_email?: string | null
+  order_detail_url?: string | null
   stores?: StoreRelation
   order_items?: OrderNotificationItem[] | null
 }
@@ -116,6 +120,7 @@ function emailLayout({
   order,
   storeName,
   trackingUrl,
+  ctaLabel = 'Bekijk bestelstatus',
   footerNote,
 }: {
   title: string
@@ -126,6 +131,7 @@ function emailLayout({
   order: OrderNotificationOrder
   storeName: string
   trackingUrl: string | null
+  ctaLabel?: string
   footerNote: string
 }) {
   const orderRows = htmlRows([
@@ -194,7 +200,7 @@ function emailLayout({
                     ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin: 28px 0 18px;">
                         <tr>
                           <td style="background: #0f4ea8; border-radius: 8px;">
-                            <a href="${escapeHtml(trackingUrl)}" style="display: inline-block; padding: 13px 20px; color: #ffffff; font-size: 15px; font-weight: 800; text-decoration: none;">Bekijk bestelstatus</a>
+                            <a href="${escapeHtml(trackingUrl)}" style="display: inline-block; padding: 13px 20px; color: #ffffff; font-size: 15px; font-weight: 800; text-decoration: none;">${escapeHtml(ctaLabel)}</a>
                           </td>
                         </tr>
                       </table>
@@ -322,6 +328,243 @@ export async function sendOrderStatusChangedEmail(
 
   return sendMail({
     to: order.customer_email,
+    replyTo: order.store_manager_email,
+    subject,
+    text,
+    html,
+  })
+}
+
+export function shouldSendOrderReadyForPickupEmail(order: OrderNotificationOrder) {
+  return (
+    order.article_status === 'at_location' &&
+    (!order.has_print || order.print_status === 'completed')
+  )
+}
+
+export function shouldSendOrderCompletedEmail(order: OrderNotificationOrder) {
+  return order.article_status === 'completed'
+}
+
+export async function sendOrderReadyForPickupEmail(order: OrderNotificationOrder) {
+  if (!order.customer_email) {
+    return { skipped: true, reason: 'Geen klantmail aanwezig.' }
+  }
+
+  const storeName = getStoreName(order.stores)
+  const subject = `Uw order ${order.order_number} kan worden opgehaald`
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
+  const html = emailLayout({
+    title: 'Uw bestelling staat klaar',
+    preheader: `Uw order ${order.order_number} kan worden opgehaald bij ${storeName}.`,
+    intro: [
+      'Beste klant,',
+      `Goed nieuws: uw bestelling staat klaar bij ${storeName}. U kunt de artikelen ophalen op locatie.`,
+      'Neem bij het ophalen uw ordernummer mee, zodat de winkel uw bestelling snel kan terugvinden.',
+    ],
+    statusLabel: 'Klaar voor ophalen',
+    statusValue: 'Artikelen op locatie',
+    order,
+    storeName,
+    trackingUrl,
+    footerNote: 'Heeft u vragen over het ophalen? Reageer gerust op deze e-mail of neem contact op met uw winkel.',
+  })
+  const text = [
+    'Beste klant,',
+    '',
+    `Goed nieuws: uw bestelling staat klaar bij ${storeName}.`,
+    'U kunt de artikelen ophalen op locatie.',
+    '',
+    `Ordernummer: ${order.order_number}`,
+    `Naam: ${order.club_name}`,
+    `Artikelenstatus: ${translateArticleStatus(order.article_status)}`,
+    `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status) : 'Niet van toepassing'}`,
+    '',
+    'Bestelde producten:',
+    formatItems(order.order_items),
+    '',
+    trackingUrl ? `Bekijk uw bestelstatus:\n${trackingUrl}\n` : '',
+    'Met vriendelijke groet,',
+    storeName,
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return sendMail({
+    to: order.customer_email,
+    replyTo: order.store_manager_email,
+    subject,
+    text,
+    html,
+  })
+}
+
+export async function sendOrderCompletedEmail(order: OrderNotificationOrder) {
+  if (!order.customer_email) {
+    return { skipped: true, reason: 'Geen klantmail aanwezig.' }
+  }
+
+  const storeName = getStoreName(order.stores)
+  const subject = `Bedankt voor uw order ${order.order_number}`
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
+  const html = emailLayout({
+    title: 'Bedankt voor uw bestelling',
+    preheader: `Uw order ${order.order_number} is afgerond. Bedankt voor uw bestelling.`,
+    intro: [
+      'Beste klant,',
+      `Uw order ${order.order_number} is afgerond. Bedankt voor uw bestelling bij ${storeName}.`,
+      'Wij wensen u veel plezier met de artikelen.',
+    ],
+    statusLabel: 'Order afgerond',
+    statusValue: 'Bedankt voor uw bestelling',
+    order,
+    storeName,
+    trackingUrl,
+    footerNote: 'Heeft u nog vragen over deze bestelling? Reageer gerust op deze e-mail of neem contact op met uw winkel.',
+  })
+  const text = [
+    'Beste klant,',
+    '',
+    `Uw order ${order.order_number} is afgerond. Bedankt voor uw bestelling bij ${storeName}.`,
+    'Wij wensen u veel plezier met de artikelen.',
+    '',
+    `Ordernummer: ${order.order_number}`,
+    `Naam: ${order.club_name}`,
+    '',
+    'Bestelde producten:',
+    formatItems(order.order_items),
+    '',
+    trackingUrl ? `Bekijk uw bestelstatus:\n${trackingUrl}\n` : '',
+    'Met vriendelijke groet,',
+    storeName,
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return sendMail({
+    to: order.customer_email,
+    replyTo: order.store_manager_email,
+    subject,
+    text,
+    html,
+  })
+}
+
+export async function sendPrintOrderCreatedEmail(
+  to: string,
+  order: OrderNotificationOrder
+) {
+  if (!to) {
+    return { skipped: true, reason: 'Geen printafdeling-mailadres aanwezig.' }
+  }
+
+  const storeName = getStoreName(order.stores)
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
+  const subject = `Nieuwe printopdracht voor order ${order.order_number}`
+  const html = emailLayout({
+    title: 'Nieuwe printopdracht',
+    preheader: `Order ${order.order_number} bevat printwerk voor ${order.club_name}.`,
+    intro: [
+      'Beste printafdeling,',
+      `Er is een nieuwe order aangemaakt met een printopdracht voor ${order.club_name}. Hieronder staan de belangrijkste gegevens.`,
+      order.print_instructions?.trim()
+        ? `Printinstructies: ${order.print_instructions.trim()}`
+        : 'Er zijn geen aanvullende printinstructies ingevuld.',
+    ],
+    statusLabel: 'Printstatus',
+    statusValue: order.print_status ? translatePrintStatus(order.print_status) : 'Nieuw',
+    order,
+    storeName,
+    trackingUrl: order.order_detail_url ?? trackingUrl,
+    ctaLabel: order.order_detail_url ? 'Open order in backoffice' : 'Bekijk bestelstatus',
+    footerNote: 'Open de order in de backoffice om de printopdracht verder te verwerken.',
+  })
+  const text = [
+    'Beste printafdeling,',
+    '',
+    `Er is een nieuwe order aangemaakt met een printopdracht voor ${order.club_name}.`,
+    '',
+    `Ordernummer: ${order.order_number}`,
+    `Winkel: ${storeName}`,
+    `Naam: ${order.club_name}`,
+    `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status) : 'Nieuw'}`,
+    `Deadline: ${formatDate(order.deadline)}`,
+    `Uitleverdatum: ${formatDate(order.delivery_date)}`,
+    '',
+    'Bestelde producten:',
+    formatItems(order.order_items),
+    '',
+    'Printinstructies:',
+    order.print_instructions?.trim() || '-',
+    '',
+    order.order_detail_url ? `Open de order in de backoffice:\n${order.order_detail_url}\n` : '',
+    trackingUrl ? `Publieke bestelstatus:\n${trackingUrl}\n` : '',
+    'Met vriendelijke groet,',
+    'INTERSPORT Backoffice',
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return sendMail({
+    to,
+    replyTo: order.store_manager_email,
+    subject,
+    text,
+    html,
+  })
+}
+
+export async function sendOrderManagerOrderCreatedEmail(
+  to: string,
+  order: OrderNotificationOrder
+) {
+  if (!to) {
+    return { skipped: true, reason: 'Geen bestelverantwoordelijke-mailadres aanwezig.' }
+  }
+
+  const storeName = getStoreName(order.stores)
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
+  const subject = `Nieuwe artikelbestelling voor order ${order.order_number}`
+  const html = emailLayout({
+    title: 'Nieuwe artikelbestelling',
+    preheader: `Order ${order.order_number} moet worden besteld door de bestelverantwoordelijke.`,
+    intro: [
+      'Beste bestelverantwoordelijke,',
+      `Er is een nieuwe order aangemaakt waarbij de artikelen door de bestelverantwoordelijke besteld moeten worden.`,
+      `De order is aangemaakt voor ${order.club_name} vanuit ${storeName}.`,
+    ],
+    statusLabel: 'Actie vereist',
+    statusValue: 'Artikelen bestellen',
+    order,
+    storeName,
+    trackingUrl: order.order_detail_url ?? trackingUrl,
+    ctaLabel: order.order_detail_url ? 'Open order in backoffice' : 'Bekijk bestelstatus',
+    footerNote: 'Open de order in de backoffice om de artikelbestelling verder op te pakken.',
+  })
+  const text = [
+    'Beste bestelverantwoordelijke,',
+    '',
+    'Er is een nieuwe order aangemaakt waarbij de artikelen door de bestelverantwoordelijke besteld moeten worden.',
+    '',
+    `Ordernummer: ${order.order_number}`,
+    `Winkel: ${storeName}`,
+    `Naam: ${order.club_name}`,
+    `Artikelenstatus: ${translateArticleStatus(order.article_status)}`,
+    `Deadline: ${formatDate(order.deadline)}`,
+    `Uitleverdatum: ${formatDate(order.delivery_date)}`,
+    '',
+    'Bestelde producten:',
+    formatItems(order.order_items),
+    '',
+    order.order_detail_url ? `Open de order in de backoffice:\n${order.order_detail_url}\n` : '',
+    'Met vriendelijke groet,',
+    'INTERSPORT Backoffice',
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return sendMail({
+    to,
     replyTo: order.store_manager_email,
     subject,
     text,

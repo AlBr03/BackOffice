@@ -10,7 +10,13 @@ import {
   translatePrintStatus,
 } from '@/lib/order-status'
 import { isOfficeLikeRole, isStoreLikeRole, STORE_MANAGER_ROLE } from '@/lib/roles'
-import { sendOrderStatusChangedEmail } from '@/lib/order-notifications'
+import {
+  sendOrderCompletedEmail,
+  sendOrderReadyForPickupEmail,
+  sendOrderStatusChangedEmail,
+  shouldSendOrderCompletedEmail,
+  shouldSendOrderReadyForPickupEmail,
+} from '@/lib/order-notifications'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -165,15 +171,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
   }
 
-  const mailResult = await sendOrderStatusChangedEmail(
-    {
-      ...order,
-      article_status: nextArticleStatus,
-      print_status: nextPrintStatus,
-      store_manager_email: storeManagerEmail,
-    },
-    changeSummary
-  )
+  const notificationOrder = {
+    ...order,
+    article_status: nextArticleStatus,
+    print_status: nextPrintStatus,
+    store_manager_email: storeManagerEmail,
+  }
+
+  const mailResult = shouldSendOrderCompletedEmail(notificationOrder)
+    ? await sendOrderCompletedEmail(notificationOrder)
+    : shouldSendOrderReadyForPickupEmail(notificationOrder)
+      ? await sendOrderReadyForPickupEmail(notificationOrder)
+      : await sendOrderStatusChangedEmail(notificationOrder, changeSummary)
 
   return NextResponse.json({ ok: true, changeSummary, mail: mailResult })
 }

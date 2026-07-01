@@ -10,6 +10,7 @@ import {
 } from '@/lib/order-fields'
 import { deriveLegacyStatus, getInitialPrintStatus } from '@/lib/order-status'
 import { isStoreLikeRole } from '@/lib/roles'
+import { ARTICLE_ORDER_RESPONSIBILITY_OPTIONS } from '@/lib/article-order-responsibility'
 
 type StoreOption = {
   id: string
@@ -39,6 +40,7 @@ export function OrderForm({
   const [wefactInvoiceReference, setWefactInvoiceReference] = useState('')
   const [wefactInvoiceUrl, setWefactInvoiceUrl] = useState('')
   const [logoAction, setLogoAction] = useState('')
+  const [articleOrderResponsibility, setArticleOrderResponsibility] = useState('order_manager')
   const [supplier, setSupplier] = useState('')
   const [productLines, setProductLines] = useState([createEmptyProductLine()])
   const [printInstructions, setPrintInstructions] = useState('')
@@ -124,6 +126,7 @@ export function OrderForm({
         wefact_invoice_reference: wefactInvoiceReference || null,
         wefact_invoice_url: wefactInvoiceUrl.trim() || null,
         logo_action: logoAction || null,
+        article_order_responsibility: articleOrderResponsibility,
         supplier: supplier || null,
         customer_email: customerEmail || null,
         product_description: productDescription,
@@ -361,19 +364,31 @@ export function OrderForm({
         <h3 style={{ margin: 0, color: '#082D78', fontSize: 20 }}>Orderdetails</h3>
 
         <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+          <select
+            value={articleOrderResponsibility}
+            onChange={(e) => setArticleOrderResponsibility(e.target.value)}
+            aria-label="Artikelen bestellen door"
+          >
+            {ARTICLE_ORDER_RESPONSIBILITY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                Artikelen: {option.label}
+              </option>
+            ))}
+          </select>
+
           <select value={logoAction} onChange={(e) => setLogoAction(e.target.value)}>
             <option value="">Logo&apos;s / actie</option>
             <option value="bestellen">Bestellen</option>
             <option value="aanwezig">Aanwezig</option>
             <option value="niet_nodig">Niet nodig</option>
           </select>
-
-          <input
-            value={supplier}
-            onChange={(e) => setSupplier(e.target.value)}
-            placeholder="Leverancier"
-          />
         </div>
+
+        <input
+          value={supplier}
+          onChange={(e) => setSupplier(e.target.value)}
+          placeholder="Leverancier"
+        />
 
         <textarea
           value={printInstructions}
