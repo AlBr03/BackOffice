@@ -146,7 +146,28 @@ export async function POST(request: NextRequest, context: RouteContext) {
       ? body.fileName.trim()
       : 'printvoorbeeld'
 
-    await admin
+    if (!order.has_print) {
+      return NextResponse.json(
+        { error: 'Voor deze order is geen printvoorbeeld van toepassing.' },
+        { status: 400 }
+      )
+    }
+
+    const { data: printPreviewFiles } = await admin
+      .from('order_files')
+      .select('id')
+      .eq('order_id', id)
+      .not('file_path', 'like', '%/customer-logos/%')
+      .limit(1)
+
+    if ((printPreviewFiles ?? []).length === 0) {
+      return NextResponse.json(
+        { error: 'Er is nog geen printvoorbeeldbestand toegevoegd.' },
+        { status: 400 }
+      )
+    }
+
+    const { error: proofUpdateError } = await admin
       .from('orders')
       .update({
         print_proof_status: 'pending',
@@ -155,12 +176,20 @@ export async function POST(request: NextRequest, context: RouteContext) {
       })
       .eq('id', id)
 
-    await admin.from('order_activity_log').insert({
+    if (proofUpdateError) {
+      return NextResponse.json({ error: proofUpdateError.message }, { status: 400 })
+    }
+
+    const { error: activityError } = await admin.from('order_activity_log').insert({
       order_id: id,
       action_type: 'print_proof_ready',
       description: `Printvoorbeeld klaar voor beoordeling: ${fileName}`,
       performed_by: user.id,
     })
+
+    if (activityError) {
+      return NextResponse.json({ error: activityError.message }, { status: 400 })
+    }
 
     const result = await sendPrintProofReadyEmail(notificationOrder)
     return NextResponse.json({ ok: true, ...result })

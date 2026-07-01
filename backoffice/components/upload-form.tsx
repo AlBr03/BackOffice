@@ -56,13 +56,22 @@ export function UploadForm({ orderId }: { orderId: string }) {
           },
           body: JSON.stringify({ type: 'print_proof_ready', fileName: file.name }),
         })
+        const result = (await response.json().catch(() => null)) as
+          | { skipped?: boolean; reason?: string; error?: string }
+          | null
 
         if (!response.ok) {
-          setMessage('Printvoorbeeld succesvol geupload. Klantmail kon niet worden verstuurd.')
+          setMessage(
+            result?.error ?? 'Printvoorbeeld succesvol geupload. Klantmail kon niet worden verstuurd.'
+          )
           return
         }
 
-        setMessage('Printvoorbeeld succesvol geupload en klantmail verstuurd.')
+        setMessage(
+          result?.skipped
+            ? `Printvoorbeeld succesvol geupload. ${result.reason ?? 'Er is geen klantmail verstuurd.'}`
+            : 'Printvoorbeeld succesvol geupload en klantmail verstuurd.'
+        )
       } catch {
         setMessage('Printvoorbeeld succesvol geupload. Klantmail kon niet worden verstuurd.')
       }
