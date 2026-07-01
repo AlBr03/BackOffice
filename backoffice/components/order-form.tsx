@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   createEmptyProductLine,
@@ -26,6 +26,7 @@ export function OrderForm({
   stores: StoreOption[]
 }) {
   const supabase = createClient()
+  const submitLockRef = useRef(false)
 
   const isStoreUser = isStoreLikeRole(role)
 
@@ -46,6 +47,7 @@ export function OrderForm({
   const [deliveryDate, setDeliveryDate] = useState('')
   const [notes, setNotes] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   function updateProductLine(
     index: number,
@@ -78,10 +80,19 @@ export function OrderForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    if (submitLockRef.current) {
+      return
+    }
+
+    submitLockRef.current = true
+    setIsSubmitting(true)
     setError(null)
 
     if (!selectedStoreId) {
       setError('Selecteer een winkel.')
+      submitLockRef.current = false
+      setIsSubmitting(false)
       return
     }
 
@@ -95,6 +106,8 @@ export function OrderForm({
 
     if (!productDescription) {
       setError('Vul minimaal een productregel in.')
+      submitLockRef.current = false
+      setIsSubmitting(false)
       return
     }
 
@@ -129,6 +142,8 @@ export function OrderForm({
 
     if (insertError || !insertedOrder) {
       setError(insertError?.message ?? 'De order kon niet worden opgeslagen.')
+      submitLockRef.current = false
+      setIsSubmitting(false)
       return
     }
 
@@ -143,6 +158,8 @@ export function OrderForm({
 
     if (itemsError) {
       setError(itemsError.message)
+      submitLockRef.current = false
+      setIsSubmitting(false)
       return
     }
 
@@ -160,6 +177,8 @@ export function OrderForm({
 
     if (activityError) {
       setError(activityError.message)
+      submitLockRef.current = false
+      setIsSubmitting(false)
       return
     }
 
@@ -401,7 +420,9 @@ export function OrderForm({
         />
       </section>
 
-      <button type="submit">Order opslaan</button>
+      <button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Order opslaan...' : 'Order opslaan'}
+      </button>
 
       {error ? (
         <p style={{ color: '#b00012', margin: 0, fontWeight: 600 }}>{error}</p>

@@ -7,6 +7,7 @@ import { OrderDetailLiveShell } from '@/components/order-detail-live-shell'
 import { DeleteOrderButton } from '@/components/delete-order-button'
 import { CopyTrackingLinkButton } from '@/components/copy-tracking-link-button'
 import { parseProductDescription } from '@/lib/order-fields'
+import { getPublicOrderTrackingUrl } from '@/lib/public-url'
 import { isOfficeLikeRole, isStoreLikeRole, STORE_MANAGER_ROLE } from '@/lib/roles'
 import {
   getArticleStatusStyle,
@@ -332,11 +333,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   const articleStatusStyle = getArticleStatusStyle(order.article_status)
   const printStatusStyle = getPrintStatusStyle(order.print_status)
-  const publicAppUrl = process.env.NEXT_PUBLIC_APP_URL
-  const trackingUrl =
-    publicAppUrl && order.tracking_token
-      ? `${publicAppUrl.replace(/\/$/, '')}/bestelstatus/${order.tracking_token}`
-      : null
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const productLines = order.order_items?.length
     ? order.order_items.map((item) => ({
         product: item.product,
@@ -628,7 +625,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   </>
                 ) : (
                   <div style={{ color: 'var(--text-soft)', fontWeight: 600 }}>
-                    Stel `NEXT_PUBLIC_APP_URL` in om een volledige publieke link te tonen.
+                    Stel `NEXT_PUBLIC_APP_URL` in, of zet Vercel system environment variables aan,
+                    om een volledige publieke link te tonen.
                   </div>
                 )}
               </div>

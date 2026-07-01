@@ -1,5 +1,6 @@
 import { sendMail } from '@/lib/mail'
 import { translateArticleStatus, translatePrintStatus } from '@/lib/order-status'
+import { getPublicOrderTrackingUrl } from '@/lib/public-url'
 
 type OrderNotificationItem = {
   product: string
@@ -218,16 +219,6 @@ function emailLayout({
 </html>`
 }
 
-function getTrackingUrl(orderNumber: string, trackingToken?: string | null) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL
-
-  if (!baseUrl || !trackingToken) {
-    return null
-  }
-
-  return `${baseUrl.replace(/\/$/, '')}/bestelstatus/${trackingToken}`
-}
-
 export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
   if (!order.customer_email) {
     return { skipped: true, reason: 'Geen klantmail aanwezig.' }
@@ -235,7 +226,7 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
 
   const storeName = getStoreName(order.stores)
   const subject = `Bevestiging van uw order ${order.order_number}`
-  const trackingUrl = getTrackingUrl(order.order_number, order.tracking_token)
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const html = emailLayout({
     title: 'Uw bestelling is ontvangen',
     preheader: `Uw order ${order.order_number} is ontvangen door ${storeName}.`,
@@ -295,7 +286,7 @@ export async function sendOrderStatusChangedEmail(
 
   const storeName = getStoreName(order.stores)
   const subject = `Update over uw order ${order.order_number}`
-  const trackingUrl = getTrackingUrl(order.order_number, order.tracking_token)
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const html = emailLayout({
     title: 'Update over uw bestelling',
     preheader: `Er is een nieuwe update voor order ${order.order_number}.`,
