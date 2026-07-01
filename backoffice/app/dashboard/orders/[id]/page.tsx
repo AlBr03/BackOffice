@@ -13,6 +13,7 @@ import {
 } from '@/lib/article-order-responsibility'
 import { getPublicOrderTrackingUrl } from '@/lib/public-url'
 import { isOfficeLikeRole, isStoreLikeRole, STORE_MANAGER_ROLE } from '@/lib/roles'
+import { getLogoAction } from '@/lib/logo-action'
 import {
   getArticleStatusStyle,
   getPrintStatusStyle,
@@ -155,19 +156,6 @@ function formatDateTime(value?: string | null) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return date.toLocaleString('nl-NL')
-}
-
-function translateLogoAction(value?: string | null) {
-  switch (value) {
-    case 'bestellen':
-      return 'Bestellen'
-    case 'aanwezig':
-      return 'Aanwezig'
-    case 'niet_nodig':
-      return 'Niet nodig'
-    default:
-      return value ?? '-'
-  }
 }
 
 function translatePrintProofStatus(value?: string | null) {
@@ -331,6 +319,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
       }
     })
   )
+  const customerLogoFiles = signedFiles.filter((file) =>
+    file.file_path.includes('/customer-logos/')
+  )
+  const printPreviewFiles = signedFiles.filter(
+    (file) => !file.file_path.includes('/customer-logos/')
+  )
 
   const { data: activity } = await supabase
     .from('order_activity_log')
@@ -344,6 +338,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
     order.article_order_responsibility
   )
   const printStatusStyle = getPrintStatusStyle(order.print_status)
+  const logoAction = getLogoAction(order.logo_action)
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const productLines = order.order_items?.length
     ? order.order_items.map((item) => ({
@@ -528,7 +523,16 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 />
                 <InfoField
                   label="Logo's"
-                  value={translateLogoAction(order.logo_action)}
+                  value={
+                    <div style={{ display: 'grid', gap: 6 }}>
+                      <span>{logoAction.label}</span>
+                      {order.logo_action === 'klant_aanleveren' ? (
+                        <span style={{ color: 'var(--text-soft)', fontSize: 13, fontWeight: 500 }}>
+                          De klant moet de logo&apos;s nog zelf aanleveren via de track & trace pagina.
+                        </span>
+                      ) : null}
+                    </div>
+                  }
                 />
                 {order.has_print ? (
                   <>
@@ -678,7 +682,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
             <div className="ui-card">
               <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
-                Printbestanden
+                Bestanden
               </h2>
 
               {order.has_print ? (
@@ -696,8 +700,78 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   Er zijn nog geen printbestanden geüpload.
                 </div>
               ) : (
-                <div style={{ display: 'grid', gap: 12 }}>
-                  {signedFiles.map((file) => (
+                <div style={{ display: 'grid', gap: 20 }}>
+                  <div style={{ display: 'grid', gap: 12 }}>
+                    <div>
+                      <h3 style={{ margin: 0, color: 'var(--intersport-blue)', fontSize: 18 }}>
+                        Aangeleverde logo&apos;s van klant
+                      </h3>
+                      <p className="ui-text-muted" style={{ margin: '4px 0 0 0' }}>
+                        Logo&apos;s die via de track & trace pagina zijn geupload.
+                      </p>
+                    </div>
+
+                    {customerLogoFiles.length === 0 ? (
+                      <div className="ui-card-soft" style={{ fontWeight: 600 }}>
+                        Er zijn nog geen klantlogo&apos;s aangeleverd.
+                      </div>
+                    ) : (
+                      customerLogoFiles.map((file) => (
+                        <a
+                          key={file.id}
+                          href={file.signedUrl ?? '#'}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="ui-card-soft"
+                          style={{ display: 'block', color: 'var(--text)', textDecoration: 'none' }}
+                        >
+                          <div style={{ fontWeight: 700, marginBottom: 4 }}>
+                            {file.file_name}
+                          </div>
+                          <div style={{ color: 'var(--text-soft)', fontSize: 13 }}>
+                            {file.mime_type || 'Bestand'} - {formatDate(file.created_at)}
+                          </div>
+                        </a>
+                      ))
+                    )}
+                  </div>
+
+                  <div style={{ display: 'grid', gap: 12 }}>
+                    <div>
+                      <h3 style={{ margin: 0, color: 'var(--intersport-blue)', fontSize: 18 }}>
+                        Printvoorbeelden ter beoordeling
+                      </h3>
+                      <p className="ui-text-muted" style={{ margin: '4px 0 0 0' }}>
+                        Bestanden die naar de klant gaan om goed te keuren.
+                      </p>
+                    </div>
+
+                    {printPreviewFiles.length === 0 ? (
+                      <div className="ui-card-soft" style={{ fontWeight: 600 }}>
+                        Er zijn nog geen printvoorbeelden geupload.
+                      </div>
+                    ) : (
+                      printPreviewFiles.map((file) => (
+                        <a
+                          key={file.id}
+                          href={file.signedUrl ?? '#'}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="ui-card-soft"
+                          style={{ display: 'block', color: 'var(--text)', textDecoration: 'none' }}
+                        >
+                          <div style={{ fontWeight: 700, marginBottom: 4 }}>
+                            {file.file_name}
+                          </div>
+                          <div style={{ color: 'var(--text-soft)', fontSize: 13 }}>
+                            {file.mime_type || 'Bestand'} - {formatDate(file.created_at)}
+                          </div>
+                        </a>
+                      ))
+                    )}
+                  </div>
+
+                  {([] as typeof signedFiles).map((file) => (
                     <a
                       key={file.id}
                       href={file.signedUrl ?? '#'}

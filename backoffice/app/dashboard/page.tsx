@@ -123,7 +123,7 @@ export default async function DashboardPage({
   if (searchQuery.trim()) {
     const safeQuery = searchQuery.trim().replace(/,/g, ' ')
     query = query.or(
-      `order_number.ilike.%${safeQuery}%,club_name.ilike.%${safeQuery}%,product_description.ilike.%${safeQuery}%`
+      `order_number.ilike.%${safeQuery}%,club_name.ilike.%${safeQuery}%,product_description.ilike.%${safeQuery}%,wefact_reference.ilike.%${safeQuery}%,wefact_quote_reference.ilike.%${safeQuery}%,wefact_invoice_reference.ilike.%${safeQuery}%`
     )
   }
 
@@ -181,7 +181,7 @@ export default async function DashboardPage({
               type="text"
               name="q"
               defaultValue={searchQuery}
-              placeholder="Zoek op ordernummer, club of product"
+              placeholder="Zoek op ordernummer, club, product of Wefact nummer"
             />
           </div>
 

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PublicLogoUploadForm } from '@/components/public-logo-upload-form'
 import { PublicPrintProofApprovalForm } from '@/components/public-print-proof-approval-form'
+import { getLogoAction, shouldCustomerUploadLogo } from '@/lib/logo-action'
 import { parseProductDescription } from '@/lib/order-fields'
 import {
   ARTICLE_STATUS_OPTIONS,
@@ -88,6 +89,7 @@ const ORDER_TRACKING_SELECT = `
   club_name,
   article_status,
   print_status,
+  logo_action,
   created_at,
   updated_at,
   deadline,
@@ -127,6 +129,7 @@ const ORDER_TRACKING_SELECT_WITHOUT_PRINT_PROOF = `
   club_name,
   article_status,
   print_status,
+  logo_action,
   created_at,
   updated_at,
   deadline,
@@ -204,6 +207,8 @@ export default async function OrderTrackingPage({ params }: PageProps) {
   const printStatusIndex = getStatusIndex(PRINT_STATUS_OPTIONS, order.print_status)
   const articleStatusStyle = getArticleStatusStyle(order.article_status)
   const printStatusStyle = getPrintStatusStyle(order.print_status)
+  const logoAction = getLogoAction(order.logo_action)
+  const customerShouldUploadLogo = shouldCustomerUploadLogo(order.logo_action)
   const productLines = order.order_items?.length
     ? order.order_items.map((item) => ({
         product: item.product,
@@ -211,9 +216,14 @@ export default async function OrderTrackingPage({ params }: PageProps) {
         productCode: item.product_code ?? '',
       }))
     : parseProductDescription(order.product_description, order.quantity)
-  const publicPrintFiles = (order.order_files ?? []).filter(
-    (file) => !file.file_path.includes('/customer-logos/')
-  )
+  const publicPrintFiles = (order.order_files ?? [])
+    .filter((file) => !file.file_path.includes('/customer-logos/'))
+    .sort((first, second) => {
+      const firstTime = new Date(first.created_at ?? '').getTime()
+      const secondTime = new Date(second.created_at ?? '').getTime()
+
+      return (Number.isNaN(secondTime) ? 0 : secondTime) - (Number.isNaN(firstTime) ? 0 : firstTime)
+    })
   const signedFiles = await Promise.all(
     publicPrintFiles.map(async (file) => {
       const { data } = await supabase.storage
@@ -227,6 +237,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
     })
   )
   const hasPrintPreview = publicPrintFiles.length > 0
+  const printPreviewFile = signedFiles.find((file) => file.signedUrl) ?? signedFiles[0] ?? null
 
   return (
     <div style={{ display: 'grid', gap: 24 }}>
@@ -345,12 +356,41 @@ export default async function OrderTrackingPage({ params }: PageProps) {
               gap: 18,
             }}
           >
-            <PublicLogoUploadForm token={token} />
+            {customerShouldUploadLogo ? (
+              <PublicLogoUploadForm token={token} />
+            ) : (
+              <div
+                style={{
+                  display: 'grid',
+                  gap: 10,
+                  padding: 18,
+                  borderRadius: 18,
+                  background: '#f8faff',
+                  border: '1px solid #e6edf7',
+                }}
+              >
+                <div style={{ fontWeight: 800, color: '#082D78', marginBottom: 4 }}>
+                  {logoAction.customerLabel}
+                </div>
+                <div style={{ color: '#5b6b84', lineHeight: 1.5 }}>
+                  {logoAction.customerDescription}
+                </div>
+              </div>
+            )}
             {hasPrintPreview ? (
               <PublicPrintProofApprovalForm
                 token={token}
                 initialStatus={order.print_proof_status}
                 initialFeedback={order.print_proof_feedback}
+                previewFile={
+                  printPreviewFile
+                    ? {
+                        fileName: printPreviewFile.file_name,
+                        mimeType: printPreviewFile.mime_type,
+                        signedUrl: printPreviewFile.signedUrl,
+                      }
+                    : null
+                }
               />
             ) : null}
           </div>
@@ -660,10 +700,6 @@ export default async function OrderTrackingPage({ params }: PageProps) {
               <div>
                 <div style={{ color: '#5b6b84', fontSize: 13, marginBottom: 4 }}>Verwachte uitlevering</div>
                 <div style={{ fontWeight: 700 }}>{formatDate(order.delivery_date)}</div>
-              </div>
-              <div>
-                <div style={{ color: '#5b6b84', fontSize: 13, marginBottom: 4 }}>Leverancier</div>
-                <div style={{ fontWeight: 700 }}>{order.supplier || 'Nog niet ingevuld'}</div>
               </div>
             </div>
           </div>

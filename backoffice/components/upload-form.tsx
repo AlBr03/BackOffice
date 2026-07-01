@@ -24,10 +24,6 @@ export function UploadForm({ orderId }: { orderId: string }) {
     try {
       setIsUploading(true)
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
       const safeFileName = file.name.replace(/\s+/g, '-')
       const filePath = `${orderId}/${Date.now()}-${safeFileName}`
 
@@ -52,14 +48,25 @@ export function UploadForm({ orderId }: { orderId: string }) {
         return
       }
 
-      await supabase.from('order_activity_log').insert({
-        order_id: orderId,
-        action_type: 'file_uploaded',
-        description: `Printbestand geüpload: ${file.name}`,
-        performed_by: user?.id ?? null,
-      })
+      try {
+        const response = await fetch(`/api/orders/${orderId}/notify`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ type: 'print_proof_ready', fileName: file.name }),
+        })
 
-      setMessage('Bestand succesvol geüpload.')
+        if (!response.ok) {
+          setMessage('Printvoorbeeld succesvol geupload. Klantmail kon niet worden verstuurd.')
+          return
+        }
+
+        setMessage('Printvoorbeeld succesvol geupload en klantmail verstuurd.')
+      } catch {
+        setMessage('Printvoorbeeld succesvol geupload. Klantmail kon niet worden verstuurd.')
+      }
+
       setFile(null)
       router.refresh()
     } catch {
@@ -80,7 +87,7 @@ export function UploadForm({ orderId }: { orderId: string }) {
             fontWeight: 600,
           }}
         >
-          Upload printbestand
+          Upload printvoorbeeld
         </label>
 
         <input
@@ -91,7 +98,7 @@ export function UploadForm({ orderId }: { orderId: string }) {
       </div>
 
       <button type="submit" disabled={isUploading}>
-        {isUploading ? 'Uploaden...' : 'Bestand uploaden'}
+        {isUploading ? 'Uploaden...' : 'Printvoorbeeld uploaden'}
       </button>
 
       {message ? (

@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation'
 
 type PrintProofStatus = 'pending' | 'approved' | 'rejected'
 
+type PreviewFile = {
+  fileName: string
+  mimeType?: string | null
+  signedUrl?: string | null
+} | null
+
 function translatePrintProofStatus(status?: string | null) {
   switch (status) {
     case 'approved':
@@ -20,10 +26,12 @@ export function PublicPrintProofApprovalForm({
   token,
   initialStatus,
   initialFeedback,
+  previewFile,
 }: {
   token: string
   initialStatus?: string | null
   initialFeedback?: string | null
+  previewFile?: PreviewFile
 }) {
   const router = useRouter()
   const [choice, setChoice] = useState<PrintProofStatus>(
@@ -33,6 +41,11 @@ export function PublicPrintProofApprovalForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const previewUrl = previewFile?.signedUrl ?? null
+  const previewMimeType = previewFile?.mimeType ?? ''
+  const isPdfPreview =
+    previewMimeType === 'application/pdf' || previewFile?.fileName.toLowerCase().endsWith('.pdf')
+  const isImagePreview = previewMimeType.startsWith('image/')
 
   async function submitDecision(action: 'approved' | 'rejected') {
     setMessage(null)
@@ -99,10 +112,106 @@ export function PublicPrintProofApprovalForm({
           Printvoorbeeld beoordelen
         </div>
         <div style={{ color: '#5b6b84', lineHeight: 1.5 }}>
-          Controleer het printvoorbeeld bij de bestanden. Keur het goed of geef door wat aangepast
-          moet worden.
+          Controleer het printvoorbeeld hieronder. Keur het goed of geef door wat aangepast moet worden.
         </div>
       </div>
+
+      {previewFile ? (
+        <div style={{ display: 'grid', gap: 8 }}>
+          <div
+            style={{
+              position: 'relative',
+              overflow: 'hidden',
+              minHeight: 220,
+              aspectRatio: '4 / 3',
+              borderRadius: 16,
+              background: '#ffffff',
+              border: '1px solid #d9e2f0',
+              boxShadow: '0 10px 24px rgba(8,45,120,0.08)',
+            }}
+          >
+            {previewUrl && isPdfPreview ? (
+              <iframe
+                src={`${previewUrl}#toolbar=0&navpanes=0`}
+                title={`Printvoorbeeld ${previewFile.fileName}`}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 0,
+                  pointerEvents: 'none',
+                }}
+              />
+            ) : null}
+
+            {previewUrl && isImagePreview ? (
+              <div
+                role="img"
+                aria-label={`Printvoorbeeld ${previewFile.fileName}`}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  backgroundImage: `url("${previewUrl}")`,
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: 'contain',
+                }}
+              />
+            ) : null}
+
+            {!previewUrl || (!isPdfPreview && !isImagePreview) ? (
+              <div
+                style={{
+                  height: '100%',
+                  display: 'grid',
+                  placeItems: 'center',
+                  padding: 18,
+                  color: '#5b6b84',
+                  textAlign: 'center',
+                }}
+              >
+                Voorbeeld kan hier niet worden weergegeven.
+              </div>
+            ) : null}
+
+            {previewUrl ? (
+              <a
+                href={previewUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`Open printvoorbeeld ${previewFile.fileName} groot`}
+                title="Klik om het printvoorbeeld groot te openen"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'grid',
+                  alignItems: 'end',
+                  padding: 12,
+                  textDecoration: 'none',
+                  background: 'linear-gradient(180deg, transparent 58%, rgba(8,45,120,0.68) 100%)',
+                }}
+              >
+                <span
+                  style={{
+                    justifySelf: 'end',
+                    padding: '8px 12px',
+                    borderRadius: 999,
+                    background: 'white',
+                    color: '#082D78',
+                    fontWeight: 800,
+                    boxShadow: '0 6px 16px rgba(8,45,120,0.16)',
+                  }}
+                >
+                  Vergroten
+                </span>
+              </a>
+            ) : null}
+          </div>
+
+          <div style={{ color: '#5b6b84', fontSize: 13 }}>
+            {previewFile.fileName}
+          </div>
+        </div>
+      ) : null}
 
       <div
         style={{

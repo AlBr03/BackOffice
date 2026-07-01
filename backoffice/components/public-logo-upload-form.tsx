@@ -17,27 +17,34 @@ export function PublicLogoUploadForm({ token }: { token: string }) {
     setMessage(null)
     setError(null)
 
-    const file = fileInputRef.current?.files?.[0]
+    const files = Array.from(fileInputRef.current?.files ?? [])
 
-    if (!file) {
-      setError('Selecteer eerst een AI- of EPS-bestand.')
+    if (files.length === 0) {
+      setError('Selecteer eerst een of meer AI- of EPS-bestanden.')
       return
     }
 
-    const extension = file.name.split('.').pop()?.toLowerCase()
+    const invalidExtensionFile = files.find((file) => {
+      const extension = file.name.split('.').pop()?.toLowerCase()
+      return extension !== 'ai' && extension !== 'eps'
+    })
 
-    if (extension !== 'ai' && extension !== 'eps') {
-      setError('Alleen .ai en .eps bestanden zijn toegestaan.')
+    if (invalidExtensionFile) {
+      setError(`${invalidExtensionFile.name} is geen .ai of .eps bestand.`)
       return
     }
 
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      setError(`Het bestand mag maximaal ${MAX_FILE_SIZE_MB} MB zijn.`)
+    const tooLargeFile = files.find((file) => file.size > MAX_FILE_SIZE_MB * 1024 * 1024)
+
+    if (tooLargeFile) {
+      setError(`${tooLargeFile.name} is groter dan ${MAX_FILE_SIZE_MB} MB.`)
       return
     }
 
     const formData = new FormData()
-    formData.append('file', file)
+    files.forEach((file) => {
+      formData.append('files', file)
+    })
 
     setIsUploading(true)
 
@@ -46,7 +53,12 @@ export function PublicLogoUploadForm({ token }: { token: string }) {
         method: 'POST',
         body: formData,
       })
-      const result = (await response.json()) as { error?: string; fileName?: string }
+      const result = (await response.json()) as {
+        error?: string
+        fileName?: string
+        fileNames?: string[]
+        uploaded?: number
+      }
 
       if (!response.ok) {
         setError(result.error ?? 'Logo kon niet worden geupload.')
@@ -57,7 +69,12 @@ export function PublicLogoUploadForm({ token }: { token: string }) {
         fileInputRef.current.value = ''
       }
 
-      setMessage(`${result.fileName ?? 'Logo'} is ontvangen en toegevoegd aan de bestelling.`)
+      const uploaded = result.uploaded ?? result.fileNames?.length ?? 1
+      setMessage(
+        uploaded === 1
+          ? `${result.fileNames?.[0] ?? result.fileName ?? 'Logo'} is ontvangen en toegevoegd aan de bestelling.`
+          : `${uploaded} logo's zijn ontvangen en toegevoegd aan de bestelling.`
+      )
       router.refresh()
     } catch {
       setError('Er ging iets mis tijdens het uploaden.')
@@ -83,15 +100,15 @@ export function PublicLogoUploadForm({ token }: { token: string }) {
           Logo toevoegen
         </div>
         <div style={{ color: '#5b6b84', lineHeight: 1.5 }}>
-          Upload hier uw logo als .ai of .eps bestand. Het bestand komt automatisch bij de
+          Upload hier uw logo&apos;s als .ai of .eps bestand. De bestanden komen automatisch bij de
           bestelling in de backoffice.
         </div>
       </div>
 
-      <input ref={fileInputRef} type="file" accept=".ai,.eps" disabled={isUploading} />
+      <input ref={fileInputRef} type="file" accept=".ai,.eps" multiple disabled={isUploading} />
 
       <button type="submit" disabled={isUploading}>
-        {isUploading ? 'Uploaden...' : 'Logo uploaden'}
+        {isUploading ? 'Uploaden...' : "Logo's uploaden"}
       </button>
 
       {message ? (

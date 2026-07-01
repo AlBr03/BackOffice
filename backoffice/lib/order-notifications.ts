@@ -450,6 +450,57 @@ export async function sendOrderCompletedEmail(order: OrderNotificationOrder) {
   })
 }
 
+export async function sendPrintProofReadyEmail(order: OrderNotificationOrder) {
+  if (!order.customer_email) {
+    return { skipped: true, reason: 'Geen klantmail aanwezig.' }
+  }
+
+  const storeName = getStoreName(order.stores)
+  const subject = `Printvoorbeeld klaar voor order ${order.order_number}`
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
+  const html = emailLayout({
+    title: 'Printvoorbeeld klaar voor beoordeling',
+    preheader: `Het printvoorbeeld voor order ${order.order_number} staat klaar.`,
+    intro: [
+      'Beste klant,',
+      `Het printvoorbeeld voor uw order ${order.order_number} staat klaar op uw persoonlijke bestelstatuspagina.`,
+      'Controleer het voorbeeld zorgvuldig. U kunt het direct goedkeuren of aangeven wat er aangepast moet worden.',
+    ],
+    statusLabel: 'Actie gevraagd',
+    statusValue: 'Printvoorbeeld beoordelen',
+    order,
+    storeName,
+    trackingUrl,
+    ctaLabel: 'Printvoorbeeld beoordelen',
+    footerNote: 'Zodra u reageert, wordt de winkel automatisch op de hoogte gebracht.',
+  })
+  const text = [
+    'Beste klant,',
+    '',
+    `Het printvoorbeeld voor uw order ${order.order_number} staat klaar.`,
+    'Controleer het voorbeeld zorgvuldig. U kunt het goedkeuren of aangeven wat er aangepast moet worden.',
+    '',
+    `Ordernummer: ${order.order_number}`,
+    `Naam: ${order.club_name}`,
+    '',
+    trackingUrl ? `Beoordeel het printvoorbeeld via uw persoonlijke bestelpagina:\n${trackingUrl}\n` : '',
+    'Zodra u reageert, wordt de winkel automatisch op de hoogte gebracht.',
+    '',
+    'Met vriendelijke groet,',
+    storeName,
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return sendMail({
+    to: order.customer_email,
+    replyTo: order.store_manager_email,
+    subject,
+    text,
+    html,
+  })
+}
+
 export async function sendPrintOrderCreatedEmail(
   to: string,
   order: OrderNotificationOrder

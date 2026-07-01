@@ -11,6 +11,7 @@ import {
 import { deriveLegacyStatus, getInitialPrintStatus } from '@/lib/order-status'
 import { isStoreLikeRole } from '@/lib/roles'
 import { ARTICLE_ORDER_RESPONSIBILITY_OPTIONS } from '@/lib/article-order-responsibility'
+import { LOGO_ACTION_OPTIONS } from '@/lib/logo-action'
 
 type StoreOption = {
   id: string
@@ -378,9 +379,11 @@ export function OrderForm({
 
           <select value={logoAction} onChange={(e) => setLogoAction(e.target.value)}>
             <option value="">Logo&apos;s / actie</option>
-            <option value="bestellen">Bestellen</option>
-            <option value="aanwezig">Aanwezig</option>
-            <option value="niet_nodig">Niet nodig</option>
+            {LOGO_ACTION_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
 

@@ -8,6 +8,7 @@ import {
   sendPrintOrderCreatedEmail,
   sendOrderCreatedEmail,
   sendOrderStatusChangedEmail,
+  sendPrintProofReadyEmail,
   shouldSendOrderCompletedEmail,
   shouldSendOrderReadyForPickupEmail,
 } from '@/lib/order-notifications'
@@ -43,13 +44,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
     .single()
 
   const body = (await request.json()) as
-    | { type?: 'created' | 'status_changed'; changeSummary?: string }
+    | {
+        type?: 'created' | 'status_changed' | 'print_proof_ready'
+        changeSummary?: string
+        fileName?: string
+      }
     | undefined
 
   const { data: order, error } = await supabase
     .from('orders')
     .select(
       `
+      id,
       order_number,
       tracking_token,
       club_name,
@@ -131,6 +137,32 @@ export async function POST(request: NextRequest, context: RouteContext) {
       : shouldSendOrderReadyForPickupEmail(notificationOrder)
         ? await sendOrderReadyForPickupEmail(notificationOrder)
         : await sendOrderStatusChangedEmail(notificationOrder, body.changeSummary)
+    return NextResponse.json({ ok: true, ...result })
+  }
+
+  if (body?.type === 'print_proof_ready') {
+    const admin = createAdminClient()
+    const fileName = typeof body.fileName === 'string' && body.fileName.trim()
+      ? body.fileName.trim()
+      : 'printvoorbeeld'
+
+    await admin
+      .from('orders')
+      .update({
+        print_proof_status: 'pending',
+        print_proof_feedback: null,
+        print_proof_responded_at: null,
+      })
+      .eq('id', id)
+
+    await admin.from('order_activity_log').insert({
+      order_id: id,
+      action_type: 'print_proof_ready',
+      description: `Printvoorbeeld klaar voor beoordeling: ${fileName}`,
+      performed_by: user.id,
+    })
+
+    const result = await sendPrintProofReadyEmail(notificationOrder)
     return NextResponse.json({ ok: true, ...result })
   }
 
