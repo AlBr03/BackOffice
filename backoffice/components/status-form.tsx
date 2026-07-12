@@ -59,7 +59,12 @@ export function StatusForm({
     })
 
     const result = (await response.json().catch(() => null)) as
-      | { error?: string; skipped?: boolean; reason?: string; mail?: { skipped?: boolean } }
+      | {
+          error?: string
+          skipped?: boolean
+          reason?: string
+          mail?: { skipped?: boolean; reason?: string; error?: string }
+        }
       | null
 
     if (!response.ok) {
@@ -77,7 +82,7 @@ export function StatusForm({
 
     setMessage(
       result?.mail?.skipped
-        ? 'Status bijgewerkt. Er is geen klantmail verstuurd.'
+        ? result.mail.reason ?? 'Status bijgewerkt. Er is geen klantmail verstuurd.'
         : 'Status succesvol bijgewerkt en klantmail verstuurd.'
     )
     setIsSaving(false)

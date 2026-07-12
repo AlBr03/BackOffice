@@ -25,6 +25,10 @@ type RouteContext = {
 const ARTICLE_STATUSES = new Set<string>(ARTICLE_STATUS_OPTIONS.map((option) => option.value))
 const PRINT_STATUSES = new Set<string>(PRINT_STATUS_OPTIONS.map((option) => option.value))
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Onbekende mailfout.'
+}
+
 export async function PATCH(request: NextRequest, context: RouteContext) {
   const { id } = await context.params
   const supabase = await createClient()
@@ -178,11 +182,24 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     store_manager_email: storeManagerEmail,
   }
 
-  const mailResult = shouldSendOrderCompletedEmail(notificationOrder)
-    ? await sendOrderCompletedEmail(notificationOrder)
-    : shouldSendOrderReadyForPickupEmail(notificationOrder)
-      ? await sendOrderReadyForPickupEmail(notificationOrder)
-      : await sendOrderStatusChangedEmail(notificationOrder, changeSummary)
+  let mailResult:
+    | Awaited<ReturnType<typeof sendOrderCompletedEmail>>
+    | { skipped: true; reason: string; error?: string }
+
+  try {
+    mailResult = shouldSendOrderCompletedEmail(notificationOrder)
+      ? await sendOrderCompletedEmail(notificationOrder)
+      : shouldSendOrderReadyForPickupEmail(notificationOrder)
+        ? await sendOrderReadyForPickupEmail(notificationOrder)
+        : await sendOrderStatusChangedEmail(notificationOrder, changeSummary)
+  } catch (mailError) {
+    console.error('Status bijgewerkt, maar klantmail kon niet worden verstuurd', mailError)
+    mailResult = {
+      skipped: true,
+      reason: 'Status bijgewerkt, maar klantmail kon niet worden verstuurd.',
+      error: getErrorMessage(mailError),
+    }
+  }
 
   return NextResponse.json({ ok: true, changeSummary, mail: mailResult })
 }
