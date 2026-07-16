@@ -54,8 +54,9 @@ export function DashboardLiveTable({
 
   useEffect(() => {
     const interval = setInterval(() => {
+      if (document.hidden) return
       router.refresh()
-    }, 5000)
+    }, 30000)
 
     return () => clearInterval(interval)
   }, [router])

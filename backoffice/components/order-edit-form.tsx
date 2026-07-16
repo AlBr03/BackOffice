@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   createEmptyProductLine,
@@ -64,6 +65,7 @@ export function OrderEditForm({
   stores: StoreOption[]
   order: OrderData
 }) {
+  const router = useRouter()
   const supabase = createClient()
   const isStoreUser = isStoreLikeRole(role)
 
@@ -149,6 +151,11 @@ export function OrderEditForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    if (isSaving) {
+      return
+    }
+
     setError(null)
     setIsSaving(true)
 
@@ -220,15 +227,23 @@ export function OrderEditForm({
       return
     }
 
-    const { error: insertItemsError } = await supabase.from('order_items').insert(
-      normalizedProductLines.map((line) => ({
+    const [{ error: insertItemsError }, { error: activityError }] = await Promise.all([
+      supabase.from('order_items').insert(
+        normalizedProductLines.map((line) => ({
+          order_id: order.id,
+          product: line.product,
+          quantity: line.quantity,
+          product_code: line.productCode || null,
+          size: line.size || null,
+        }))
+      ),
+      supabase.from('order_activity_log').insert({
         order_id: order.id,
-        product: line.product,
-        quantity: line.quantity,
-        product_code: line.productCode || null,
-        size: line.size || null,
-      }))
-    )
+        action_type: 'order_updated',
+        description: 'Ordergegevens bijgewerkt',
+        performed_by: user?.id ?? null,
+      }),
+    ])
 
     if (insertItemsError) {
       setError(insertItemsError.message)
@@ -236,20 +251,14 @@ export function OrderEditForm({
       return
     }
 
-    const { error: activityError } = await supabase.from('order_activity_log').insert({
-      order_id: order.id,
-      action_type: 'order_updated',
-      description: 'Ordergegevens bijgewerkt',
-      performed_by: user?.id ?? null,
-    })
-
     if (activityError) {
       setError(activityError.message)
       setIsSaving(false)
       return
     }
 
-    window.location.href = `/dashboard/orders/${order.id}`
+    router.push(`/dashboard/orders/${order.id}`)
+    router.refresh()
   }
 
   return (
@@ -533,7 +542,7 @@ export function OrderEditForm({
         <button
           type="button"
           onClick={() => {
-            window.location.href = `/dashboard/orders/${order.id}`
+            router.push(`/dashboard/orders/${order.id}`)
           }}
           style={{
             background: '#eef3fb',

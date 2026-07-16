@@ -76,12 +76,6 @@ export default async function DashboardPage({
       quantity,
       article_status,
       print_status,
-      order_items (
-        product,
-        quantity,
-        product_code,
-        size
-      ),
       has_print,
       status,
       created_at,

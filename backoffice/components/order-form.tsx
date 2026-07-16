@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   createEmptyProductLine,
@@ -27,6 +28,7 @@ export function OrderForm({
   storeId?: string | null
   stores: StoreOption[]
 }) {
+  const router = useRouter()
   const supabase = createClient()
   const submitLockRef = useRef(false)
 
@@ -168,15 +170,28 @@ export function OrderForm({
       return
     }
 
-    const { error: itemsError } = await supabase.from('order_items').insert(
-      normalizedProductLines.map((line) => ({
+    const activityDescription = hasPrint
+      ? 'Order aangemaakt met printwerk'
+      : 'Order aangemaakt'
+
+    const [{ error: itemsError }, { error: activityError }] = await Promise.all([
+      supabase.from('order_items').insert(
+        normalizedProductLines.map((line) => ({
+          order_id: insertedOrder.id,
+          product: line.product,
+          quantity: line.quantity,
+          product_code: line.productCode || null,
+          size: line.size || null,
+        }))
+      ),
+      supabase.from('order_activity_log').insert({
         order_id: insertedOrder.id,
-        product: line.product,
-        quantity: line.quantity,
-        product_code: line.productCode || null,
-        size: line.size || null,
-      }))
-    )
+        action_type: 'created',
+        description: activityDescription,
+        new_status: 'new',
+        performed_by: user?.id ?? null,
+      }),
+    ])
 
     if (itemsError) {
       setError(itemsError.message)
@@ -185,18 +200,6 @@ export function OrderForm({
       return
     }
 
-    const activityDescription = hasPrint
-      ? 'Order aangemaakt met printwerk'
-      : 'Order aangemaakt'
-
-    const { error: activityError } = await supabase.from('order_activity_log').insert({
-      order_id: insertedOrder.id,
-      action_type: 'created',
-      description: activityDescription,
-      new_status: 'new',
-      performed_by: user?.id ?? null,
-    })
-
     if (activityError) {
       setError(activityError.message)
       submitLockRef.current = false
@@ -204,19 +207,19 @@ export function OrderForm({
       return
     }
 
-    try {
-      await fetch(`/api/orders/${insertedOrder.id}/notify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ type: 'created' }),
-      })
-    } catch (notificationError) {
+    fetch(`/api/orders/${insertedOrder.id}/notify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ type: 'created' }),
+      keepalive: true,
+    }).catch((notificationError) => {
       console.error('Ordermail kon niet worden verstuurd', notificationError)
-    }
+    })
 
-    window.location.href = '/dashboard'
+    router.push(`/dashboard/orders/${insertedOrder.id}`)
+    router.refresh()
   }
 
   return (

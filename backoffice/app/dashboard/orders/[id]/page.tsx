@@ -28,6 +28,15 @@ type PageProps = {
   params: Promise<{ id: string }>
 }
 
+type SignedOrderFile = {
+  id: string
+  file_name: string
+  file_path: string
+  mime_type: string | null
+  created_at: string | null
+  signedUrl: string | null
+}
+
 const ORDER_DETAIL_SELECT = `
   id,
   order_number,
@@ -229,6 +238,122 @@ function InfoField({
   )
 }
 
+function PrintPreviewMini({ file }: { file?: SignedOrderFile | null }) {
+  if (!file) {
+    return (
+      <div className="ui-card-soft" style={{ marginTop: 16, fontWeight: 600 }}>
+        Er is nog geen printvoorbeeld geupload.
+      </div>
+    )
+  }
+
+  const previewUrl = file.signedUrl
+  const mimeType = file.mime_type ?? ''
+  const isPdfPreview = mimeType === 'application/pdf' || file.file_name.toLowerCase().endsWith('.pdf')
+  const isImagePreview = mimeType.startsWith('image/')
+
+  return (
+    <div style={{ display: 'grid', gap: 8, marginTop: 16 }}>
+      <div
+        style={{
+          position: 'relative',
+          overflow: 'hidden',
+          minHeight: 180,
+          aspectRatio: '4 / 3',
+          borderRadius: 14,
+          background: 'var(--surface-alt)',
+          border: '1px solid var(--border)',
+          boxShadow: '0 10px 24px rgba(8,45,120,0.08)',
+        }}
+      >
+        {previewUrl && isPdfPreview ? (
+          <iframe
+            src={`${previewUrl}#toolbar=0&navpanes=0`}
+            title={`Printvoorbeeld ${file.file_name}`}
+            style={{
+              width: '100%',
+              height: '100%',
+              border: 0,
+              pointerEvents: 'none',
+              background: 'white',
+            }}
+          />
+        ) : null}
+
+        {previewUrl && isImagePreview ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={previewUrl}
+            alt={`Printvoorbeeld ${file.file_name}`}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              display: 'block',
+              background: 'white',
+            }}
+          />
+        ) : null}
+
+        {!previewUrl || (!isPdfPreview && !isImagePreview) ? (
+          <div
+            style={{
+              height: '100%',
+              minHeight: 180,
+              display: 'grid',
+              placeItems: 'center',
+              padding: 18,
+              color: 'var(--text-soft)',
+              textAlign: 'center',
+              fontWeight: 700,
+            }}
+          >
+            Voorbeeld kan hier niet worden weergegeven.
+          </div>
+        ) : null}
+
+        {previewUrl ? (
+          <a
+            href={previewUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`Open printvoorbeeld ${file.file_name} groot`}
+            title="Open printvoorbeeld groot"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'grid',
+              alignItems: 'end',
+              padding: 10,
+              textDecoration: 'none',
+              background: 'linear-gradient(180deg, transparent 58%, rgba(8,45,120,0.68) 100%)',
+            }}
+          >
+            <span
+              style={{
+                justifySelf: 'end',
+                padding: '7px 11px',
+                borderRadius: 999,
+                background: 'white',
+                color: '#082D78',
+                fontWeight: 800,
+                fontSize: 13,
+                boxShadow: '0 6px 16px rgba(8,45,120,0.16)',
+              }}
+            >
+              Vergroten
+            </span>
+          </a>
+        ) : null}
+      </div>
+
+      <div style={{ color: 'var(--text-soft)', fontSize: 13 }}>
+        {file.file_name} - {formatDate(file.created_at)}
+      </div>
+    </div>
+  )
+}
+
 export default async function OrderDetailPage({ params }: PageProps) {
   const { id } = await params
   const supabase = await createClient()
@@ -331,6 +456,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
   const printPreviewFiles = signedFiles.filter(
     (file) => !file.file_path.includes('/customer-logos/')
   )
+  const printPreviewFile =
+    printPreviewFiles.find((file) => file.signedUrl) ?? printPreviewFiles[0] ?? null
 
   const { data: activity } = await supabase
     .from('order_activity_log')
@@ -578,6 +705,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   <div style={{ fontWeight: 700 }}>{order.print_proof_feedback}</div>
                 </div>
               ) : null}
+
+              {order.has_print ? <PrintPreviewMini file={printPreviewFile} /> : null}
             </div>
 
             <div className="ui-card">

@@ -465,6 +465,36 @@ td {
   background: rgba(255, 255, 255, 0.44);
 }
 
+.ui-skeleton-list {
+  display: grid;
+}
+
+.ui-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.ui-skeleton-line {
+  min-height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #edf2f8 0%, #f8fbff 50%, #edf2f8 100%);
+  background-size: 220% 100%;
+  animation: ui-skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes ui-skeleton-pulse {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 .ui-pill {
   display: inline-flex;
   align-items: center;
@@ -560,6 +590,11 @@ td {
 
 .mode-dark .ui-table-header {
   background: linear-gradient(180deg, rgba(17, 31, 55, 0.74), rgba(10, 20, 36, 0.88));
+}
+
+.mode-dark .ui-skeleton-line {
+  background: linear-gradient(90deg, #223049 0%, #2d3c58 50%, #223049 100%);
+  background-size: 220% 100%;
 }
 
 .mode-dark .app-brand,
