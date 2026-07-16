@@ -44,6 +44,10 @@ function getStoreName(stores?: StoreRelation) {
   return store?.name ?? 'onbekende winkel'
 }
 
+function getStoreSignature(storeName: string) {
+  return /^intersport\b/i.test(storeName) ? storeName : `Intersport ${storeName}`
+}
+
 function formatDate(value?: string | null) {
   if (!value) return '-'
   const date = new Date(value)
@@ -138,6 +142,7 @@ function emailLayout({
   ctaLabel?: string
   footerNote: string
 }) {
+  const storeSignature = getStoreSignature(storeName)
   const orderRows = htmlRows([
     { label: 'Ordernummer', value: order.order_number },
     { label: 'Naam', value: order.club_name },
@@ -214,7 +219,7 @@ function emailLayout({
                 }
 
                 <p style="margin: 22px 0 0; color: #2d3748; font-size: 15px; line-height: 1.6;">${escapeHtml(footerNote)}</p>
-                <p style="margin: 22px 0 0; color: #2d3748; font-size: 15px; line-height: 1.6;">Met vriendelijke groet,<br><strong>${escapeHtml(storeName)}</strong></p>
+                <p style="margin: 22px 0 0; color: #2d3748; font-size: 15px; line-height: 1.6;">Met vriendelijke groet,<br><strong>${escapeHtml(storeSignature)}</strong></p>
               </td>
             </tr>
             <tr>
@@ -273,7 +278,7 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
     'U ontvangt automatisch een bericht zodra de status van uw bestelling verandert.',
     '',
     'Met vriendelijke groet,',
-    storeName,
+    getStoreSignature(storeName),
   ]
     .filter(Boolean)
     .join('\n')
@@ -328,7 +333,7 @@ export async function sendOrderStatusChangedEmail(
     'Heeft u vragen? Neem dan contact op met uw winkel en vermeld uw ordernummer.',
     '',
     'Met vriendelijke groet,',
-    storeName,
+    getStoreSignature(storeName),
   ].join('\n')
 
   return sendMail({
@@ -390,7 +395,7 @@ export async function sendOrderReadyForPickupEmail(order: OrderNotificationOrder
     '',
     trackingUrl ? `Bekijk uw bestelstatus:\n${trackingUrl}\n` : '',
     'Met vriendelijke groet,',
-    storeName,
+    getStoreSignature(storeName),
   ]
     .filter(Boolean)
     .join('\n')
@@ -441,7 +446,7 @@ export async function sendOrderCompletedEmail(order: OrderNotificationOrder) {
     '',
     trackingUrl ? `Bekijk uw bestelstatus:\n${trackingUrl}\n` : '',
     'Met vriendelijke groet,',
-    storeName,
+    getStoreSignature(storeName),
   ]
     .filter(Boolean)
     .join('\n')
@@ -492,7 +497,7 @@ export async function sendPrintProofReadyEmail(order: OrderNotificationOrder) {
     'Zodra u reageert, wordt de winkel automatisch op de hoogte gebracht.',
     '',
     'Met vriendelijke groet,',
-    storeName,
+    getStoreSignature(storeName),
   ]
     .filter(Boolean)
     .join('\n')
@@ -524,8 +529,8 @@ export async function sendPrintOrderCreatedEmail(
       'Beste printafdeling,',
       `Er is een nieuwe order aangemaakt met een printopdracht voor ${order.club_name}. Hieronder staan de belangrijkste gegevens.`,
       order.print_supplier?.trim()
-        ? `Leverancier printwerk: ${order.print_supplier.trim()}`
-        : 'Er is geen printleverancier ingevuld.',
+        ? `Leverancier logo's: ${order.print_supplier.trim()}`
+        : "Er is geen leverancier voor logo's ingevuld.",
       order.print_instructions?.trim()
         ? `Printinstructies: ${order.print_instructions.trim()}`
         : 'Er zijn geen aanvullende printinstructies ingevuld.',
@@ -547,7 +552,7 @@ export async function sendPrintOrderCreatedEmail(
     `Winkel: ${storeName}`,
     `Naam: ${order.club_name}`,
     `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status) : 'Nieuw'}`,
-    `Leverancier printwerk: ${order.print_supplier?.trim() || '-'}`,
+    `Leverancier logo's: ${order.print_supplier?.trim() || '-'}`,
     `Deadline: ${formatDate(order.deadline)}`,
     `Uitleverdatum: ${formatDate(order.delivery_date)}`,
     '',
@@ -560,7 +565,7 @@ export async function sendPrintOrderCreatedEmail(
     order.order_detail_url ? `Open de order in de backoffice:\n${order.order_detail_url}\n` : '',
     trackingUrl ? `Publieke bestelstatus:\n${trackingUrl}\n` : '',
     'Met vriendelijke groet,',
-    'INTERSPORT Backoffice',
+    getStoreSignature(storeName),
   ]
     .filter(Boolean)
     .join('\n')
@@ -618,7 +623,7 @@ export async function sendOrderManagerOrderCreatedEmail(
     '',
     order.order_detail_url ? `Open de order in de backoffice:\n${order.order_detail_url}\n` : '',
     'Met vriendelijke groet,',
-    'INTERSPORT Backoffice',
+    getStoreSignature(storeName),
   ]
     .filter(Boolean)
     .join('\n')
@@ -676,7 +681,154 @@ export async function sendStoreManagerArticleOrderCreatedEmail(
     '',
     order.order_detail_url ? `Open de order in de backoffice:\n${order.order_detail_url}\n` : '',
     'Met vriendelijke groet,',
-    'INTERSPORT Backoffice',
+    getStoreSignature(storeName),
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return sendMail({
+    to,
+    replyTo: order.store_manager_email,
+    subject,
+    text,
+    html,
+  })
+}
+
+export async function sendArticleOrderReminderEmail(to: string, order: OrderNotificationOrder) {
+  if (!to) {
+    return { skipped: true, reason: 'Geen verantwoordelijke voor artikelbestelling aanwezig.' }
+  }
+
+  const storeName = getStoreName(order.stores)
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
+  const subject = `Reminder: artikelen bestellen voor order ${order.order_number}`
+  const html = emailLayout({
+    title: 'Reminder artikelen bestellen',
+    preheader: `Order ${order.order_number} staat al 3 dagen open zonder dat artikelen besteld zijn.`,
+    intro: [
+      'Beste verantwoordelijke,',
+      `De artikelen voor order ${order.order_number} zijn nog niet als besteld gemarkeerd.`,
+      `Pak de artikelbestelling voor ${order.club_name} vanuit ${storeName} op en werk de status bij zodra de artikelen besteld zijn.`,
+    ],
+    statusLabel: 'Reminder',
+    statusValue: 'Artikelen nog niet besteld',
+    order,
+    storeName,
+    trackingUrl: order.order_detail_url ?? trackingUrl,
+    ctaLabel: order.order_detail_url ? 'Open order in backoffice' : 'Bekijk bestelstatus',
+    footerNote: 'Open de order in de backoffice om de artikelstatus bij te werken.',
+  })
+  const text = [
+    'Beste verantwoordelijke,',
+    '',
+    `De artikelen voor order ${order.order_number} zijn nog niet als besteld gemarkeerd.`,
+    `Pak de artikelbestelling voor ${order.club_name} vanuit ${storeName} op en werk de status bij zodra de artikelen besteld zijn.`,
+    '',
+    'Bestelde producten:',
+    formatItems(order.order_items),
+    '',
+    order.order_detail_url ? `Open de order in de backoffice:\n${order.order_detail_url}\n` : '',
+    'Met vriendelijke groet,',
+    getStoreSignature(storeName),
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return sendMail({
+    to,
+    replyTo: order.store_manager_email,
+    subject,
+    text,
+    html,
+  })
+}
+
+export async function sendLogoOrderReminderEmail(to: string, order: OrderNotificationOrder) {
+  if (!to) {
+    return { skipped: true, reason: 'Geen verantwoordelijke voor logobestelling aanwezig.' }
+  }
+
+  const storeName = getStoreName(order.stores)
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
+  const subject = `Reminder: logo's bestellen voor order ${order.order_number}`
+  const html = emailLayout({
+    title: "Reminder logo's bestellen",
+    preheader: `Order ${order.order_number} staat al 5 dagen open zonder dat logo's besteld zijn.`,
+    intro: [
+      'Beste verantwoordelijke,',
+      `De logo's voor order ${order.order_number} zijn nog niet als besteld gemarkeerd.`,
+      `Pak de logobestelling voor ${order.club_name} vanuit ${storeName} op en werk de printstatus bij zodra de logo's besteld zijn.`,
+    ],
+    statusLabel: 'Reminder',
+    statusValue: "Logo's nog niet besteld",
+    order,
+    storeName,
+    trackingUrl: order.order_detail_url ?? trackingUrl,
+    ctaLabel: order.order_detail_url ? 'Open order in backoffice' : 'Bekijk bestelstatus',
+    footerNote: 'Open de order in de backoffice om de printstatus bij te werken.',
+  })
+  const text = [
+    'Beste verantwoordelijke,',
+    '',
+    `De logo's voor order ${order.order_number} zijn nog niet als besteld gemarkeerd.`,
+    `Pak de logobestelling voor ${order.club_name} vanuit ${storeName} op en werk de printstatus bij zodra de logo's besteld zijn.`,
+    '',
+    'Bestelde producten:',
+    formatItems(order.order_items),
+    '',
+    order.order_detail_url ? `Open de order in de backoffice:\n${order.order_detail_url}\n` : '',
+    'Met vriendelijke groet,',
+    getStoreSignature(storeName),
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return sendMail({
+    to,
+    replyTo: order.store_manager_email,
+    subject,
+    text,
+    html,
+  })
+}
+
+export async function sendArticleArrivalReminderEmail(to: string, order: OrderNotificationOrder) {
+  if (!to) {
+    return { skipped: true, reason: 'Geen verantwoordelijke voor artikelopvolging aanwezig.' }
+  }
+
+  const storeName = getStoreName(order.stores)
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
+  const subject = `Reminder: artikelen nog niet binnen voor order ${order.order_number}`
+  const html = emailLayout({
+    title: 'Reminder artikelen opvolgen',
+    preheader: `Order ${order.order_number} staat al 3 weken op besteld zonder ontvangst op locatie.`,
+    intro: [
+      'Beste verantwoordelijke,',
+      `De artikelen voor order ${order.order_number} zijn al 3 weken als besteld gemarkeerd, maar nog niet als op locatie gemarkeerd.`,
+      `Controleer de levering voor ${order.club_name} vanuit ${storeName} en werk de status bij zodra de artikelen binnen zijn.`,
+    ],
+    statusLabel: 'Reminder',
+    statusValue: 'Artikelen nog niet binnen',
+    order,
+    storeName,
+    trackingUrl: order.order_detail_url ?? trackingUrl,
+    ctaLabel: order.order_detail_url ? 'Open order in backoffice' : 'Bekijk bestelstatus',
+    footerNote: 'Open de order in de backoffice om de artikelstatus bij te werken.',
+  })
+  const text = [
+    'Beste verantwoordelijke,',
+    '',
+    `De artikelen voor order ${order.order_number} zijn al 3 weken als besteld gemarkeerd, maar nog niet als op locatie gemarkeerd.`,
+    `Controleer de levering voor ${order.club_name} vanuit ${storeName} en werk de status bij zodra de artikelen binnen zijn.`,
+    '',
+    'Bestelde producten:',
+    formatItems(order.order_items),
+    '',
+    order.order_detail_url ? `Open de order in de backoffice:\n${order.order_detail_url}\n` : '',
+    'Met vriendelijke groet,',
+    getStoreSignature(storeName),
   ]
     .filter(Boolean)
     .join('\n')

@@ -539,7 +539,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
               <div className="ui-grid-two" style={{ gap: 16 }}>
                 <InfoField label="Print nodig" value={order.has_print ? 'Ja' : 'Nee'} />
                 {order.has_print ? (
-                  <InfoField label="Leverancier printwerk" value={order.print_supplier || '-'} />
+            <InfoField label="Leverancier logo's" value={order.print_supplier || '-'} />
                 ) : null}
                 <InfoField
                   label="Logo's"

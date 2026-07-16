@@ -134,13 +134,30 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 
   const changeSummary = changes.join(' | ')
+  const now = new Date().toISOString()
+  const statusUpdate: {
+    article_status: string
+    print_status: string | null
+    status: string
+    article_ordered_at?: string
+    logos_ordered_at?: string
+  } = {
+    article_status: nextArticleStatus,
+    print_status: nextPrintStatus,
+    status: deriveLegacyStatus(nextArticleStatus, order.has_print, nextPrintStatus),
+  }
+
+  if (nextArticleStatus === 'ordered' && order.article_status !== 'ordered') {
+    statusUpdate.article_ordered_at = now
+  }
+
+  if (nextPrintStatus === 'logos_ordered' && order.print_status !== 'logos_ordered') {
+    statusUpdate.logos_ordered_at = now
+  }
+
   const { error: updateError } = await admin
     .from('orders')
-    .update({
-      article_status: nextArticleStatus,
-      print_status: nextPrintStatus,
-      status: deriveLegacyStatus(nextArticleStatus, order.has_print, nextPrintStatus),
-    })
+    .update(statusUpdate)
     .eq('id', id)
 
   if (updateError) {

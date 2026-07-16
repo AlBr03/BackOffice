@@ -448,7 +448,7 @@ export function OrderForm({
             <input
               value={printSupplier}
               onChange={(e) => setPrintSupplier(e.target.value)}
-              placeholder="Leverancier printwerk"
+              placeholder="Leverancier logo's"
             />
           </div>
 
