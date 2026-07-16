@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import {
   sendOrderCompletedEmail,
   sendOrderManagerOrderCreatedEmail,
+  sendStoreManagerArticleOrderCreatedEmail,
   sendOrderReadyForPickupEmail,
   sendPrintOrderCreatedEmail,
   sendOrderCreatedEmail,
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       article_status,
       article_order_responsibility,
       print_status,
+      print_supplier,
       print_instructions,
       notes,
       delivery_date,
@@ -75,7 +77,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       order_items (
         product,
         quantity,
-        product_code
+        product_code,
+        size
       )
     `
     )
@@ -203,6 +206,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
         failed: number
       }
     | undefined
+  let storeManagerOrderResults:
+    | {
+        total: number
+        sent: number
+        failed: number
+      }
+    | undefined
   let printResults:
     | {
         total: number
@@ -213,13 +223,20 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   async function sendRoleNotification(
     role: string,
-    sender: (email: string) => Promise<unknown>
+    sender: (email: string) => Promise<unknown>,
+    storeId?: string | null
   ) {
     const admin = createAdminClient()
-    const { data: profiles, error: profilesError } = await admin
+    let profilesQuery = admin
       .from('profiles')
       .select('id')
       .eq('role', role)
+
+    if (storeId) {
+      profilesQuery = profilesQuery.eq('store_id', storeId)
+    }
+
+    const { data: profiles, error: profilesError } = await profilesQuery
 
     if (profilesError) {
       console.error(`Profielen voor rol ${role} konden niet worden opgehaald`, profilesError)
@@ -250,6 +267,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     )
   }
 
+  if (order.article_order_responsibility === STORE_MANAGER_ROLE) {
+    storeManagerOrderResults = await sendRoleNotification(
+      STORE_MANAGER_ROLE,
+      (email) => sendStoreManagerArticleOrderCreatedEmail(email, notificationOrder),
+      order.store_id
+    )
+  }
+
   if (order.has_print) {
     printResults = await sendRoleNotification(PRINT_ROLE, (email) =>
       sendPrintOrderCreatedEmail(email, notificationOrder)
@@ -260,6 +285,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     ok: true,
     customer: customerResult,
     orderManager: orderManagerResults,
+    storeManagerOrder: storeManagerOrderResults,
     print: printResults,
   })
 }

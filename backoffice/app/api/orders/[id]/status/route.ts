@@ -87,7 +87,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       order_items (
         product,
         quantity,
-        product_code
+        product_code,
+        size
       )
     `
     )

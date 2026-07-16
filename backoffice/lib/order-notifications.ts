@@ -6,6 +6,7 @@ type OrderNotificationItem = {
   product: string
   quantity: number
   product_code: string | null
+  size?: string | null
 }
 
 type StoreRelation =
@@ -27,6 +28,7 @@ type OrderNotificationOrder = {
   print_status: string | null
   has_print?: boolean | null
   notes: string | null
+  print_supplier?: string | null
   print_instructions?: string | null
   delivery_date: string | null
   deadline: string | null
@@ -56,8 +58,9 @@ function formatItems(items?: OrderNotificationItem[] | null) {
 
   return items
     .map((item) => {
-      const productCode = item.product_code ? `, productcode: ${item.product_code}` : ''
-      return `- ${item.product} (${item.quantity}x${productCode})`
+      const productCode = item.product_code || '-'
+      const size = item.size || '-'
+      return `- ${productCode} - ${item.product} - maat ${size} - ${item.quantity}x`
     })
     .join('\n')
 }
@@ -86,16 +89,17 @@ function htmlRows(rows: { label: string; value: string }[]) {
 
 function htmlItems(items?: OrderNotificationItem[] | null) {
   if (!items?.length) {
-    return '<tr><td colspan="3" style="padding: 12px 0; color: #5b6472; font-size: 14px;">Geen productregels gevonden</td></tr>'
+    return '<tr><td colspan="4" style="padding: 12px 0; color: #5b6472; font-size: 14px;">Geen productregels gevonden</td></tr>'
   }
 
   return items
     .map(
       (item) => `
         <tr>
+          <td style="padding: 12px 0; color: #5b6472; font-size: 14px; border-bottom: 1px solid #e6ebf2;">${escapeHtml(item.product_code || '-')}</td>
           <td style="padding: 12px 0; color: #13233a; font-size: 14px; border-bottom: 1px solid #e6ebf2;">${escapeHtml(item.product)}</td>
-          <td style="padding: 12px 0; color: #13233a; font-size: 14px; text-align: center; border-bottom: 1px solid #e6ebf2;">${escapeHtml(item.quantity)}x</td>
-          <td style="padding: 12px 0; color: #5b6472; font-size: 14px; text-align: right; border-bottom: 1px solid #e6ebf2;">${escapeHtml(item.product_code || '-')}</td>
+          <td style="padding: 12px 0; color: #13233a; font-size: 14px; text-align: center; border-bottom: 1px solid #e6ebf2;">${escapeHtml(item.size || '-')}</td>
+          <td style="padding: 12px 0; color: #13233a; font-size: 14px; text-align: right; border-bottom: 1px solid #e6ebf2;">${escapeHtml(item.quantity)}x</td>
         </tr>
       `
     )
@@ -188,9 +192,10 @@ function emailLayout({
                 <h2 style="margin: 26px 0 10px; color: #13233a; font-size: 18px; line-height: 1.35;">Bestelde producten</h2>
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
                   <tr>
-                    <th align="left" style="padding: 0 0 8px; color: #5b6472; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #dce4ef;">Product</th>
-                    <th align="center" style="padding: 0 0 8px; color: #5b6472; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #dce4ef;">Aantal</th>
-                    <th align="right" style="padding: 0 0 8px; color: #5b6472; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #dce4ef;">Productcode</th>
+                    <th align="left" style="padding: 0 0 8px; color: #5b6472; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #dce4ef;">Artikelcode</th>
+                    <th align="left" style="padding: 0 0 8px; color: #5b6472; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #dce4ef;">Omschrijving</th>
+                    <th align="center" style="padding: 0 0 8px; color: #5b6472; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #dce4ef;">Maat</th>
+                    <th align="right" style="padding: 0 0 8px; color: #5b6472; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #dce4ef;">Aantal</th>
                   </tr>
                   ${htmlItems(order.order_items)}
                 </table>
@@ -518,6 +523,9 @@ export async function sendPrintOrderCreatedEmail(
     intro: [
       'Beste printafdeling,',
       `Er is een nieuwe order aangemaakt met een printopdracht voor ${order.club_name}. Hieronder staan de belangrijkste gegevens.`,
+      order.print_supplier?.trim()
+        ? `Leverancier printwerk: ${order.print_supplier.trim()}`
+        : 'Er is geen printleverancier ingevuld.',
       order.print_instructions?.trim()
         ? `Printinstructies: ${order.print_instructions.trim()}`
         : 'Er zijn geen aanvullende printinstructies ingevuld.',
@@ -539,6 +547,7 @@ export async function sendPrintOrderCreatedEmail(
     `Winkel: ${storeName}`,
     `Naam: ${order.club_name}`,
     `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status) : 'Nieuw'}`,
+    `Leverancier printwerk: ${order.print_supplier?.trim() || '-'}`,
     `Deadline: ${formatDate(order.deadline)}`,
     `Uitleverdatum: ${formatDate(order.delivery_date)}`,
     '',
@@ -596,6 +605,64 @@ export async function sendOrderManagerOrderCreatedEmail(
     'Beste bestelverantwoordelijke,',
     '',
     'Er is een nieuwe order aangemaakt waarbij de artikelen door de bestelverantwoordelijke besteld moeten worden.',
+    '',
+    `Ordernummer: ${order.order_number}`,
+    `Winkel: ${storeName}`,
+    `Naam: ${order.club_name}`,
+    `Artikelenstatus: ${translateArticleStatus(order.article_status)}`,
+    `Deadline: ${formatDate(order.deadline)}`,
+    `Uitleverdatum: ${formatDate(order.delivery_date)}`,
+    '',
+    'Bestelde producten:',
+    formatItems(order.order_items),
+    '',
+    order.order_detail_url ? `Open de order in de backoffice:\n${order.order_detail_url}\n` : '',
+    'Met vriendelijke groet,',
+    'INTERSPORT Backoffice',
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return sendMail({
+    to,
+    replyTo: order.store_manager_email,
+    subject,
+    text,
+    html,
+  })
+}
+
+export async function sendStoreManagerArticleOrderCreatedEmail(
+  to: string,
+  order: OrderNotificationOrder
+) {
+  if (!to) {
+    return { skipped: true, reason: 'Geen hoofdverantwoordelijke winkel-mailadres aanwezig.' }
+  }
+
+  const storeName = getStoreName(order.stores)
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
+  const subject = `Artikelen bestellen voor order ${order.order_number}`
+  const html = emailLayout({
+    title: 'Artikelen bestellen',
+    preheader: `Order ${order.order_number} moet door de winkel worden besteld.`,
+    intro: [
+      'Beste winkelverantwoordelijke,',
+      'Er is een nieuwe order aangemaakt waarbij de artikelen door de winkel besteld moeten worden.',
+      `De order is aangemaakt voor ${order.club_name} vanuit ${storeName}.`,
+    ],
+    statusLabel: 'Actie vereist',
+    statusValue: 'Bestellen door winkel',
+    order,
+    storeName,
+    trackingUrl: order.order_detail_url ?? trackingUrl,
+    ctaLabel: order.order_detail_url ? 'Open order in backoffice' : 'Bekijk bestelstatus',
+    footerNote: 'Open de order in de backoffice om de artikelbestelling verder op te pakken.',
+  })
+  const text = [
+    'Beste winkelverantwoordelijke,',
+    '',
+    'Er is een nieuwe order aangemaakt waarbij de artikelen door de winkel besteld moeten worden.',
     '',
     `Ordernummer: ${order.order_number}`,
     `Winkel: ${storeName}`,

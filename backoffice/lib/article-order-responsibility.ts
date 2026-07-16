@@ -1,20 +1,20 @@
 export const ARTICLE_ORDER_RESPONSIBILITY_OPTIONS = [
   {
     value: 'order_manager',
-    label: 'Bestelverantwoordelijke',
-    shortLabel: 'Bestelverantwoordelijke',
-    description: 'Artikelen moeten worden besteld door de bestelverantwoordelijke.',
+    label: 'Bestellen door inkoop',
+    shortLabel: 'Inkoop',
+    description: 'Artikelen moeten worden besteld door inkoop.',
   },
   {
     value: 'store_manager',
-    label: 'Winkelverantwoordelijke',
+    label: 'Bestellen door winkel',
     shortLabel: 'Winkel',
-    description: 'Artikelen worden besteld door de winkelverantwoordelijke zelf.',
+    description: 'Artikelen worden besteld door de winkel zelf.',
   },
   {
     value: 'not_needed',
     label: 'Niet bestellen',
-    shortLabel: 'Niet nodig',
+    shortLabel: 'Niet bestellen',
     description: 'Artikelen hoeven niet besteld te worden.',
   },
 ] as const

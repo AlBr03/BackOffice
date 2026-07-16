@@ -42,6 +42,7 @@ const ORDER_DETAIL_SELECT = `
   logo_action,
   article_order_responsibility,
   supplier,
+  print_supplier,
   customer_email,
   article_status,
   print_status,
@@ -62,7 +63,8 @@ const ORDER_DETAIL_SELECT = `
   order_items (
     product,
     quantity,
-    product_code
+    product_code,
+    size
   ),
   stores (
     id,
@@ -84,6 +86,7 @@ const ORDER_DETAIL_SELECT_WITHOUT_PRINT_PROOF = `
   logo_action,
   article_order_responsibility,
   supplier,
+  print_supplier,
   customer_email,
   article_status,
   print_status,
@@ -101,7 +104,8 @@ const ORDER_DETAIL_SELECT_WITHOUT_PRINT_PROOF = `
   order_items (
     product,
     quantity,
-    product_code
+    product_code,
+    size
   ),
   stores (
     id,
@@ -136,7 +140,8 @@ const ORDER_DETAIL_SELECT_LEGACY = `
   order_items (
     product,
     quantity,
-    product_code
+    product_code,
+    size
   ),
   stores (
     id,
@@ -257,7 +262,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
     order = fallbackResult.data ? withMissingPrintProofFields(fallbackResult.data) : null
   }
 
-  if (error && /wefact_(quote|invoice)_/i.test(error.message)) {
+  if (error && /wefact_(quote|invoice)_|print_supplier/i.test(error.message)) {
     const fallbackResult = await supabase
       .from('orders')
       .select(ORDER_DETAIL_SELECT_LEGACY)
@@ -274,6 +279,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
         wefact_quote_url: null,
         wefact_invoice_reference: null,
         wefact_invoice_url: null,
+        print_supplier: null,
       }
     } else {
       order = null
@@ -345,6 +351,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
         product: item.product,
         quantity: item.quantity,
         productCode: item.product_code ?? '',
+        size: item.size ?? '',
       }))
     : parseProductDescription(order.product_description, order.quantity)
 
@@ -480,11 +487,15 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   <div
                     key={`${line.product}-${index}`}
                     className="ui-product-row"
-                    style={{ gridTemplateColumns: 'minmax(0, 2fr) 120px minmax(0, 1fr)', gap: 16 }}
+                    style={{
+                      gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 2fr) minmax(0, 0.8fr) 100px',
+                      gap: 16,
+                    }}
                   >
-                    <InfoField label="Product" value={line.product} />
+                    <InfoField label="Artikelcode" value={line.productCode || '-'} />
+                    <InfoField label="Omschrijving" value={line.product} />
+                    <InfoField label="Maat" value={line.size || '-'} />
                     <InfoField label="Aantal" value={line.quantity} />
-                    <InfoField label="Productcode" value={line.productCode || '-'} />
                   </div>
                 ))}
               </div>
@@ -492,14 +503,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
             <div className="ui-card">
               <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
-                Print
+                Besteldetails
               </h2>
 
               <div className="ui-grid-two" style={{ gap: 16 }}>
                 <InfoField label="Leverancier" value={order.supplier || '-'} />
                 <InfoField label="Totaal aantal" value={order.quantity} />
                 <InfoField
-                  label="Artikelen bestellen door"
+                  label="Bestellen door"
                   value={
                     <div style={{ display: 'grid', gap: 6 }}>
                       <span
@@ -517,10 +528,19 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     </div>
                   }
                 />
-                <InfoField
-                  label="Print nodig"
-                  value={order.has_print ? 'Ja' : 'Nee'}
-                />
+              </div>
+            </div>
+
+            <div className="ui-card">
+              <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
+                Printdetails
+              </h2>
+
+              <div className="ui-grid-two" style={{ gap: 16 }}>
+                <InfoField label="Print nodig" value={order.has_print ? 'Ja' : 'Nee'} />
+                {order.has_print ? (
+                  <InfoField label="Leverancier printwerk" value={order.print_supplier || '-'} />
+                ) : null}
                 <InfoField
                   label="Logo's"
                   value={
@@ -576,7 +596,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
             <div className="ui-card">
               <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
-                Opmerkingen
+                Overige opmerkingen
               </h2>
 
               <div className="ui-card-soft" style={{ minHeight: 90, whiteSpace: 'pre-wrap' }}>

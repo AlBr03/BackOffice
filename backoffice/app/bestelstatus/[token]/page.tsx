@@ -107,7 +107,8 @@ const ORDER_TRACKING_SELECT = `
   order_items (
     product,
     quantity,
-    product_code
+    product_code,
+    size
   ),
   order_files (
     id,
@@ -144,7 +145,8 @@ const ORDER_TRACKING_SELECT_WITHOUT_PRINT_PROOF = `
   order_items (
     product,
     quantity,
-    product_code
+    product_code,
+    size
   ),
   order_files (
     id,
@@ -214,6 +216,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
         product: item.product,
         quantity: item.quantity,
         productCode: item.product_code ?? '',
+        size: item.size ?? '',
       }))
     : parseProductDescription(order.product_description, order.quantity)
   const publicPrintFiles = (order.order_files ?? [])
@@ -727,10 +730,10 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                     border: '1px solid #e6edf7',
                   }}
                 >
-                  <div style={{ fontWeight: 800 }}>{line.product}</div>
-                  <div style={{ color: '#42526b' }}>Aantal: {line.quantity}</div>
+                  <div style={{ fontWeight: 800 }}>{line.productCode || 'Geen artikelcode'}</div>
+                  <div style={{ color: '#42526b' }}>{line.product}</div>
                   <div style={{ color: '#5b6b84' }}>
-                    Productcode: {line.productCode || 'Nog niet toegevoegd'}
+                    Maat: {line.size || '-'} - Aantal: {line.quantity}
                   </div>
                 </div>
               ))}

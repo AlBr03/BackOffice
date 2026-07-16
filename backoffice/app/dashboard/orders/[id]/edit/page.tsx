@@ -22,6 +22,7 @@ const ORDER_EDIT_SELECT = `
   logo_action,
   article_order_responsibility,
   supplier,
+  print_supplier,
   customer_email,
   article_status,
   print_status,
@@ -36,7 +37,8 @@ const ORDER_EDIT_SELECT = `
   order_items (
     product,
     quantity,
-    product_code
+    product_code,
+    size
   )
 `
 
@@ -62,7 +64,8 @@ const ORDER_EDIT_SELECT_LEGACY = `
   order_items (
     product,
     quantity,
-    product_code
+    product_code,
+    size
   )
 `
 
@@ -88,7 +91,7 @@ export default async function EditOrderPage({ params }: PageProps) {
     .eq('id', id)
     .single()
 
-  if (error && /wefact_(quote|invoice)_/i.test(error.message)) {
+  if (error && /wefact_(quote|invoice)_|print_supplier/i.test(error.message)) {
     const fallbackResult = await supabase
       .from('orders')
       .select(ORDER_EDIT_SELECT_LEGACY)
@@ -104,6 +107,7 @@ export default async function EditOrderPage({ params }: PageProps) {
         wefact_quote_url: null,
         wefact_invoice_reference: null,
         wefact_invoice_url: null,
+        print_supplier: null,
       }
     } else {
       order = null

@@ -507,12 +507,24 @@ td {
 
 .ui-product-row {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) 130px minmax(0, 1.2fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr) minmax(0, 0.8fr) 110px auto;
   gap: 12px;
   padding: 16px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid rgba(125, 146, 182, 0.16);
+}
+
+.ui-product-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ui-product-row-action {
+  min-height: 42px;
+  padding: 0 14px;
+  white-space: nowrap;
 }
 
 .ui-subtle-button {

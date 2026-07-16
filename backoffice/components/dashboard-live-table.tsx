@@ -23,6 +23,7 @@ type OrderRow = {
     product: string
     quantity: number
     product_code: string | null
+    size: string | null
   }[] | null
   has_print: boolean
   status: string
@@ -93,6 +94,7 @@ export function DashboardLiveTable({
                     product: item.product,
                     quantity: item.quantity,
                     productCode: item.product_code ?? '',
+                    size: item.size ?? '',
                   }))
                 : parseProductDescription(order.product_description, order.quantity)
               const primaryProduct = productLines[0]
@@ -109,7 +111,11 @@ export function DashboardLiveTable({
                   ) : null}
                   <td>{order.club_name}</td>
                   <td>
-                    <div style={{ fontWeight: 600 }}>{primaryProduct?.product ?? '-'}</div>
+                    <div style={{ fontWeight: 600 }}>{primaryProduct?.productCode || '-'}</div>
+                    <div style={{ color: '#5b6b84', fontSize: 13 }}>
+                      {primaryProduct?.product ?? '-'}
+                      {primaryProduct?.size ? `, maat ${primaryProduct.size}` : ''}
+                    </div>
                     {extraProducts > 0 ? (
                       <div style={{ color: '#5b6b84', fontSize: 13 }}>
                         + {extraProducts} extra product{extraProducts > 1 ? 'en' : ''}

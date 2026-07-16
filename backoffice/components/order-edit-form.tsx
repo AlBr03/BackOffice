@@ -35,6 +35,7 @@ type OrderData = {
   logo_action: string | null
   article_order_responsibility?: string | null
   supplier: string | null
+  print_supplier?: string | null
   customer_email: string | null
   article_status: string | null
   print_status: string | null
@@ -50,6 +51,7 @@ type OrderData = {
     product: string
     quantity: number
     product_code: string | null
+    size: string | null
   }[] | null
 }
 
@@ -82,12 +84,14 @@ export function OrderEditForm({
     getArticleOrderResponsibility(order.article_order_responsibility).value
   )
   const [supplier, setSupplier] = useState(order.supplier ?? '')
+  const [printSupplier, setPrintSupplier] = useState(order.print_supplier ?? '')
   const [productLines, setProductLines] = useState<ProductLine[]>(
     order.order_items?.length
       ? order.order_items.map((item) => ({
           product: item.product,
           quantity: item.quantity,
           productCode: item.product_code ?? '',
+          size: item.size ?? '',
         }))
       : parseProductDescription(order.product_description, order.quantity)
   )
@@ -101,7 +105,7 @@ export function OrderEditForm({
 
   function updateProductLine(
     index: number,
-    field: 'product' | 'quantity' | 'productCode',
+    field: 'product' | 'quantity' | 'productCode' | 'size',
     value: string
   ) {
     setProductLines((currentLines) =>
@@ -126,6 +130,21 @@ export function OrderEditForm({
 
   function addProductLine() {
     setProductLines((currentLines) => [...currentLines, createEmptyProductLine()])
+  }
+
+  function duplicateProductLine(index: number) {
+    setProductLines((currentLines) =>
+      currentLines.flatMap((line, lineIndex) =>
+        lineIndex === index ? [line, { ...line }] : [line]
+      )
+    )
+  }
+
+  function removeProductLine(index: number) {
+    setProductLines((currentLines) => {
+      const nextLines = currentLines.filter((_, lineIndex) => lineIndex !== index)
+      return nextLines.length ? nextLines : [createEmptyProductLine()]
+    })
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -163,12 +182,13 @@ export function OrderEditForm({
         wefact_quote_url: wefactQuoteUrl.trim() || null,
         wefact_invoice_reference: wefactInvoiceReference || null,
         wefact_invoice_url: wefactInvoiceUrl.trim() || null,
-        logo_action: logoAction || null,
+        logo_action: hasPrint ? logoAction || null : null,
         article_order_responsibility: articleOrderResponsibility,
         supplier: supplier || null,
+        print_supplier: hasPrint ? printSupplier || null : null,
         customer_email: customerEmail || null,
         product_description: productDescription,
-        print_instructions: printInstructions || null,
+        print_instructions: hasPrint ? printInstructions || null : null,
         quantity: getTotalQuantity(normalizedProductLines),
         has_print: hasPrint,
         print_status: hasPrint ? order.print_status ?? getInitialPrintStatus(true) : null,
@@ -206,6 +226,7 @@ export function OrderEditForm({
         product: line.product,
         quantity: line.quantity,
         product_code: line.productCode || null,
+        size: line.size || null,
       }))
     )
 
@@ -334,7 +355,7 @@ export function OrderEditForm({
           <div>
             <h3 className="ui-section-title">Producten</h3>
             <p className="ui-text-muted" style={{ marginTop: 4 }}>
-              Iedere regel bevat product, aantal en productcode.
+              Iedere regel bevat artikelcode, omschrijving, maat en aantal.
             </p>
           </div>
 
@@ -360,10 +381,20 @@ export function OrderEditForm({
         {productLines.map((line, index) => (
           <div key={index} className="ui-product-row">
             <input
+              value={line.productCode}
+              onChange={(e) => updateProductLine(index, 'productCode', e.target.value)}
+              placeholder="Artikelcode"
+            />
+            <input
               value={line.product}
               onChange={(e) => updateProductLine(index, 'product', e.target.value)}
-              placeholder="Product"
+              placeholder="Omschrijving"
               required
+            />
+            <input
+              value={line.size}
+              onChange={(e) => updateProductLine(index, 'size', e.target.value)}
+              placeholder="Maat"
             />
             <input
               value={line.quantity}
@@ -373,63 +404,55 @@ export function OrderEditForm({
               min={1}
               required
             />
-            <input
-              value={line.productCode}
-              onChange={(e) => updateProductLine(index, 'productCode', e.target.value)}
-              placeholder="Productcode"
-            />
+            <div className="ui-product-row-actions">
+              <button
+                type="button"
+                onClick={() => duplicateProductLine(index)}
+                className="ui-subtle-button ui-product-row-action"
+                aria-label={`Productregel ${index + 1} dupliceren`}
+                title="Productregel dupliceren"
+              >
+                Kopieer
+              </button>
+              <button
+                type="button"
+                onClick={() => removeProductLine(index)}
+                className="ui-subtle-button ui-product-row-action"
+                aria-label={`Productregel ${index + 1} verwijderen`}
+                title="Productregel verwijderen"
+              >
+                Verwijder
+              </button>
+            </div>
           </div>
         ))}
       </section>
 
-      <section
-        style={{
-          display: 'grid',
-          gap: 14,
-          padding: 20,
-          borderRadius: 18,
-          background: '#f8faff',
-          border: '1px solid #e6edf7',
-        }}
-      >
-        <h3 style={{ margin: 0, color: '#082D78', fontSize: 20 }}>Orderdetails</h3>
+      <section className="ui-card-soft ui-form-section">
+        <h3 className="ui-section-title">Besteldetails</h3>
 
         <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
           <select
             value={articleOrderResponsibility}
             onChange={(e) => setArticleOrderResponsibility(e.target.value)}
-            aria-label="Artikelen bestellen door"
+            aria-label="Bestellen door"
           >
             {ARTICLE_ORDER_RESPONSIBILITY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                Artikelen: {option.label}
-              </option>
-            ))}
-          </select>
-
-          <select value={logoAction} onChange={(e) => setLogoAction(e.target.value)}>
-            <option value="">Logo&apos;s / actie</option>
-            {LOGO_ACTION_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
+
+          <input
+            value={supplier}
+            onChange={(e) => setSupplier(e.target.value)}
+            placeholder="Leverancier"
+          />
         </div>
+      </section>
 
-        <input
-          value={supplier}
-          onChange={(e) => setSupplier(e.target.value)}
-          placeholder="Leverancier"
-        />
-
-        <textarea
-          value={printInstructions}
-          onChange={(e) => setPrintInstructions(e.target.value)}
-          placeholder="Printinstructies"
-          rows={5}
-        />
-
+      <section className="ui-card-soft ui-form-section">
         <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <input
             checked={hasPrint}
@@ -439,6 +462,40 @@ export function OrderEditForm({
           />
           Inclusief printwerk
         </label>
+      </section>
+
+      {hasPrint ? (
+        <section className="ui-card-soft ui-form-section">
+          <h3 className="ui-section-title">Printdetails</h3>
+
+          <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+            <select value={logoAction} onChange={(e) => setLogoAction(e.target.value)}>
+            <option value="">Logo&apos;s / actie</option>
+            {LOGO_ACTION_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+            </select>
+
+            <input
+              value={printSupplier}
+              onChange={(e) => setPrintSupplier(e.target.value)}
+              placeholder="Leverancier printwerk"
+            />
+          </div>
+
+          <textarea
+            value={printInstructions}
+            onChange={(e) => setPrintInstructions(e.target.value)}
+            placeholder="Printinstructies"
+            rows={5}
+          />
+        </section>
+      ) : null}
+
+      <section className="ui-card-soft ui-form-section">
+        <h3 className="ui-section-title">Deadline</h3>
 
         <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
@@ -463,7 +520,7 @@ export function OrderEditForm({
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Opmerkingen"
+          placeholder="Overige opmerkingen"
           rows={5}
         />
       </section>
