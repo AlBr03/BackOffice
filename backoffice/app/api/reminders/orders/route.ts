@@ -55,7 +55,7 @@ type ReminderOrder = {
 }
 
 function getCronSecret() {
-  return process.env.REMINDER_CRON_SECRET || process.env.CRON_SECRET || null
+  return process.env.CRON_SECRET || process.env.REMINDER_CRON_SECRET || null
 }
 
 function isAuthorized(request: NextRequest) {
@@ -273,7 +273,7 @@ function getActivityDescription(kind: ReminderKind) {
 export async function POST(request: NextRequest) {
   if (!getCronSecret()) {
     return NextResponse.json(
-      { error: 'REMINDER_CRON_SECRET of CRON_SECRET is nog niet geconfigureerd.' },
+      { error: 'CRON_SECRET is nog niet geconfigureerd.' },
       { status: 503 }
     )
   }

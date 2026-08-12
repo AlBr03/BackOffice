@@ -372,45 +372,6 @@ export function OrderEditForm({
           </div>
         </div>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <input
-            checked={articleOutOfStock}
-            onChange={(e) => setArticleOutOfStock(e.target.checked)}
-            type="checkbox"
-            style={{ width: 18, height: 18 }}
-          />
-          Artikel niet direct op voorraad
-        </label>
-
-        {articleOutOfStock ? (
-          <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
-                Verwachte levering
-              </label>
-              <input
-                value={expectedArticleDeliveryDate}
-                onChange={(e) => setExpectedArticleDeliveryDate(e.target.value)}
-                type="date"
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
-                Reminder dagen vooraf
-              </label>
-              <input
-                value={articleDeliveryReminderDaysBefore}
-                onChange={(e) => {
-                  const value = Number(e.target.value)
-                  setArticleDeliveryReminderDaysBefore(Number.isFinite(value) && value >= 0 ? value : 0)
-                }}
-                type="number"
-                min={0}
-              />
-            </div>
-          </div>
-        ) : null}
       </section>
 
       <section className="ui-card-soft ui-form-section">
@@ -521,6 +482,46 @@ export function OrderEditForm({
             placeholder="Leverancier"
           />
         </div>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <input
+            checked={articleOutOfStock}
+            onChange={(e) => setArticleOutOfStock(e.target.checked)}
+            type="checkbox"
+            style={{ width: 18, height: 18 }}
+          />
+          Artikel niet direct op voorraad
+        </label>
+
+        {articleOutOfStock ? (
+          <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+                Verwachte levering
+              </label>
+              <input
+                value={expectedArticleDeliveryDate}
+                onChange={(e) => setExpectedArticleDeliveryDate(e.target.value)}
+                type="date"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+                Reminder dagen vooraf
+              </label>
+              <input
+                value={articleDeliveryReminderDaysBefore}
+                onChange={(e) => {
+                  const value = Number(e.target.value)
+                  setArticleDeliveryReminderDaysBefore(Number.isFinite(value) && value >= 0 ? value : 0)
+                }}
+                type="number"
+                min={0}
+              />
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="ui-card-soft ui-form-section">
