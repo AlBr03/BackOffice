@@ -16,8 +16,11 @@ type DashboardPageProps = {
     print?: string
     store?: string
     q?: string
+    page?: string
   }>
 }
+
+const PAGE_SIZE = 100
 
 export default async function DashboardPage({
   searchParams,
@@ -28,6 +31,12 @@ export default async function DashboardPage({
   const selectedPrint = params.print ?? ''
   const selectedStore = params.store ?? ''
   const searchQuery = params.q ?? ''
+  const requestedPage = Number(params.page ?? '1')
+  const currentPage = Number.isFinite(requestedPage) && requestedPage > 0
+    ? Math.floor(requestedPage)
+    : 1
+  const rangeFrom = (currentPage - 1) * PAGE_SIZE
+  const rangeTo = rangeFrom + PAGE_SIZE - 1
 
   const supabase = await createClient()
   const {
@@ -83,7 +92,8 @@ export default async function DashboardPage({
       stores (
         name
       )
-    `
+    `,
+      { count: 'exact' }
     )
     .order('created_at', { ascending: false })
 
@@ -122,7 +132,22 @@ export default async function DashboardPage({
     )
   }
 
-  const { data: orders, error } = await query
+  const { data: orders, error, count } = await query.range(rangeFrom, rangeTo)
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE))
+
+  function getPageHref(page: number) {
+    const nextParams = new URLSearchParams()
+
+    if (searchQuery) nextParams.set('q', searchQuery)
+    if (selectedArticleStatus) nextParams.set('article_status', selectedArticleStatus)
+    if (selectedPrint) nextParams.set('print', selectedPrint)
+    if (selectedPrintStatus) nextParams.set('print_status', selectedPrintStatus)
+    if (selectedStore) nextParams.set('store', selectedStore)
+    if (page > 1) nextParams.set('page', String(page))
+
+    const queryString = nextParams.toString()
+    return queryString ? `/dashboard?${queryString}` : '/dashboard'
+  }
 
   return (
     <div className="ui-stack">
@@ -246,6 +271,26 @@ export default async function DashboardPage({
         orders={orders ?? []}
         showStoreColumn={!isStoreLike}
       />
+
+      {totalPages > 1 ? (
+        <section className="ui-card" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="ui-text-muted">
+            Pagina {currentPage} van {totalPages} - {count ?? 0} orders totaal
+          </div>
+          <div className="ui-actions">
+            {currentPage > 1 ? (
+              <Link href={getPageHref(currentPage - 1)} className="ui-link-button">
+                Vorige
+              </Link>
+            ) : null}
+            {currentPage < totalPages ? (
+              <Link href={getPageHref(currentPage + 1)} className="ui-link-button">
+                Volgende
+              </Link>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
     </div>
   )
 }

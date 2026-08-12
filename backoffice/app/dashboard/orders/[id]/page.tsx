@@ -360,6 +360,10 @@ function PrintPreviewMini({ file }: { file?: SignedOrderFile | null }) {
   )
 }
 
+function getOrderFileHref(orderId: string, fileId: string) {
+  return `/api/orders/${orderId}/files/${fileId}`
+}
+
 export default async function OrderDetailPage({ params }: PageProps) {
   const { id } = await params
   const supabase = await createClient()
@@ -452,32 +456,36 @@ export default async function OrderDetailPage({ params }: PageProps) {
     .eq('order_id', id)
     .order('created_at', { ascending: false })
 
-  const signedFiles = await Promise.all(
-    (files ?? []).map(async (file) => {
-      const { data } = await supabase.storage
-        .from('print-files')
-        .createSignedUrl(file.file_path, 60 * 60)
-
-      return {
-        ...file,
-        signedUrl: data?.signedUrl ?? null,
-      }
-    })
-  )
-  const customerLogoFiles = signedFiles.filter((file) =>
+  const unsignedFiles: SignedOrderFile[] = (files ?? []).map((file) => ({
+    ...file,
+    signedUrl: null,
+  }))
+  const customerLogoFiles = unsignedFiles.filter((file) =>
     file.file_path.includes('/customer-logos/')
   )
-  const printPreviewFiles = signedFiles.filter(
+  const printPreviewFiles = unsignedFiles.filter(
     (file) => !file.file_path.includes('/customer-logos/')
   )
-  const printPreviewFile =
-    printPreviewFiles.find((file) => file.signedUrl) ?? printPreviewFiles[0] ?? null
+  const firstPrintPreviewFile = printPreviewFiles[0] ?? null
+  const printPreviewFile = firstPrintPreviewFile
+    ? await (async () => {
+      const { data } = await supabase.storage
+        .from('print-files')
+        .createSignedUrl(firstPrintPreviewFile.file_path, 60 * 60)
+
+      return {
+        ...firstPrintPreviewFile,
+        signedUrl: data?.signedUrl ?? null,
+      }
+    })()
+    : null
 
   const { data: activity } = await supabase
     .from('order_activity_log')
     .select('id, action_type, description, created_at')
     .eq('order_id', id)
     .order('created_at', { ascending: false })
+    .limit(50)
 
   const articleStatusStyle = getArticleStatusStyle(order.article_status)
   const articleResponsibility = getArticleOrderResponsibility(order.article_order_responsibility)
@@ -874,7 +882,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 <div className="ui-card-soft" style={{ fontWeight: 600 }}>
                   Voor deze order is geen print vereist.
                 </div>
-              ) : signedFiles.length === 0 ? (
+              ) : unsignedFiles.length === 0 ? (
                 <div className="ui-card-soft" style={{ fontWeight: 600 }}>
                   Er zijn nog geen printbestanden geüpload.
                 </div>
@@ -898,7 +906,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                       customerLogoFiles.map((file) => (
                         <a
                           key={file.id}
-                          href={file.signedUrl ?? '#'}
+                          href={getOrderFileHref(order.id, file.id)}
                           target="_blank"
                           rel="noreferrer"
                           className="ui-card-soft"
@@ -933,7 +941,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                       printPreviewFiles.map((file) => (
                         <a
                           key={file.id}
-                          href={file.signedUrl ?? '#'}
+                          href={getOrderFileHref(order.id, file.id)}
                           target="_blank"
                           rel="noreferrer"
                           className="ui-card-soft"
@@ -950,10 +958,10 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     )}
                   </div>
 
-                  {([] as typeof signedFiles).map((file) => (
+                  {([] as typeof unsignedFiles).map((file) => (
                     <a
                       key={file.id}
-                      href={file.signedUrl ?? '#'}
+                      href={getOrderFileHref(order.id, file.id)}
                       target="_blank"
                       rel="noreferrer"
                       className="ui-card-soft"
