@@ -48,6 +48,7 @@ export default function SettingsMailPage() {
         {statusRow('Microsoft tenant ID', process.env.MICROSOFT_TENANT_ID, false)}
         {statusRow('Microsoft client ID', process.env.MICROSOFT_CLIENT_ID, false)}
         {statusRow('Microsoft client secret', process.env.MICROSOFT_CLIENT_SECRET, false)}
+        {statusRow('Microsoft afzendmailbox', process.env.MAIL_SENDER_ADDRESS, false)}
         {statusRow('SMTP fallback', isSmtpConfigured() ? 'configured' : undefined, false)}
         {statusRow('SMTP host', process.env.SMTP_HOST)}
         {statusRow('SMTP user', process.env.SMTP_USER)}

@@ -40,6 +40,10 @@ function isSecure(port: number) {
   return port === 465
 }
 
+function getSenderAddress() {
+  return process.env.MAIL_SENDER_ADDRESS || ADMINISTRATION_EMAIL
+}
+
 export function isMicrosoftGraphConfigured() {
   return Boolean(
     process.env.MICROSOFT_TENANT_ID &&
@@ -103,10 +107,11 @@ async function getMicrosoftGraphAccessToken() {
 
 async function sendMailWithMicrosoftGraph({ to, subject, text, html, replyTo }: MailOptions) {
   const accessToken = await getMicrosoftGraphAccessToken()
-  const effectiveReplyTo = replyTo || process.env.MAIL_REPLY_TO || ADMINISTRATION_EMAIL
+  const senderAddress = getSenderAddress()
+  const effectiveReplyTo = replyTo || process.env.MAIL_REPLY_TO || senderAddress
 
   const response = await fetch(
-    `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(ADMINISTRATION_EMAIL)}/sendMail`,
+    `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(senderAddress)}/sendMail`,
     {
       method: 'POST',
       headers: {
@@ -149,6 +154,7 @@ async function sendMailWithMicrosoftGraph({ to, subject, text, html, replyTo }: 
 async function sendMailWithSmtp({ to, subject, text, html, replyTo }: MailOptions) {
   const port = parsePort()
   const from = process.env.MAIL_FROM || ADMINISTRATION_FROM
+  const senderAddress = getSenderAddress()
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port,
@@ -162,7 +168,7 @@ async function sendMailWithSmtp({ to, subject, text, html, replyTo }: MailOption
   await transporter.sendMail({
     from,
     to,
-    replyTo: replyTo || process.env.MAIL_REPLY_TO || ADMINISTRATION_EMAIL,
+    replyTo: replyTo || process.env.MAIL_REPLY_TO || senderAddress,
     subject,
     text,
     html,
