@@ -45,6 +45,9 @@ export function OrderForm({
   const [logoAction, setLogoAction] = useState('')
   const [articleOrderResponsibility, setArticleOrderResponsibility] = useState('order_manager')
   const [supplier, setSupplier] = useState('')
+  const [articleOutOfStock, setArticleOutOfStock] = useState(false)
+  const [expectedArticleDeliveryDate, setExpectedArticleDeliveryDate] = useState('')
+  const [articleDeliveryReminderDaysBefore, setArticleDeliveryReminderDaysBefore] = useState(2)
   const [printSupplier, setPrintSupplier] = useState('')
   const [productLines, setProductLines] = useState([createEmptyProductLine()])
   const [printInstructions, setPrintInstructions] = useState('')
@@ -147,6 +150,9 @@ export function OrderForm({
         logo_action: hasPrint ? logoAction || null : null,
         article_order_responsibility: articleOrderResponsibility,
         supplier: supplier || null,
+        article_out_of_stock: articleOutOfStock,
+        expected_article_delivery_date: articleOutOfStock ? expectedArticleDeliveryDate || null : null,
+        article_delivery_reminder_days_before: articleDeliveryReminderDaysBefore,
         print_supplier: hasPrint ? printSupplier || null : null,
         customer_email: customerEmail || null,
         product_description: productDescription,
@@ -310,6 +316,46 @@ export function OrderForm({
             />
           </div>
         </div>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <input
+            checked={articleOutOfStock}
+            onChange={(e) => setArticleOutOfStock(e.target.checked)}
+            type="checkbox"
+            style={{ width: 18, height: 18 }}
+          />
+          Artikel niet direct op voorraad
+        </label>
+
+        {articleOutOfStock ? (
+          <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+                Verwachte levering
+              </label>
+              <input
+                value={expectedArticleDeliveryDate}
+                onChange={(e) => setExpectedArticleDeliveryDate(e.target.value)}
+                type="date"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+                Reminder dagen vooraf
+              </label>
+              <input
+                value={articleDeliveryReminderDaysBefore}
+                onChange={(e) => {
+                  const value = Number(e.target.value)
+                  setArticleDeliveryReminderDaysBefore(Number.isFinite(value) && value >= 0 ? value : 0)
+                }}
+                type="number"
+                min={0}
+              />
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="ui-card-soft ui-form-section">

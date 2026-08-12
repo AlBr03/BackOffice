@@ -25,6 +25,9 @@ type OrderNotificationOrder = {
   customer_email: string | null
   article_status: string | null
   article_order_responsibility?: string | null
+  article_out_of_stock?: boolean | null
+  expected_article_delivery_date?: string | null
+  article_delivery_reminder_days_before?: number | null
   print_status: string | null
   has_print?: boolean | null
   notes: string | null
@@ -148,6 +151,10 @@ function emailLayout({
     { label: 'Naam', value: order.club_name },
     { label: 'Winkel', value: storeName },
     { label: 'Artikelenstatus', value: translateArticleStatus(order.article_status) },
+    {
+      label: 'Verwachte artikellevering',
+      value: order.article_out_of_stock ? formatDate(order.expected_article_delivery_date) : '-',
+    },
     {
       label: 'Printstatus',
       value: order.print_status ? translatePrintStatus(order.print_status) : 'Niet van toepassing',
@@ -821,6 +828,56 @@ export async function sendArticleArrivalReminderEmail(to: string, order: OrderNo
     'Beste verantwoordelijke,',
     '',
     `De artikelen voor order ${order.order_number} zijn al 3 weken als besteld gemarkeerd, maar nog niet als op locatie gemarkeerd.`,
+    `Controleer de levering voor ${order.club_name} vanuit ${storeName} en werk de status bij zodra de artikelen binnen zijn.`,
+    '',
+    'Bestelde producten:',
+    formatItems(order.order_items),
+    '',
+    order.order_detail_url ? `Open de order in de backoffice:\n${order.order_detail_url}\n` : '',
+    'Met vriendelijke groet,',
+    getStoreSignature(storeName),
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return sendMail({
+    to,
+    replyTo: order.store_manager_email,
+    subject,
+    text,
+    html,
+  })
+}
+
+export async function sendArticleDeliveryReminderEmail(to: string, order: OrderNotificationOrder) {
+  if (!to) {
+    return { skipped: true, reason: 'Geen verantwoordelijke voor artikellevering aanwezig.' }
+  }
+
+  const storeName = getStoreName(order.stores)
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
+  const expectedDate = formatDate(order.expected_article_delivery_date)
+  const subject = `Reminder: verwachte artikellevering voor order ${order.order_number}`
+  const html = emailLayout({
+    title: 'Reminder verwachte artikellevering',
+    preheader: `Order ${order.order_number} heeft een verwachte artikellevering op ${expectedDate}.`,
+    intro: [
+      'Beste verantwoordelijke,',
+      `Voor order ${order.order_number} staat een verwachte artikellevering gepland op ${expectedDate}.`,
+      `Controleer de levering voor ${order.club_name} vanuit ${storeName} en werk de status bij zodra de artikelen binnen zijn.`,
+    ],
+    statusLabel: 'Reminder',
+    statusValue: `Verwacht op ${expectedDate}`,
+    order,
+    storeName,
+    trackingUrl: order.order_detail_url ?? trackingUrl,
+    ctaLabel: order.order_detail_url ? 'Open order in backoffice' : 'Bekijk bestelstatus',
+    footerNote: 'Open de order in de backoffice om de artikelstatus of verwachte leverdatum bij te werken.',
+  })
+  const text = [
+    'Beste verantwoordelijke,',
+    '',
+    `Voor order ${order.order_number} staat een verwachte artikellevering gepland op ${expectedDate}.`,
     `Controleer de levering voor ${order.club_name} vanuit ${storeName} en werk de status bij zodra de artikelen binnen zijn.`,
     '',
     'Bestelde producten:',

@@ -36,6 +36,10 @@ type OrderData = {
   logo_action: string | null
   article_order_responsibility?: string | null
   supplier: string | null
+  article_out_of_stock?: boolean | null
+  expected_article_delivery_date?: string | null
+  article_delivery_reminder_days_before?: number | null
+  article_delivery_reminder_sent_at?: string | null
   print_supplier?: string | null
   customer_email: string | null
   article_status: string | null
@@ -86,6 +90,13 @@ export function OrderEditForm({
     getArticleOrderResponsibility(order.article_order_responsibility).value
   )
   const [supplier, setSupplier] = useState(order.supplier ?? '')
+  const [articleOutOfStock, setArticleOutOfStock] = useState(order.article_out_of_stock ?? false)
+  const [expectedArticleDeliveryDate, setExpectedArticleDeliveryDate] = useState(
+    order.expected_article_delivery_date ?? ''
+  )
+  const [articleDeliveryReminderDaysBefore, setArticleDeliveryReminderDaysBefore] = useState(
+    order.article_delivery_reminder_days_before ?? 2
+  )
   const [printSupplier, setPrintSupplier] = useState(order.print_supplier ?? '')
   const [productLines, setProductLines] = useState<ProductLine[]>(
     order.order_items?.length
@@ -177,6 +188,11 @@ export function OrderEditForm({
     const {
       data: { user },
     } = await supabase.auth.getUser()
+    const shouldKeepArticleDeliveryReminderSentAt =
+      articleOutOfStock &&
+      order.article_out_of_stock === articleOutOfStock &&
+      order.expected_article_delivery_date === expectedArticleDeliveryDate &&
+      (order.article_delivery_reminder_days_before ?? 2) === articleDeliveryReminderDaysBefore
 
     const { error: updateError } = await supabase
       .from('orders')
@@ -192,6 +208,12 @@ export function OrderEditForm({
         logo_action: hasPrint ? logoAction || null : null,
         article_order_responsibility: articleOrderResponsibility,
         supplier: supplier || null,
+        article_out_of_stock: articleOutOfStock,
+        expected_article_delivery_date: articleOutOfStock ? expectedArticleDeliveryDate || null : null,
+        article_delivery_reminder_days_before: articleDeliveryReminderDaysBefore,
+        article_delivery_reminder_sent_at: shouldKeepArticleDeliveryReminderSentAt
+          ? order.article_delivery_reminder_sent_at ?? null
+          : null,
         print_supplier: hasPrint ? printSupplier || null : null,
         customer_email: customerEmail || null,
         product_description: productDescription,
@@ -349,6 +371,46 @@ export function OrderEditForm({
             />
           </div>
         </div>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <input
+            checked={articleOutOfStock}
+            onChange={(e) => setArticleOutOfStock(e.target.checked)}
+            type="checkbox"
+            style={{ width: 18, height: 18 }}
+          />
+          Artikel niet direct op voorraad
+        </label>
+
+        {articleOutOfStock ? (
+          <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+                Verwachte levering
+              </label>
+              <input
+                value={expectedArticleDeliveryDate}
+                onChange={(e) => setExpectedArticleDeliveryDate(e.target.value)}
+                type="date"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+                Reminder dagen vooraf
+              </label>
+              <input
+                value={articleDeliveryReminderDaysBefore}
+                onChange={(e) => {
+                  const value = Number(e.target.value)
+                  setArticleDeliveryReminderDaysBefore(Number.isFinite(value) && value >= 0 ? value : 0)
+                }}
+                type="number"
+                min={0}
+              />
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="ui-card-soft ui-form-section">

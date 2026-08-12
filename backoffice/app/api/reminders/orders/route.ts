@@ -8,6 +8,7 @@ import {
 } from '@/lib/roles'
 import {
   sendArticleArrivalReminderEmail,
+  sendArticleDeliveryReminderEmail,
   sendArticleOrderReminderEmail,
   sendLogoOrderReminderEmail,
 } from '@/lib/order-notifications'
@@ -16,7 +17,7 @@ export const dynamic = 'force-dynamic'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
-type ReminderKind = 'article_order' | 'logo_order' | 'article_arrival'
+type ReminderKind = 'article_order' | 'logo_order' | 'article_arrival' | 'article_delivery'
 
 type ReminderOrder = {
   id: string
@@ -26,6 +27,9 @@ type ReminderOrder = {
   customer_email: string | null
   article_status: string | null
   article_order_responsibility?: string | null
+  article_out_of_stock?: boolean | null
+  expected_article_delivery_date?: string | null
+  article_delivery_reminder_days_before?: number | null
   print_status: string | null
   has_print?: boolean | null
   logo_action?: string | null
@@ -40,6 +44,7 @@ type ReminderOrder = {
   article_order_reminder_sent_at?: string | null
   logo_order_reminder_sent_at?: string | null
   article_arrival_reminder_sent_at?: string | null
+  article_delivery_reminder_sent_at?: string | null
   stores?: { name?: string | null } | { name?: string | null }[] | null
   order_items?: {
     product: string
@@ -76,6 +81,22 @@ function isOlderThan(value: string | null | undefined, days: number, now: Date) 
   if (Number.isNaN(date.getTime())) return false
 
   return date.getTime() <= now.getTime() - days * DAY_MS
+}
+
+function isDeliveryReminderDue(order: ReminderOrder, now: Date) {
+  if (
+    !order.article_out_of_stock ||
+    !order.expected_article_delivery_date ||
+    order.article_delivery_reminder_sent_at
+  ) {
+    return false
+  }
+
+  const expectedDate = new Date(order.expected_article_delivery_date)
+  if (Number.isNaN(expectedDate.getTime())) return false
+
+  const daysBefore = Math.max(0, order.article_delivery_reminder_days_before ?? 2)
+  return expectedDate.getTime() - daysBefore * DAY_MS <= now.getTime()
 }
 
 function getSkippedResult(reason: string) {
@@ -165,6 +186,14 @@ function getReminderKinds(order: ReminderOrder, now: Date): ReminderKind[] {
     kinds.push('article_arrival')
   }
 
+  if (
+    articleStatus !== 'at_location' &&
+    articleStatus !== 'completed' &&
+    isDeliveryReminderDue(order, now)
+  ) {
+    kinds.push('article_delivery')
+  }
+
   return kinds
 }
 
@@ -190,7 +219,9 @@ async function sendReminder(kind: ReminderKind, order: ReminderOrder) {
       ? sendLogoOrderReminderEmail
       : kind === 'article_arrival'
         ? sendArticleArrivalReminderEmail
-        : sendArticleOrderReminderEmail
+        : kind === 'article_delivery'
+          ? sendArticleDeliveryReminderEmail
+          : sendArticleOrderReminderEmail
 
   const results = await Promise.allSettled(emails.map((email) => sender(email, notificationOrder)))
   const sent = results.filter((result) => {
@@ -221,6 +252,8 @@ function getSentColumn(kind: ReminderKind) {
       return 'logo_order_reminder_sent_at'
     case 'article_arrival':
       return 'article_arrival_reminder_sent_at'
+    case 'article_delivery':
+      return 'article_delivery_reminder_sent_at'
   }
 }
 
@@ -232,6 +265,8 @@ function getActivityDescription(kind: ReminderKind) {
       return "Reminder verstuurd: logo's nog niet besteld"
     case 'article_arrival':
       return 'Reminder verstuurd: bestelde artikelen nog niet binnen'
+    case 'article_delivery':
+      return 'Reminder verstuurd: verwachte artikellevering nadert'
   }
 }
 
@@ -260,6 +295,9 @@ export async function POST(request: NextRequest) {
       customer_email,
       article_status,
       article_order_responsibility,
+      article_out_of_stock,
+      expected_article_delivery_date,
+      article_delivery_reminder_days_before,
       print_status,
       has_print,
       logo_action,
@@ -274,6 +312,7 @@ export async function POST(request: NextRequest) {
       article_order_reminder_sent_at,
       logo_order_reminder_sent_at,
       article_arrival_reminder_sent_at,
+      article_delivery_reminder_sent_at,
       stores (
         name
       ),
@@ -285,7 +324,7 @@ export async function POST(request: NextRequest) {
       )
     `
     )
-    .or('article_status.eq.new,article_status.eq.ordered,print_status.eq.new')
+    .or('article_status.eq.new,article_status.eq.ordered,print_status.eq.new,article_out_of_stock.eq.true')
     .order('created_at', { ascending: true })
     .limit(1000)
 

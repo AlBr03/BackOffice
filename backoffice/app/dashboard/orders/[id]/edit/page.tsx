@@ -22,6 +22,10 @@ const ORDER_EDIT_SELECT = `
   logo_action,
   article_order_responsibility,
   supplier,
+  article_out_of_stock,
+  expected_article_delivery_date,
+  article_delivery_reminder_days_before,
+  article_delivery_reminder_sent_at,
   print_supplier,
   customer_email,
   article_status,
@@ -91,7 +95,12 @@ export default async function EditOrderPage({ params }: PageProps) {
     .eq('id', id)
     .single()
 
-  if (error && /wefact_(quote|invoice)_|print_supplier/i.test(error.message)) {
+  if (
+    error &&
+    /wefact_(quote|invoice)_|print_supplier|article_out_of_stock|expected_article_delivery_date|article_delivery_reminder_days_before/i.test(
+      error.message
+    )
+  ) {
     const fallbackResult = await supabase
       .from('orders')
       .select(ORDER_EDIT_SELECT_LEGACY)
@@ -108,6 +117,10 @@ export default async function EditOrderPage({ params }: PageProps) {
         wefact_invoice_reference: null,
         wefact_invoice_url: null,
         print_supplier: null,
+        article_out_of_stock: false,
+        expected_article_delivery_date: null,
+        article_delivery_reminder_days_before: 2,
+        article_delivery_reminder_sent_at: null,
       }
     } else {
       order = null

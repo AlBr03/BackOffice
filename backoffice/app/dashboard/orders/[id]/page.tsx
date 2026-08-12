@@ -51,6 +51,9 @@ const ORDER_DETAIL_SELECT = `
   logo_action,
   article_order_responsibility,
   supplier,
+  article_out_of_stock,
+  expected_article_delivery_date,
+  article_delivery_reminder_days_before,
   print_supplier,
   customer_email,
   article_status,
@@ -95,6 +98,9 @@ const ORDER_DETAIL_SELECT_WITHOUT_PRINT_PROOF = `
   logo_action,
   article_order_responsibility,
   supplier,
+  article_out_of_stock,
+  expected_article_delivery_date,
+  article_delivery_reminder_days_before,
   print_supplier,
   customer_email,
   article_status,
@@ -387,7 +393,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
     order = fallbackResult.data ? withMissingPrintProofFields(fallbackResult.data) : null
   }
 
-  if (error && /wefact_(quote|invoice)_|print_supplier/i.test(error.message)) {
+  if (
+    error &&
+    /wefact_(quote|invoice)_|print_supplier|article_out_of_stock|expected_article_delivery_date|article_delivery_reminder_days_before/i.test(
+      error.message
+    )
+  ) {
     const fallbackResult = await supabase
       .from('orders')
       .select(ORDER_DETAIL_SELECT_LEGACY)
@@ -405,6 +416,9 @@ export default async function OrderDetailPage({ params }: PageProps) {
         wefact_invoice_reference: null,
         wefact_invoice_url: null,
         print_supplier: null,
+        article_out_of_stock: false,
+        expected_article_delivery_date: null,
+        article_delivery_reminder_days_before: 2,
       }
     } else {
       order = null
@@ -636,6 +650,22 @@ export default async function OrderDetailPage({ params }: PageProps) {
               <div className="ui-grid-two" style={{ gap: 16 }}>
                 <InfoField label="Leverancier" value={order.supplier || '-'} />
                 <InfoField label="Totaal aantal" value={order.quantity} />
+                <InfoField
+                  label="Niet direct op voorraad"
+                  value={order.article_out_of_stock ? 'Ja' : 'Nee'}
+                />
+                <InfoField
+                  label="Verwachte artikellevering"
+                  value={formatDate(order.expected_article_delivery_date)}
+                />
+                <InfoField
+                  label="Reminder vooraf"
+                  value={
+                    order.article_out_of_stock
+                      ? `${order.article_delivery_reminder_days_before ?? 2} dagen`
+                      : '-'
+                  }
+                />
                 <InfoField
                   label="Bestellen door"
                   value={
