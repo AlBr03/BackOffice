@@ -518,6 +518,78 @@ export async function sendPrintProofReadyEmail(order: OrderNotificationOrder) {
   })
 }
 
+export async function sendPrintProofReviewedEmail(
+  to: string,
+  order: OrderNotificationOrder,
+  status: 'approved' | 'rejected',
+  feedback?: string
+) {
+  if (!to) {
+    return { skipped: true, reason: 'Geen printafdeling-mailadres aanwezig.' }
+  }
+
+  const storeName = getStoreName(order.stores)
+  const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
+  const isApproved = status === 'approved'
+  const subject = isApproved
+    ? `Printvoorbeeld goedgekeurd voor order ${order.order_number}`
+    : `Printvoorbeeld afgewezen voor order ${order.order_number}`
+  const statusValue = isApproved ? 'Goedgekeurd door klant' : 'Afgewezen door klant'
+  const feedbackText = feedback?.trim()
+  const html = emailLayout({
+    title: isApproved ? 'Printvoorbeeld goedgekeurd' : 'Printvoorbeeld afgewezen',
+    preheader: `Het printvoorbeeld voor order ${order.order_number} is ${isApproved ? 'goedgekeurd' : 'afgewezen'}.`,
+    intro: [
+      'Beste printafdeling,',
+      `De klant heeft het printvoorbeeld voor order ${order.order_number} ${isApproved ? 'goedgekeurd' : 'afgewezen'}.`,
+      feedbackText ? `Feedback van de klant: ${feedbackText}` : 'Er is geen aanvullende feedback meegegeven.',
+    ],
+    statusLabel: 'Beoordeling klant',
+    statusValue,
+    order,
+    storeName,
+    trackingUrl: order.order_detail_url ?? trackingUrl,
+    ctaLabel: order.order_detail_url ? 'Open order in backoffice' : 'Bekijk bestelstatus',
+    footerNote: isApproved
+      ? 'Open de order in de backoffice om de printopdracht verder te verwerken.'
+      : 'Open de order in de backoffice om de aanpassing op te pakken.',
+  })
+  const text = [
+    'Beste printafdeling,',
+    '',
+    `De klant heeft het printvoorbeeld voor order ${order.order_number} ${isApproved ? 'goedgekeurd' : 'afgewezen'}.`,
+    '',
+    `Ordernummer: ${order.order_number}`,
+    `Winkel: ${storeName}`,
+    `Naam: ${order.club_name}`,
+    `Beoordeling klant: ${statusValue}`,
+    `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status) : 'Niet van toepassing'}`,
+    `Deadline: ${formatDate(order.deadline)}`,
+    `Uitleverdatum: ${formatDate(order.delivery_date)}`,
+    '',
+    'Bestelde producten:',
+    formatItems(order.order_items),
+    '',
+    'Feedback klant:',
+    feedbackText || '-',
+    '',
+    order.order_detail_url ? `Open de order in de backoffice:\n${order.order_detail_url}\n` : '',
+    trackingUrl ? `Publieke bestelstatus:\n${trackingUrl}\n` : '',
+    'Met vriendelijke groet,',
+    getStoreSignature(storeName),
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return sendMail({
+    to,
+    replyTo: order.store_manager_email,
+    subject,
+    text,
+    html,
+  })
+}
+
 export async function sendPrintOrderCreatedEmail(
   to: string,
   order: OrderNotificationOrder
