@@ -11,11 +11,24 @@ export function OrderDetailLiveShell({
   const router = useRouter()
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      router.refresh()
-    }, 5000)
+    let hiddenAt: number | null = null
 
-    return () => clearInterval(interval)
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        hiddenAt = Date.now()
+        return
+      }
+
+      if (hiddenAt !== null && Date.now() - hiddenAt >= 30_000) {
+        router.refresh()
+      }
+
+      hiddenAt = null
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [router])
 
   return <>{children}</>
