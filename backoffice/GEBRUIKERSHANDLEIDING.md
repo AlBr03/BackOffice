@@ -123,6 +123,7 @@ De track-&-tracelink geeft rechtstreeks toegang tot de publieke orderpagina. Dee
 
 ## 3. Inloggen en uitloggen
 
+
 **Wachtwoord vergeten?** Klik op deze link op het inlogscherm en vul het e-mailadres van je account in. Als het account bestaat, ontvang je een herstellink. Controleer ook je spammap. Open de link in dezelfde browser waarin je de aanvraag hebt gedaan, kies een nieuw wachtwoord van minimaal acht tekens en vul dit tweemaal in. Log daarna opnieuw in met je nieuwe wachtwoord.
 
 Is de link verlopen, al gebruikt of in een andere browser geopend? Vraag via **Nieuwe herstellink aanvragen** een nieuwe e-mail aan. De beheerder moet de herstelmail en het applicatiedomein in Supabase Auth hebben ingesteld.
@@ -306,11 +307,13 @@ Het systeem toont alle statussen in een keuzelijst en dwingt de bovenstaande vol
 3. Kies de nieuwe artikelenstatus en/of printstatus.
 4. Kies **Statussen opslaan**.
 
-De wijziging wordt in de activiteit vastgelegd. Als een klantmailadres aanwezig is en mail correct is ingesteld, ontvangt de klant automatisch een passende statusmail.
+De wijziging wordt in de activiteit vastgelegd. Als een klantmailadres aanwezig is en mail correct is ingesteld, ontvangt de klant een passende statusmail, behalve voor aankomst van artikelen of logo?s op locatie. Die aankomst wordt intern gemeld; het ophaalbericht blijft behouden.
 
 De printafdeling ziet in dit formulier alleen de printstatus. Andere bevoegde rollen kunnen zowel de artikelenstatus als de printstatus wijzigen.
 
 ### 8.4 Speciale klantmails
+
+**E-mails bij aankomst:** de klant ontvangt geen afzonderlijke statusmail wanneer artikelen of logo’s op locatie aankomen. Medewerkers van de betrokken winkel, hoofdkantoor, bestelverantwoordelijken en beheerders ontvangen de interne aankomstmail; bij printorders ontvangt ook de printafdeling deze. Klanten ontvangen wel een ophaalbericht zodra artikelen op locatie zijn en eventueel printwerk is afgerond. De interne mail is afzonderlijk instelbaar bij **Bedrijfsinstellingen → Mailtemplates → Aankomst op locatie (intern)**.
 
 - Wanneer de artikelenstatus **Op locatie** is en geen print nodig is, ontvangt de klant een bericht dat de bestelling kan worden opgehaald.
 - Bij een printorder wordt dit afhaalbericht verzonden wanneer de artikelen **Op locatie** zijn en de printstatus **Afgerond** is.

@@ -3,6 +3,7 @@ import type { DropdownSettings } from '@/lib/dropdown-settings'
 import { sendBusinessMail } from '@/lib/send-business-mail'
 import { translateArticleStatus, translatePrintStatus } from '@/lib/order-status'
 import { getPublicOrderTrackingUrl } from '@/lib/public-url'
+import { suppressCustomerArrivalEmail } from '@/lib/status-email-policy'
 
 type OrderNotificationItem = {
   product: string
@@ -309,8 +310,12 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
 
 export async function sendOrderStatusChangedEmail(
   order: OrderNotificationOrder,
-  changeSummary: string
+  changeSummary: string,
+  previous?: OrderNotificationOrder
 ) {
+  if (suppressCustomerArrivalEmail(order, previous)) {
+    return { skipped: true, reason: 'Aankomst op locatie wordt alleen intern gemeld.' }
+  }
   const { settings: dropdownSettings } = await loadDropdownSettings()
 
   if (!order.customer_email) {
@@ -360,6 +365,15 @@ export async function sendOrderStatusChangedEmail(
     subject,
     text,
     html,
+  })
+}
+
+export async function sendInternalArrivalEmail(to: string, order: OrderNotificationOrder, changeSummary: string) {
+  const text = `Order ${order.order_number}\n${getStoreName(order.stores)}\n${order.club_name}\n\n${changeSummary}\n\n${formatItems(order.order_items)}\n\n${order.order_detail_url ?? ''}`
+  return sendBusinessMail('internal_arrival', order, {
+    to, subject: `Aankomst op locatie — order ${order.order_number}`,
+    text, html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif">${escapeHtml(text)}</div>`,
+    replyTo: order.store_manager_email,
   })
 }
 

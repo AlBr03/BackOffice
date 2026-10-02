@@ -44,6 +44,14 @@ De standaard herstelmail moet `{{ .ConfirmationURL }}` gebruiken. De PKCE-code v
 
 Controleer de regels en callback met `node --test tests/password-recovery.test.mjs`. Test vervolgens in de doelomgeving een echte herstelmail, een verlopen/gebruikt exemplaar en inloggen met het nieuwe wachtwoord. De configuratie en mailbezorging zijn niet vanuit deze workspace gewijzigd.
 
+## Aankomstmeldingen
+
+Statuswijzigingen naar `at_location` of `logos_at_location` sturen geen algemene klantmail. Het ophaalbericht blijft actief wanneer de artikelen op locatie zijn en eventueel printwerk is afgerond. Andere klantstatusmails en de afrondingsmail blijven beschikbaar.
+
+De status-API stuurt bij aankomst een interne mail naar medewerkers van de betrokken winkel, hoofdkantoor, bestelverantwoordelijken en beheerders; bij printorders ook naar de printafdeling. Adressen worden ontdubbeld. De nieuwe mailtemplate **Aankomst op locatie (intern)** is standaard ingeschakeld en afzonderlijk beheerbaar in de bedrijfsinstellingen. Er is geen migratie nodig. Interne mails gebruiken dezelfde ingestelde mailprovider als ordermails.
+
+Controleer dit gedrag met `node --test tests/status-email-policy.test.mjs`. De tests controleren klantonderdrukking, behoud van de ophaalvoorwaarden, andere statuswijzigingen en interne ontvangers per winkel.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

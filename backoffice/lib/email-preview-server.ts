@@ -11,6 +11,7 @@ export async function renderEmailPreview(settings: BusinessSettings, event: Emai
     switch (event) {
       case 'created': await mail.sendOrderCreatedEmail(order); break
       case 'status_changed': await mail.sendOrderStatusChangedEmail(order, 'Voorbeeld van een statuswijziging'); break
+      case 'internal_arrival': await mail.sendInternalArrivalEmail(to, { ...order, article_status: 'at_location' }, 'Artikelen zijn op locatie'); break
       case 'ready': await mail.sendOrderReadyForPickupEmail({ ...order, article_status: 'at_location', print_status: 'completed' }); break
       case 'completed': await mail.sendOrderCompletedEmail({ ...order, article_status: 'completed', print_status: 'completed' }); break
       case 'proof_ready': await mail.sendPrintProofReadyEmail(order); break

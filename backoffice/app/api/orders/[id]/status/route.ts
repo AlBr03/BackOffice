@@ -1,4 +1,6 @@
 import { loadDropdownSettings } from '@/lib/dropdown-settings-server'
+import { hasArrivalChange } from '@/lib/status-email-policy'
+import { notifyInternalArrival } from '@/lib/internal-arrival-notifications'
 import { loadBusinessSettings } from '@/lib/business-settings-server'
 import { missingRequiredFields, FIELD_NAMES, type TRANSITIONS } from '@/lib/business-settings'
 import { NextRequest, NextResponse } from 'next/server'
@@ -227,7 +229,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       ? await sendOrderCompletedEmail(notificationOrder)
       : shouldSendOrderReadyForPickupEmail(notificationOrder)
         ? await sendOrderReadyForPickupEmail(notificationOrder)
-        : await sendOrderStatusChangedEmail(notificationOrder, changeSummary)
+        : await sendOrderStatusChangedEmail(notificationOrder, changeSummary, order)
   } catch (mailError) {
     console.error('Status bijgewerkt, maar klantmail kon niet worden verstuurd', mailError)
     mailResult = {
@@ -237,5 +239,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
   }
 
-  return NextResponse.json({ ok: true, changeSummary, mail: mailResult })
+  let internalMail: Awaited<ReturnType<typeof notifyInternalArrival>> | { failed: number; reason: string } | null = null
+  if (hasArrivalChange(order, notificationOrder)) {
+    try { internalMail = await notifyInternalArrival(notificationOrder, changeSummary) }
+    catch { internalMail = { failed: 1, reason: 'Status bijgewerkt, maar interne aankomstmail kon niet worden verstuurd.' } }
+  }
+  return NextResponse.json({ ok: true, changeSummary, mail: mailResult, internalMail })
 }
