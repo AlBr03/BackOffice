@@ -1,3 +1,6 @@
+import { loadDropdownSettings } from '@/lib/dropdown-settings-server'
+import { loadBusinessSettings } from '@/lib/business-settings-server'
+import { missingRequiredFields, FIELD_NAMES, type TRANSITIONS } from '@/lib/business-settings'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
@@ -74,6 +77,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       tracking_token,
       club_name,
       customer_email,
+      accepted_by,
+      supplier,
+      print_supplier,
+      logo_action,
+      print_instructions,
       article_status,
       article_out_of_stock,
       expected_article_delivery_date,
@@ -118,17 +126,24 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     ? requestedPrintStatus ?? order.print_status ?? getInitialPrintStatus(true)
     : null
 
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+  const { settings: business } = await loadBusinessSettings()
+  const missing = [
+    ...(nextArticleStatus !== order.article_status ? missingRequiredFields(business, order, `article:${nextArticleStatus}` as typeof TRANSITIONS[number]) : []),
+    ...(nextPrintStatus && nextPrintStatus !== order.print_status ? missingRequiredFields(business, order, `print:${nextPrintStatus}` as typeof TRANSITIONS[number]) : []),
+  ]
+  if (missing.length) return NextResponse.json({ error: 'Vul eerst de verplichte velden in via Order bewerken: ' + [...new Set(missing)].map((field) => FIELD_NAMES[field]).join(', ') }, { status: 400 })
   const changes = []
 
   if (nextArticleStatus !== (order.article_status ?? 'new')) {
     changes.push(
-      `Artikelenstatus gewijzigd van ${translateArticleStatus(order.article_status)} naar ${translateArticleStatus(nextArticleStatus)}`
+      `Artikelenstatus gewijzigd van ${translateArticleStatus(order.article_status, dropdownSettings)} naar ${translateArticleStatus(nextArticleStatus, dropdownSettings)}`
     )
   }
 
   if (order.has_print && nextPrintStatus !== (order.print_status ?? getInitialPrintStatus(true))) {
     changes.push(
-      `Printstatus gewijzigd van ${translatePrintStatus(order.print_status ?? getInitialPrintStatus(true))} naar ${translatePrintStatus(nextPrintStatus)}`
+      `Printstatus gewijzigd van ${translatePrintStatus(order.print_status ?? getInitialPrintStatus(true), dropdownSettings)} naar ${translatePrintStatus(nextPrintStatus, dropdownSettings)}`
     )
   }
 

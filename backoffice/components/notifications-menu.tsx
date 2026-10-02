@@ -213,22 +213,22 @@ export function NotificationsMenu() {
             right: 0,
             width: 'min(420px, calc(100vw - 24px))',
             maxHeight: 'min(620px, calc(100vh - 110px))',
-            background: 'white',
+            background: 'var(--popover-background)',
             borderRadius: 18,
-            border: '1px solid #d9e2f0',
+            border: '1px solid var(--border)',
             boxShadow: '0 18px 36px rgba(8,45,120,0.18)',
             zIndex: 30,
             overflow: 'hidden',
-            color: '#132033',
+            color: 'var(--text)',
           }}
         >
-          <div style={{ padding: '16px 18px', borderBottom: '1px solid #e6ebf2' }}>
+          <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--border)' }}>
             <div
               style={{
                 fontSize: 12,
                 fontWeight: 800,
                 letterSpacing: 1.1,
-                color: '#5b6b84',
+                color: 'var(--text-soft)',
               }}
             >
               NOTIFICATIES
@@ -240,11 +240,11 @@ export function NotificationsMenu() {
 
           <div style={{ maxHeight: 500, overflowY: 'auto', padding: 10 }}>
             {isLoading ? (
-              <div style={{ padding: 14, color: '#5b6b84', fontWeight: 700 }}>Laden...</div>
+              <div style={{ padding: 14, color: 'var(--text-soft)', fontWeight: 700 }}>Laden...</div>
             ) : error ? (
-              <div style={{ padding: 14, color: '#b00012', fontWeight: 700 }}>{error}</div>
+              <div style={{ padding: 14, color: 'var(--error-text)', fontWeight: 700 }}>{error}</div>
             ) : notifications.length === 0 ? (
-              <div style={{ padding: 14, color: '#5b6b84', fontWeight: 700 }}>
+              <div style={{ padding: 14, color: 'var(--text-soft)', fontWeight: 700 }}>
                 Geen nieuwe wijzigingen.
               </div>
             ) : (
@@ -259,9 +259,9 @@ export function NotificationsMenu() {
                       gap: 6,
                       padding: '12px 14px',
                       borderRadius: 12,
-                      background: '#f8faff',
-                      border: '1px solid #e6ebf2',
-                      color: '#132033',
+                      background: 'var(--surface-alt)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text)',
                       textDecoration: 'none',
                     }}
                   >
@@ -273,10 +273,10 @@ export function NotificationsMenu() {
                         alignItems: 'baseline',
                       }}
                     >
-                      <strong style={{ color: '#164196' }}>
+                      <strong style={{ color: 'var(--link-color)' }}>
                         {getNotificationLabel(notification.actionType)}
                       </strong>
-                      <span style={{ color: '#5b6b84', fontSize: 12, whiteSpace: 'nowrap' }}>
+                      <span style={{ color: 'var(--text-soft)', fontSize: 12, whiteSpace: 'nowrap' }}>
                         {formatDateTime(notification.createdAt)}
                       </span>
                     </div>
@@ -284,11 +284,11 @@ export function NotificationsMenu() {
                       Order {notification.orderNumber} - {notification.clubName}
                     </div>
                     {notification.description ? (
-                      <div style={{ color: '#42526b', lineHeight: 1.45 }}>
+                      <div style={{ color: 'var(--text-soft)', lineHeight: 1.45 }}>
                         {notification.description}
                       </div>
                     ) : null}
-                    <div style={{ color: '#5b6b84', fontSize: 13 }}>
+                    <div style={{ color: 'var(--text-soft)', fontSize: 13 }}>
                       Door {notification.performerName}
                       {notification.storeName ? ` - ${notification.storeName}` : ''}
                     </div>

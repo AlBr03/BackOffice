@@ -51,7 +51,7 @@ export function DeleteOrderButton({
       </button>
 
       {error ? (
-        <p style={{ margin: 0, color: '#b00012', fontWeight: 600 }}>{error}</p>
+        <p style={{ margin: 0, color: 'var(--error-text)', fontWeight: 600 }}>{error}</p>
       ) : null}
     </div>
   )

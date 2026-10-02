@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { isStoreLikeRole } from '@/lib/roles'
+import { loadBusinessSettings, loadPersonalSettings } from '@/lib/business-settings-server'
+import { visibleNotificationEvents } from '@/lib/business-settings'
 
 type ActivityRow = {
   id: string
@@ -95,6 +97,9 @@ export async function GET() {
     .maybeSingle()
 
   const lastSeenAt = readState?.last_seen_at ?? null
+  const [{ settings: business }, { settings: personal }] = await Promise.all([loadBusinessSettings(), loadPersonalSettings(user.id)])
+  const events = visibleNotificationEvents(business, personal, profile.role)
+  if (!events.length || (isStoreLikeRole(profile.role) && !profile.store_id)) return NextResponse.json({ lastSeenAt, unreadCount: 0, notifications: [] })
   const baseSelect = `
     id,
     order_id,
@@ -117,6 +122,7 @@ export async function GET() {
     .from('order_activity_log')
     .select('id, orders!inner (store_id, has_print)', { count: 'exact', head: true })
     .or(`performed_by.is.null,performed_by.neq.${user.id}`)
+    .in('action_type', events)
 
   if (lastSeenAt) {
     countQuery = countQuery.gt('created_at', lastSeenAt)
@@ -140,6 +146,7 @@ export async function GET() {
     .from('order_activity_log')
     .select(baseSelect)
     .or(`performed_by.is.null,performed_by.neq.${user.id}`)
+    .in('action_type', events)
 
   if (lastSeenAt) {
     activityQuery = activityQuery.gt('created_at', lastSeenAt)

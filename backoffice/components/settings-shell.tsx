@@ -1,10 +1,13 @@
 import Link from 'next/link'
+import { DropdownManagementAccess } from '@/components/dropdown-provider'
 
 const NAV_ITEMS = [
   { href: '/dashboard/settings', label: 'Overzicht' },
   { href: '/dashboard/settings/appearance', label: 'Weergave' },
   { href: '/dashboard/settings/accounts', label: 'Accounts' },
   { href: '/dashboard/settings/stores', label: 'Winkels' },
+  { href: '/dashboard/settings/dropdowns', label: 'Keuzelijsten' },
+  { href: '/dashboard/settings/business', label: 'Bedrijfsinstellingen' },
   { href: '/dashboard/settings/mail', label: 'Mail' },
   { href: '/dashboard/settings/integrations', label: 'Koppelingen' },
 ]
@@ -49,7 +52,7 @@ export function SettingsShell({
           {NAV_ITEMS.map((item) => {
             const isActive = currentPath === item.href
 
-            return (
+            const link = (
               <Link
                 key={item.href}
                 href={item.href}
@@ -57,7 +60,7 @@ export function SettingsShell({
                 style={{
                   display: 'block',
                   background: isActive ? 'var(--button-background)' : 'var(--surface-alt)',
-                  color: isActive ? 'white' : '#164196',
+                  color: isActive ? 'white' : 'var(--link-color)',
                   border: isActive ? 'none' : '1px solid rgba(125, 146, 182, 0.16)',
                   boxShadow: isActive ? 'var(--button-shadow)' : 'none',
                 }}
@@ -65,6 +68,9 @@ export function SettingsShell({
                 {item.label}
               </Link>
             )
+            return ['/dashboard/settings/dropdowns', '/dashboard/settings/business'].includes(item.href)
+              ? <DropdownManagementAccess key={item.href}>{link}</DropdownManagementAccess>
+              : link
           })}
         </aside>
 

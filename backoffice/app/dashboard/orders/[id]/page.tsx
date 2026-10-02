@@ -1,3 +1,5 @@
+import { loadDropdownSettings } from '@/lib/dropdown-settings-server'
+import { dropdownLabel } from '@/lib/dropdown-settings'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -17,8 +19,6 @@ import { getLogoAction } from '@/lib/logo-action'
 import {
   getArticleStatusStyle,
   getPrintStatusStyle,
-  translateArticleStatus,
-  translatePrintStatus,
 } from '@/lib/order-status'
 
 export const dynamic = 'force-dynamic'
@@ -281,7 +281,7 @@ function PrintPreviewMini({ file }: { file?: SignedOrderFile | null }) {
               height: '100%',
               border: 0,
               pointerEvents: 'none',
-              background: 'white',
+              background: 'var(--surface)',
             }}
           />
         ) : null}
@@ -296,7 +296,7 @@ function PrintPreviewMini({ file }: { file?: SignedOrderFile | null }) {
               height: '100%',
               objectFit: 'contain',
               display: 'block',
-              background: 'white',
+              background: 'var(--surface)',
             }}
           />
         ) : null}
@@ -340,8 +340,8 @@ function PrintPreviewMini({ file }: { file?: SignedOrderFile | null }) {
                 justifySelf: 'end',
                 padding: '7px 11px',
                 borderRadius: 999,
-                background: 'white',
-                color: '#082D78',
+                background: 'var(--surface)',
+                color: 'var(--heading-color)',
                 fontWeight: 800,
                 fontSize: 13,
                 boxShadow: '0 6px 16px rgba(8,45,120,0.16)',
@@ -493,7 +493,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
     order.article_order_responsibility
   )
   const printStatusStyle = getPrintStatusStyle(order.print_status)
-  const logoAction = getLogoAction(order.logo_action)
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+  const logoAction = getLogoAction(order.logo_action, dropdownSettings.logo_action)
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const productLines = order.order_items?.length
     ? order.order_items.map((item) => ({
@@ -572,7 +573,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   fontSize: 14,
                 }}
               >
-                Artikelen: {translateArticleStatus(order.article_status)}
+                Artikelen: {dropdownLabel(dropdownSettings, 'article_status', order.article_status)}
               </div>
               {order.has_print ? (
                 <div
@@ -585,7 +586,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     fontSize: 14,
                   }}
                 >
-                  Print: {translatePrintStatus(order.print_status)}
+                  Print: {dropdownLabel(dropdownSettings, 'print_status', order.print_status)}
                 </div>
               ) : null}
             </div>
@@ -685,7 +686,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                           color: articleResponsibilityStyle.color,
                         }}
                       >
-                        {articleResponsibility.label}
+                        {dropdownLabel(dropdownSettings, 'article_order_responsibility', order.article_order_responsibility ?? 'order_manager')}
                       </span>
                       <span style={{ color: 'var(--text-soft)', fontSize: 13, fontWeight: 500 }}>
                         {articleResponsibility.description}

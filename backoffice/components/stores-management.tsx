@@ -198,7 +198,7 @@ export function StoresManagement() {
                   onClick={() => deleteStore(store)}
                   disabled={deletingId === store.id}
                   className="ui-subtle-button"
-                  style={{ color: '#b00012', background: '#fff1f2' }}
+                  style={{ color: 'var(--error-text)', background: 'var(--error-background)' }}
                 >
                   {deletingId === store.id ? 'Verwijderen...' : 'Verwijderen'}
                 </button>

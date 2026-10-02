@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { loadPersonalSettings } from '@/lib/business-settings-server'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -16,6 +17,11 @@ export async function POST(request: Request) {
 
   if (!mode) {
     return NextResponse.json({ error: 'Ongeldige weergavemodus.' }, { status: 400 })
+  }
+  const { settings: personal, error: preferencesError } = await loadPersonalSettings(user.id)
+  if (!preferencesError) {
+    const { error: saveError } = await supabase.from('user_preferences').upsert({ user_id: user.id, preferences: { ...personal, mode }, updated_at: new Date().toISOString() })
+    if (saveError) return NextResponse.json({ error: 'Weergavevoorkeur kon niet worden opgeslagen.' }, { status: 503 })
   }
 
   const response = NextResponse.json({ success: true })

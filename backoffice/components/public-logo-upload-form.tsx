@@ -91,15 +91,15 @@ export function PublicLogoUploadForm({ token }: { token: string }) {
         gap: 12,
         padding: 18,
         borderRadius: 18,
-        background: '#f8faff',
-        border: '1px solid #e6edf7',
+        background: 'var(--surface-alt)',
+        border: '1px solid var(--border)',
       }}
     >
       <div>
-        <div style={{ fontWeight: 800, color: '#082D78', marginBottom: 4 }}>
+        <div style={{ fontWeight: 800, color: 'var(--heading-color)', marginBottom: 4 }}>
           Logo toevoegen
         </div>
-        <div style={{ color: '#5b6b84', lineHeight: 1.5 }}>
+        <div style={{ color: 'var(--text-soft)', lineHeight: 1.5 }}>
           Upload hier uw logo&apos;s als .ai of .eps bestand. De bestanden komen automatisch bij de
           bestelling in de backoffice.
         </div>
@@ -112,9 +112,9 @@ export function PublicLogoUploadForm({ token }: { token: string }) {
       </button>
 
       {message ? (
-        <div style={{ color: '#167c3a', fontWeight: 700 }}>{message}</div>
+        <div style={{ color: 'var(--success-text)', fontWeight: 700 }}>{message}</div>
       ) : null}
-      {error ? <div style={{ color: '#b00012', fontWeight: 700 }}>{error}</div> : null}
+      {error ? <div style={{ color: 'var(--error-text)', fontWeight: 700 }}>{error}</div> : null}
     </form>
   )
 }

@@ -21,7 +21,7 @@ function statusRow(label: string, value: string | undefined, required = true) {
           {required ? 'Verplicht voor klantmails' : 'Optioneel'}
         </div>
       </div>
-      <div style={{ color: isConfigured ? '#167c3a' : '#b00012', fontWeight: 700 }}>
+      <div style={{ color: isConfigured ? 'var(--success-text)' : 'var(--error-text)', fontWeight: 700 }}>
         {isConfigured ? 'Ingesteld' : 'Ontbreekt'}
       </div>
     </div>

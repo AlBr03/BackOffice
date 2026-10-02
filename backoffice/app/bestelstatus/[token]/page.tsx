@@ -1,3 +1,6 @@
+import { loadDropdownSettings } from '@/lib/dropdown-settings-server'
+import { dropdownLabel } from '@/lib/dropdown-settings'
+import { StoreContactDetails } from '@/components/store-contact-details'
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PublicLogoUploadForm } from '@/components/public-logo-upload-form'
@@ -9,8 +12,6 @@ import {
   PRINT_STATUS_OPTIONS,
   getArticleStatusStyle,
   getPrintStatusStyle,
-  translateArticleStatus,
-  translatePrintStatus,
 } from '@/lib/order-status'
 
 export const dynamic = 'force-dynamic'
@@ -85,6 +86,7 @@ function getStoreName(stores?: { name?: string | null } | { name?: string | null
 }
 
 const ORDER_TRACKING_SELECT = `
+  store_id,
   order_number,
   club_name,
   article_status,
@@ -126,6 +128,7 @@ const ORDER_TRACKING_SELECT = `
 `
 
 const ORDER_TRACKING_SELECT_WITHOUT_PRINT_PROOF = `
+  store_id,
   order_number,
   club_name,
   article_status,
@@ -209,7 +212,8 @@ export default async function OrderTrackingPage({ params }: PageProps) {
   const printStatusIndex = getStatusIndex(PRINT_STATUS_OPTIONS, order.print_status)
   const articleStatusStyle = getArticleStatusStyle(order.article_status)
   const printStatusStyle = getPrintStatusStyle(order.print_status)
-  const logoAction = getLogoAction(order.logo_action)
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+  const logoAction = getLogoAction(order.logo_action, dropdownSettings.logo_action)
   const customerShouldUploadLogo = shouldCustomerUploadLogo(order.logo_action)
   const productLines = order.order_items?.length
     ? order.order_items.map((item) => ({
@@ -322,7 +326,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                     Artikelen
                   </div>
                   <div style={{ fontSize: 22, fontWeight: 800 }}>
-                    {translateArticleStatus(order.article_status)}
+                    {dropdownLabel(dropdownSettings, 'article_status', order.article_status)}
                   </div>
                 </div>
                 {order.has_print ? (
@@ -331,7 +335,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                       Print
                     </div>
                     <div style={{ fontSize: 22, fontWeight: 800 }}>
-                      {translatePrintStatus(order.print_status)}
+                      {dropdownLabel(dropdownSettings, 'print_status', order.print_status)}
                     </div>
                   </div>
                 ) : null}
@@ -348,7 +352,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
         <section
           className="ui-public-card"
           style={{
-            background: 'white',
+            background: 'var(--surface)',
           }}
         >
           <div
@@ -368,14 +372,14 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                   gap: 10,
                   padding: 18,
                   borderRadius: 18,
-                  background: '#f8faff',
-                  border: '1px solid #e6edf7',
+                  background: 'var(--surface-alt)',
+                  border: '1px solid var(--border)',
                 }}
               >
-                <div style={{ fontWeight: 800, color: '#082D78', marginBottom: 4 }}>
+                <div style={{ fontWeight: 800, color: 'var(--heading-color)', marginBottom: 4 }}>
                   {logoAction.customerLabel}
                 </div>
-                <div style={{ color: '#5b6b84', lineHeight: 1.5 }}>
+                <div style={{ color: 'var(--text-soft)', lineHeight: 1.5 }}>
                   {logoAction.customerDescription}
                 </div>
               </div>
@@ -410,7 +414,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           <div
             className="ui-public-card"
             style={{
-              background: 'white',
+              background: 'var(--surface)',
             }}
           >
             <div
@@ -424,8 +428,8 @@ export default async function OrderTrackingPage({ params }: PageProps) {
               }}
             >
               <div>
-                <h2 style={{ margin: 0, color: '#082D78', fontSize: 28 }}>Voortgang</h2>
-                <p style={{ margin: '6px 0 0 0', color: '#5b6b84' }}>
+                <h2 style={{ margin: 0, color: 'var(--heading-color)', fontSize: 28 }}>Voortgang</h2>
+                <p style={{ margin: '6px 0 0 0', color: 'var(--text-soft)' }}>
                   Artikelen en printwerk worden apart bijgehouden voor extra duidelijkheid.
                 </p>
               </div>
@@ -438,7 +442,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                   options: ARTICLE_STATUS_OPTIONS,
                   currentIndex: articleStatusIndex,
                   currentValue: order.article_status,
-                  currentLabel: translateArticleStatus(order.article_status),
+                  currentLabel: dropdownLabel(dropdownSettings, 'article_status', order.article_status),
                   currentStyle: articleStatusStyle,
                   visible: true,
                   kind: 'article' as const,
@@ -448,7 +452,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                   options: PRINT_STATUS_OPTIONS,
                   currentIndex: printStatusIndex,
                   currentValue: order.print_status,
-                  currentLabel: translatePrintStatus(order.print_status),
+                  currentLabel: dropdownLabel(dropdownSettings, 'print_status', order.print_status),
                   currentStyle: printStatusStyle,
                   visible: order.has_print,
                   kind: 'print' as const,
@@ -466,7 +470,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                         alignItems: 'center',
                       }}
                     >
-                      <h3 style={{ margin: 0, color: '#082D78', fontSize: 24 }}>{section.title}</h3>
+                      <h3 style={{ margin: 0, color: 'var(--heading-color)', fontSize: 24 }}>{section.title}</h3>
                       <div
                         style={{
                           padding: '10px 14px',
@@ -508,7 +512,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                                   ? '#167c3a'
                                   : isCurrent
                                     ? '#164196'
-                                    : '#d9e2f0',
+                                    : 'var(--border)',
                                 color: 'white',
                                 fontWeight: 800,
                                 boxShadow: isCurrent ? '0 0 0 8px rgba(22,65,150,0.12)' : 'none',
@@ -522,7 +526,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                                   width: 3,
                                   minHeight: 84,
                                   borderRadius: 999,
-                                  background: isCompleted ? '#167c3a' : '#d9e2f0',
+                                  background: isCompleted ? '#167c3a' : 'var(--border)',
                                 }}
                               />
                             ) : null}
@@ -533,19 +537,19 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                               padding: 18,
                               borderRadius: 20,
                               background: isCurrent
-                                ? 'linear-gradient(135deg, #eef3fb 0%, #f7faff 100%)'
-                                : '#f8faff',
-                              border: isCurrent ? '1px solid #c8d8f2' : '1px solid #e6edf7',
+                                ? 'var(--surface-alt)'
+                                : 'var(--surface-alt)',
+                              border: isCurrent ? '1px solid var(--border)' : '1px solid var(--border)',
                               opacity: isUpcoming ? 0.72 : 1,
                             }}
                           >
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                               <div>
-                                <div style={{ fontSize: 12, color: '#5b6b84', fontWeight: 800, letterSpacing: 1 }}>
+                                <div style={{ fontSize: 12, color: 'var(--text-soft)', fontWeight: 800, letterSpacing: 1 }}>
                                   {isCompleted ? 'VOLTOOID' : isCurrent ? 'ACTUELE FASE' : 'VOLGENDE STAP'}
                                 </div>
-                                <h3 style={{ margin: '6px 0 8px 0', color: '#082D78', fontSize: 22 }}>
-                                  {step.label}
+                                <h3 style={{ margin: '6px 0 8px 0', color: 'var(--heading-color)', fontSize: 22 }}>
+                                  {dropdownLabel(dropdownSettings, section.kind === 'article' ? 'article_status' : 'print_status', step.value)}
                                 </h3>
                               </div>
                               {isCurrent ? (
@@ -554,7 +558,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                                     alignSelf: 'start',
                                     padding: '8px 12px',
                                     borderRadius: 999,
-                                    background: '#164196',
+                                    background: 'var(--button-background)',
                                     color: 'white',
                                     fontWeight: 700,
                                   }}
@@ -563,7 +567,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                                 </div>
                               ) : null}
                             </div>
-                            <p style={{ margin: 0, color: '#42526b', lineHeight: 1.6 }}>
+                            <p style={{ margin: 0, color: 'var(--text-soft)', lineHeight: 1.6 }}>
                               {getStepDescription(section.kind, step.value)}
                             </p>
                           </div>
@@ -578,10 +582,10 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           <div
             className="ui-public-card"
             style={{
-              background: 'white',
+              background: 'var(--surface)',
             }}
           >
-            <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78', fontSize: 28 }}>
+            <h2 style={{ marginTop: 0, marginBottom: 18, color: 'var(--heading-color)', fontSize: 28 }}>
               Printbestanden
             </h2>
 
@@ -589,10 +593,10 @@ export default async function OrderTrackingPage({ params }: PageProps) {
               <div
                 style={{
                   borderRadius: 18,
-                  background: '#f8faff',
-                  border: '1px solid #e6edf7',
+                  background: 'var(--surface-alt)',
+                  border: '1px solid var(--border)',
                   padding: 18,
-                  color: '#5b6b84',
+                  color: 'var(--text-soft)',
                 }}
               >
                 Er zijn nog geen printbestanden toegevoegd aan deze bestelling.
@@ -610,15 +614,15 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                       gap: 4,
                       padding: 18,
                       borderRadius: 18,
-                      background: '#f8faff',
-                      border: '1px solid #e6edf7',
-                      color: '#132033',
+                      background: 'var(--surface-alt)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text)',
                       textDecoration: 'none',
                     }}
                   >
                     <div style={{ fontWeight: 800 }}>{file.file_name}</div>
-                    <div style={{ color: '#42526b' }}>{file.mime_type || 'Bestand'}</div>
-                    <div style={{ color: '#5b6b84' }}>
+                    <div style={{ color: 'var(--text-soft)' }}>{file.mime_type || 'Bestand'}</div>
+                    <div style={{ color: 'var(--text-soft)' }}>
                       Geupload op {formatDate(file.created_at)}
                     </div>
                   </a>
@@ -630,10 +634,10 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           <div
             className="ui-public-card"
             style={{
-              background: 'white',
+              background: 'var(--surface)',
             }}
           >
-            <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78', fontSize: 28 }}>
+            <h2 style={{ marginTop: 0, marginBottom: 18, color: 'var(--heading-color)', fontSize: 28 }}>
               Activiteit
             </h2>
 
@@ -641,10 +645,10 @@ export default async function OrderTrackingPage({ params }: PageProps) {
               <div
                 style={{
                   borderRadius: 18,
-                  background: '#f8faff',
-                  border: '1px solid #e6edf7',
+                  background: 'var(--surface-alt)',
+                  border: '1px solid var(--border)',
                   padding: 18,
-                  color: '#5b6b84',
+                  color: 'var(--text-soft)',
                 }}
               >
                 Er zijn nog geen updates beschikbaar.
@@ -659,12 +663,12 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                       gap: 6,
                       padding: 18,
                       borderRadius: 18,
-                      background: '#f8faff',
-                      border: '1px solid #e6edf7',
+                      background: 'var(--surface-alt)',
+                      border: '1px solid var(--border)',
                     }}
                   >
-                    <div style={{ fontWeight: 800, color: '#132033' }}>{item.description}</div>
-                    <div style={{ color: '#5b6b84' }}>{formatDateTime(item.created_at)}</div>
+                    <div style={{ fontWeight: 800, color: 'var(--text)' }}>{item.description}</div>
+                    <div style={{ color: 'var(--text-soft)' }}>{formatDateTime(item.created_at)}</div>
                   </div>
                 ))}
               </div>
@@ -676,32 +680,33 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           <div
             className="ui-public-card"
             style={{
-              background: 'white',
+              background: 'var(--surface)',
             }}
           >
-            <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78', fontSize: 24 }}>
+            <h2 style={{ marginTop: 0, marginBottom: 18, color: 'var(--heading-color)', fontSize: 24 }}>
               Samenvatting
             </h2>
 
             <div style={{ display: 'grid', gap: 14 }}>
               <div>
-                <div style={{ color: '#5b6b84', fontSize: 13, marginBottom: 4 }}>Klant / vereniging</div>
+                <div style={{ color: 'var(--text-soft)', fontSize: 13, marginBottom: 4 }}>Klant / vereniging</div>
                 <div style={{ fontWeight: 700 }}>{order.club_name}</div>
               </div>
               <div>
-                <div style={{ color: '#5b6b84', fontSize: 13, marginBottom: 4 }}>Winkel</div>
+                <div style={{ color: 'var(--text-soft)', fontSize: 13, marginBottom: 4 }}>Winkel</div>
                 <div style={{ fontWeight: 700 }}>{getStoreName(order.stores)}</div>
+                <StoreContactDetails storeId={order.store_id} storeName={getStoreName(order.stores)} />
               </div>
               <div>
-                <div style={{ color: '#5b6b84', fontSize: 13, marginBottom: 4 }}>Aangemaakt</div>
+                <div style={{ color: 'var(--text-soft)', fontSize: 13, marginBottom: 4 }}>Aangemaakt</div>
                 <div style={{ fontWeight: 700 }}>{formatDate(order.created_at)}</div>
               </div>
               <div>
-                <div style={{ color: '#5b6b84', fontSize: 13, marginBottom: 4 }}>Deadline</div>
+                <div style={{ color: 'var(--text-soft)', fontSize: 13, marginBottom: 4 }}>Deadline</div>
                 <div style={{ fontWeight: 700 }}>{formatDate(order.deadline)}</div>
               </div>
               <div>
-                <div style={{ color: '#5b6b84', fontSize: 13, marginBottom: 4 }}>Verwachte uitlevering</div>
+                <div style={{ color: 'var(--text-soft)', fontSize: 13, marginBottom: 4 }}>Verwachte uitlevering</div>
                 <div style={{ fontWeight: 700 }}>{formatDate(order.delivery_date)}</div>
               </div>
             </div>
@@ -710,10 +715,10 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           <div
             className="ui-public-card"
             style={{
-              background: 'white',
+              background: 'var(--surface)',
             }}
           >
-            <h2 style={{ marginTop: 0, marginBottom: 18, color: '#082D78', fontSize: 24 }}>
+            <h2 style={{ marginTop: 0, marginBottom: 18, color: 'var(--heading-color)', fontSize: 24 }}>
               Bestelde producten
             </h2>
 
@@ -726,13 +731,13 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                     gap: 4,
                     padding: 16,
                     borderRadius: 18,
-                    background: '#f8faff',
-                    border: '1px solid #e6edf7',
+                    background: 'var(--surface-alt)',
+                    border: '1px solid var(--border)',
                   }}
                 >
                   <div style={{ fontWeight: 800 }}>{line.productCode || 'Geen artikelcode'}</div>
-                  <div style={{ color: '#42526b' }}>{line.product}</div>
-                  <div style={{ color: '#5b6b84' }}>
+                  <div style={{ color: 'var(--text-soft)' }}>{line.product}</div>
+                  <div style={{ color: 'var(--text-soft)' }}>
                     Maat: {line.size || '-'} - Aantal: {line.quantity}
                   </div>
                 </div>
@@ -752,15 +757,15 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           alignItems: 'center',
           padding: 20,
           borderRadius: 22,
-          background: 'linear-gradient(135deg, #fff 0%, #f8faff 100%)',
-          border: '1px solid #d9e2f0',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
         }}
       >
         <div>
-          <div style={{ fontWeight: 800, color: '#082D78', marginBottom: 4 }}>
+          <div style={{ fontWeight: 800, color: 'var(--heading-color)', marginBottom: 4 }}>
             Vragen over deze bestelling?
           </div>
-          <div style={{ color: '#5b6b84' }}>
+          <div style={{ color: 'var(--text-soft)' }}>
             Neem contact op met uw winkel en vermeld ordernummer {order.order_number}.
           </div>
         </div>

@@ -92,7 +92,7 @@ export function UploadForm({ orderId }: { orderId: string }) {
           style={{
             display: 'block',
             marginBottom: 8,
-            color: '#5b6b84',
+            color: 'var(--text-soft)',
             fontWeight: 600,
           }}
         >
@@ -114,7 +114,7 @@ export function UploadForm({ orderId }: { orderId: string }) {
         <p
           style={{
             margin: 0,
-            color: message.includes('succesvol') ? '#167c3a' : '#b00012',
+            color: message.includes('succesvol') ? 'var(--success-text)' : 'var(--error-text)',
             fontWeight: 600,
           }}
         >

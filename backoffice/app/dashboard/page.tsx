@@ -1,10 +1,13 @@
 
+import { ConfiguredSelect, DropdownLabel } from '@/components/dropdown-provider'
+
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { DashboardLiveTable } from '@/components/dashboard-live-table'
-import { ARTICLE_STATUS_OPTIONS, PRINT_STATUS_OPTIONS } from '@/lib/order-status'
-import { isOfficeLikeRole, isStoreLikeRole, translateRole } from '@/lib/roles'
+import { isOfficeLikeRole, isStoreLikeRole } from '@/lib/roles'
+import { loadPersonalSettings } from '@/lib/business-settings-server'
+import { SORT_NAMES } from '@/lib/business-settings'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -17,6 +20,7 @@ type DashboardPageProps = {
     store?: string
     q?: string
     page?: string
+    sort?: string
   }>
 }
 
@@ -26,9 +30,6 @@ export default async function DashboardPage({
   searchParams,
 }: DashboardPageProps) {
   const params = (await searchParams) ?? {}
-  const selectedArticleStatus = params.article_status ?? ''
-  const selectedPrintStatus = params.print_status ?? ''
-  const selectedPrint = params.print ?? ''
   const selectedStore = params.store ?? ''
   const searchQuery = params.q ?? ''
   const requestedPage = Number(params.page ?? '1')
@@ -44,6 +45,11 @@ export default async function DashboardPage({
   } = await supabase.auth.getUser()
 
   if (!user) redirect('/login')
+  const { settings: personal } = await loadPersonalSettings(user.id)
+  const selectedArticleStatus = params.article_status ?? personal.dashboard.articleStatus
+  const selectedPrintStatus = params.print_status ?? personal.dashboard.printStatus
+  const selectedPrint = params.print ?? personal.dashboard.print
+  const selectedSort = params.sort && Object.hasOwn(SORT_NAMES, params.sort) ? params.sort as keyof typeof SORT_NAMES : personal.dashboard.sort
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -95,7 +101,8 @@ export default async function DashboardPage({
     `,
       { count: 'exact' }
     )
-    .order('created_at', { ascending: false })
+    .order(selectedSort === 'customer' ? 'club_name' : selectedSort === 'number' ? 'order_number' : 'created_at', { ascending: selectedSort !== 'newest' })
+    .order('id', { ascending: true })
 
   if (profile?.role === 'print') {
     query = query.eq('has_print', true)
@@ -139,9 +146,10 @@ export default async function DashboardPage({
     const nextParams = new URLSearchParams()
 
     if (searchQuery) nextParams.set('q', searchQuery)
-    if (selectedArticleStatus) nextParams.set('article_status', selectedArticleStatus)
-    if (selectedPrint) nextParams.set('print', selectedPrint)
-    if (selectedPrintStatus) nextParams.set('print_status', selectedPrintStatus)
+    nextParams.set('article_status', selectedArticleStatus)
+    nextParams.set('print', selectedPrint)
+    nextParams.set('print_status', selectedPrintStatus)
+    nextParams.set('sort', selectedSort)
     if (selectedStore) nextParams.set('store', selectedStore)
     if (page > 1) nextParams.set('page', String(page))
 
@@ -158,8 +166,8 @@ export default async function DashboardPage({
             <h1 className="ui-title">Dashboard</h1>
             <p className="ui-text-muted" style={{ marginTop: 8 }}>
               Welkom{profile?.full_name ? `, ${profile.full_name}` : ''} - rol:{' '}
-              <strong style={{ color: '#164196' }}>
-                {translateRole(profile?.role)}
+              <strong style={{ color: 'var(--link-color)' }}>
+                {<DropdownLabel dropdown="role" value={profile?.role} />}
               </strong>
             </p>
           </div>
@@ -207,35 +215,21 @@ export default async function DashboardPage({
 
           <div>
             <label className="ui-label">Artikelenstatus</label>
-            <select name="article_status" defaultValue={selectedArticleStatus}>
+            <ConfiguredSelect dropdown="article_status" name="article_status" defaultValue={selectedArticleStatus}>
               <option value="">Alle artikelstatussen</option>
-              {ARTICLE_STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            </ConfiguredSelect>
           </div>
 
           <div>
             <label className="ui-label">Print nodig</label>
-            <select name="print" defaultValue={selectedPrint}>
-              <option value="">Alles</option>
-              <option value="ja">Alleen print</option>
-              <option value="nee">Zonder print</option>
-            </select>
+            <ConfiguredSelect dropdown="print_filter" name="print" defaultValue={selectedPrint} />
           </div>
 
           <div>
             <label className="ui-label">Printstatus</label>
-            <select name="print_status" defaultValue={selectedPrintStatus}>
+            <ConfiguredSelect dropdown="print_status" name="print_status" defaultValue={selectedPrintStatus}>
               <option value="">Alle printstatussen</option>
-              {PRINT_STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            </ConfiguredSelect>
           </div>
 
           {isOfficeLike ? (
@@ -252,9 +246,11 @@ export default async function DashboardPage({
             </div>
           ) : null}
 
+          <label className="ui-label">Sortering<select name="sort" defaultValue={selectedSort}>{Object.entries(SORT_NAMES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+
           <div className="ui-actions">
             <button type="submit">Filteren</button>
-            <Link href="/dashboard" className="ui-link-button">
+            <Link href="/dashboard?article_status=&amp;print_status=&amp;print=" className="ui-link-button">
               Wissen
             </Link>
           </div>

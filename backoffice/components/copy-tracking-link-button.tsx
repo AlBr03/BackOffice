@@ -20,7 +20,7 @@ export function CopyTrackingLinkButton({ url }: { url: string }) {
       type="button"
       onClick={onCopy}
       style={{
-        background: copied ? '#167c3a' : '#164196',
+        background: copied ? '#167c3a' : 'var(--button-background)',
         color: 'white',
       }}
     >

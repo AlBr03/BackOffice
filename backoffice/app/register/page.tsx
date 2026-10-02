@@ -61,11 +61,11 @@ export default function RegisterPage() {
         style={{
           width: '100%',
           maxWidth: 480,
-          background: 'white',
+          background: 'var(--surface)',
           padding: 28,
           borderRadius: 18,
           boxShadow: '0 8px 28px rgba(8,45,120,0.10)',
-          border: '1px solid #d9e2f0',
+          border: '1px solid var(--border)',
         }}
       >
         <div style={{ marginBottom: 20 }}>
@@ -80,8 +80,8 @@ export default function RegisterPage() {
           >
             INTERSPORT
           </div>
-          <h1 style={{ margin: 0, color: '#082D78' }}>Account aanmaken</h1>
-          <p style={{ margin: '8px 0 0 0', color: '#5b6b84' }}>
+          <h1 style={{ margin: 0, color: 'var(--heading-color)' }}>Account aanmaken</h1>
+          <p style={{ margin: '8px 0 0 0', color: 'var(--text-soft)' }}>
             Maak een account aan. Daarna kan hoofdkantoor je rol toewijzen.
           </p>
         </div>
@@ -113,11 +113,11 @@ export default function RegisterPage() {
             {isSubmitting ? 'Account aanmaken...' : 'Account aanmaken'}
           </button>
 
-          {message ? <p style={{ color: '#167c3a', margin: 0, fontWeight: 600 }}>{message}</p> : null}
-          {error ? <p style={{ color: '#b00012', margin: 0, fontWeight: 600 }}>{error}</p> : null}
+          {message ? <p style={{ color: 'var(--success-text)', margin: 0, fontWeight: 600 }}>{message}</p> : null}
+          {error ? <p style={{ color: 'var(--error-text)', margin: 0, fontWeight: 600 }}>{error}</p> : null}
         </form>
 
-        <div style={{ marginTop: 18, color: '#5b6b84' }}>
+        <div style={{ marginTop: 18, color: 'var(--text-soft)' }}>
           Heb je al een account? <Link href="/login">Ga naar inloggen</Link>
         </div>
       </div>

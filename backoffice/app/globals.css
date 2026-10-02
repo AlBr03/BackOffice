@@ -2,6 +2,16 @@
   --intersport-blue: #164196;
   --intersport-dark-blue: #082d78;
   --intersport-red: #e30613;
+  --link-color: #164196;
+  --heading-color: #082d78;
+  --success-text: #167c3a;
+  --success-background: #e8f7ee;
+  --error-text: #b00012;
+  --error-background: #fff1f2;
+  --warning-text: #8a6514;
+  --warning-background: #fff8e8;
+  --info-background: #eef3fb;
+  --popover-background: #ffffff;
 }
 
 .theme-classic {
@@ -57,6 +67,16 @@
 
 .mode-dark {
   color-scheme: dark;
+  --link-color: #8fbdff;
+  --heading-color: #dbe7ff;
+  --success-text: #7cdda0;
+  --success-background: #123326;
+  --error-text: #ff9ca6;
+  --error-background: #3b1c29;
+  --warning-text: #f2d080;
+  --warning-background: #352c19;
+  --info-background: #172b49;
+  --popover-background: #0c1729;
   --background: #0a1220;
   --surface: rgba(12, 23, 41, 0.86);
   --surface-alt: rgba(17, 31, 55, 0.72);
@@ -110,7 +130,7 @@ body {
 }
 
 a {
-  color: var(--intersport-blue);
+  color: var(--link-color);
   text-decoration: none;
   transition: color 180ms ease, opacity 180ms ease;
 }
@@ -367,15 +387,15 @@ td {
 }
 
 .ui-message-success {
-  background: rgba(22, 124, 58, 0.09);
+  background: var(--success-background);
   border-color: rgba(22, 124, 58, 0.16);
-  color: #167c3a;
+  color: var(--success-text);
 }
 
 .ui-message-error {
-  background: rgba(176, 0, 18, 0.08);
+  background: var(--error-background);
   border-color: rgba(176, 0, 18, 0.14);
-  color: #b00012;
+  color: var(--error-text);
 }
 
 .ui-list {
@@ -431,10 +451,10 @@ td {
 }
 
 .ui-public-card {
-  background: white;
+  background: var(--surface);
   border-radius: 24px;
   padding: 28px;
-  border: 1px solid #d9e2f0;
+  border: 1px solid var(--border);
   box-shadow: 0 10px 30px rgba(8, 45, 120, 0.07);
 }
 
@@ -578,6 +598,10 @@ td {
   background: rgba(10, 20, 36, 0.76);
   color: #dbe7ff;
   border-color: rgba(120, 150, 194, 0.16);
+}
+
+.mode-dark .ui-subtle-button:hover {
+  background: #172b49;
 }
 
 .mode-dark .ui-table tbody tr:hover {

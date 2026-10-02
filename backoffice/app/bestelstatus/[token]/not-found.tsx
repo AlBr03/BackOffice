@@ -13,7 +13,7 @@ export default function TrackingNotFound() {
           width: '100%',
           maxWidth: 760,
           background:
-            'radial-gradient(circle at top right, rgba(227,6,19,0.08), transparent 28%), linear-gradient(180deg, #ffffff 0%, #f8faff 100%)',
+            'var(--page-background)',
           textAlign: 'center',
         }}
       >
@@ -25,8 +25,8 @@ export default function TrackingNotFound() {
             width: 76,
             height: 76,
             borderRadius: '50%',
-            background: '#fff1f2',
-            color: '#b00012',
+            background: 'var(--error-background)',
+            color: 'var(--error-text)',
             fontSize: 30,
             fontWeight: 800,
             marginBottom: 18,
@@ -38,10 +38,10 @@ export default function TrackingNotFound() {
         <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1.2, color: '#E30613' }}>
           TRACK & TRACE
         </div>
-        <h1 style={{ margin: '10px 0 14px 0', color: '#082D78', fontSize: 'clamp(2rem, 5vw, 3rem)' }}>
+        <h1 style={{ margin: '10px 0 14px 0', color: 'var(--heading-color)', fontSize: 'clamp(2rem, 5vw, 3rem)' }}>
           Deze bestelpagina bestaat niet
         </h1>
-        <p style={{ margin: '0 auto 24px auto', maxWidth: 560, color: '#5b6b84', lineHeight: 1.7 }}>
+        <p style={{ margin: '0 auto 24px auto', maxWidth: 560, color: 'var(--text-soft)', lineHeight: 1.7 }}>
           De link is ongeldig, verlopen of niet volledig gekopieerd. Controleer de link uit de mail
           of neem contact op met uw winkel.
         </p>

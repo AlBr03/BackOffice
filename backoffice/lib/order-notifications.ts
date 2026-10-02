@@ -1,4 +1,6 @@
-import { sendMail } from '@/lib/mail'
+import { loadDropdownSettings } from '@/lib/dropdown-settings-server'
+import type { DropdownSettings } from '@/lib/dropdown-settings'
+import { sendBusinessMail } from '@/lib/send-business-mail'
 import { translateArticleStatus, translatePrintStatus } from '@/lib/order-status'
 import { getPublicOrderTrackingUrl } from '@/lib/public-url'
 
@@ -19,6 +21,7 @@ type StoreRelation =
   | null
 
 type OrderNotificationOrder = {
+  store_id?: string | null
   order_number: string
   tracking_token?: string | null
   club_name: string
@@ -123,6 +126,7 @@ function htmlParagraphs(paragraphs: string[]) {
 }
 
 function emailLayout({
+  dropdownSettings,
   title,
   preheader,
   intro,
@@ -134,6 +138,7 @@ function emailLayout({
   ctaLabel = 'Bekijk bestelstatus',
   footerNote,
 }: {
+  dropdownSettings: DropdownSettings
   title: string
   preheader: string
   intro: string[]
@@ -150,14 +155,14 @@ function emailLayout({
     { label: 'Ordernummer', value: order.order_number },
     { label: 'Naam', value: order.club_name },
     { label: 'Winkel', value: storeName },
-    { label: 'Artikelenstatus', value: translateArticleStatus(order.article_status) },
+    { label: 'Artikelenstatus', value: translateArticleStatus(order.article_status, dropdownSettings) },
     {
       label: 'Verwachte artikellevering',
       value: order.article_out_of_stock ? formatDate(order.expected_article_delivery_date) : '-',
     },
     {
       label: 'Printstatus',
-      value: order.print_status ? translatePrintStatus(order.print_status) : 'Niet van toepassing',
+      value: order.print_status ? translatePrintStatus(order.print_status, dropdownSettings) : 'Niet van toepassing',
     },
     { label: 'Deadline', value: formatDate(order.deadline) },
     { label: 'Uitleverdatum', value: formatDate(order.delivery_date) },
@@ -243,6 +248,8 @@ function emailLayout({
 }
 
 export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+
   if (!order.customer_email) {
     return { skipped: true, reason: 'Geen klantmail aanwezig.' }
   }
@@ -251,6 +258,7 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
   const subject = `Bevestiging van uw order ${order.order_number}`
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const html = emailLayout({
+    dropdownSettings,
     title: 'Uw bestelling is ontvangen',
     preheader: `Uw order ${order.order_number} is ontvangen door ${storeName}.`,
     intro: [
@@ -258,7 +266,7 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
       `Bedankt voor uw bestelling. Uw order is goed ontvangen door ${storeName}. Hieronder vindt u de belangrijkste gegevens en de link naar uw persoonlijke bestelstatus.`,
     ],
     statusLabel: 'Huidige status',
-    statusValue: translateArticleStatus(order.article_status),
+    statusValue: translateArticleStatus(order.article_status, dropdownSettings),
     order,
     storeName,
     trackingUrl,
@@ -271,8 +279,8 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
     '',
     `Ordernummer: ${order.order_number}`,
     `Naam: ${order.club_name}`,
-    `Artikelenstatus: ${translateArticleStatus(order.article_status)}`,
-    `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status) : 'Niet van toepassing'}`,
+    `Artikelenstatus: ${translateArticleStatus(order.article_status, dropdownSettings)}`,
+    `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status, dropdownSettings) : 'Niet van toepassing'}`,
     `Deadline: ${formatDate(order.deadline)}`,
     `Uitleverdatum: ${formatDate(order.delivery_date)}`,
     '',
@@ -290,7 +298,7 @@ export async function sendOrderCreatedEmail(order: OrderNotificationOrder) {
     .filter(Boolean)
     .join('\n')
 
-  return sendMail({
+  return sendBusinessMail('created', order, {
     to: order.customer_email,
     replyTo: order.store_manager_email,
     subject,
@@ -303,6 +311,8 @@ export async function sendOrderStatusChangedEmail(
   order: OrderNotificationOrder,
   changeSummary: string
 ) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+
   if (!order.customer_email) {
     return { skipped: true, reason: 'Geen klantmail aanwezig.' }
   }
@@ -311,11 +321,12 @@ export async function sendOrderStatusChangedEmail(
   const subject = `Update over uw order ${order.order_number}`
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const html = emailLayout({
+    dropdownSettings,
     title: 'Update over uw bestelling',
     preheader: `Er is een nieuwe update voor order ${order.order_number}.`,
     intro: ['Beste klant,', `Er is een nieuwe update voor uw order ${order.order_number}.`, changeSummary],
     statusLabel: 'Nieuwe status',
-    statusValue: translateArticleStatus(order.article_status),
+    statusValue: translateArticleStatus(order.article_status, dropdownSettings),
     order,
     storeName,
     trackingUrl,
@@ -328,8 +339,8 @@ export async function sendOrderStatusChangedEmail(
     '',
     `${changeSummary}`,
     '',
-    `Artikelenstatus nu: ${translateArticleStatus(order.article_status)}`,
-    `Printstatus nu: ${order.print_status ? translatePrintStatus(order.print_status) : 'Niet van toepassing'}`,
+    `Artikelenstatus nu: ${translateArticleStatus(order.article_status, dropdownSettings)}`,
+    `Printstatus nu: ${order.print_status ? translatePrintStatus(order.print_status, dropdownSettings) : 'Niet van toepassing'}`,
     '',
     'Bestelde producten:',
     formatItems(order.order_items),
@@ -343,7 +354,7 @@ export async function sendOrderStatusChangedEmail(
     getStoreSignature(storeName),
   ].join('\n')
 
-  return sendMail({
+  return sendBusinessMail('status_changed', order, {
     to: order.customer_email,
     replyTo: order.store_manager_email,
     subject,
@@ -364,6 +375,8 @@ export function shouldSendOrderCompletedEmail(order: OrderNotificationOrder) {
 }
 
 export async function sendOrderReadyForPickupEmail(order: OrderNotificationOrder) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+
   if (!order.customer_email) {
     return { skipped: true, reason: 'Geen klantmail aanwezig.' }
   }
@@ -372,6 +385,7 @@ export async function sendOrderReadyForPickupEmail(order: OrderNotificationOrder
   const subject = `Uw order ${order.order_number} kan worden opgehaald`
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const html = emailLayout({
+    dropdownSettings,
     title: 'Uw bestelling staat klaar',
     preheader: `Uw order ${order.order_number} kan worden opgehaald bij ${storeName}.`,
     intro: [
@@ -394,8 +408,8 @@ export async function sendOrderReadyForPickupEmail(order: OrderNotificationOrder
     '',
     `Ordernummer: ${order.order_number}`,
     `Naam: ${order.club_name}`,
-    `Artikelenstatus: ${translateArticleStatus(order.article_status)}`,
-    `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status) : 'Niet van toepassing'}`,
+    `Artikelenstatus: ${translateArticleStatus(order.article_status, dropdownSettings)}`,
+    `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status, dropdownSettings) : 'Niet van toepassing'}`,
     '',
     'Bestelde producten:',
     formatItems(order.order_items),
@@ -407,7 +421,7 @@ export async function sendOrderReadyForPickupEmail(order: OrderNotificationOrder
     .filter(Boolean)
     .join('\n')
 
-  return sendMail({
+  return sendBusinessMail('ready', order, {
     to: order.customer_email,
     replyTo: order.store_manager_email,
     subject,
@@ -417,6 +431,8 @@ export async function sendOrderReadyForPickupEmail(order: OrderNotificationOrder
 }
 
 export async function sendOrderCompletedEmail(order: OrderNotificationOrder) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+
   if (!order.customer_email) {
     return { skipped: true, reason: 'Geen klantmail aanwezig.' }
   }
@@ -425,6 +441,7 @@ export async function sendOrderCompletedEmail(order: OrderNotificationOrder) {
   const subject = `Bedankt voor uw order ${order.order_number}`
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const html = emailLayout({
+    dropdownSettings,
     title: 'Bedankt voor uw bestelling',
     preheader: `Uw order ${order.order_number} is afgerond. Bedankt voor uw bestelling.`,
     intro: [
@@ -458,7 +475,7 @@ export async function sendOrderCompletedEmail(order: OrderNotificationOrder) {
     .filter(Boolean)
     .join('\n')
 
-  return sendMail({
+  return sendBusinessMail('completed', order, {
     to: order.customer_email,
     replyTo: order.store_manager_email,
     subject,
@@ -468,6 +485,8 @@ export async function sendOrderCompletedEmail(order: OrderNotificationOrder) {
 }
 
 export async function sendPrintProofReadyEmail(order: OrderNotificationOrder) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+
   if (!order.customer_email) {
     return { skipped: true, reason: 'Geen klantmail aanwezig.' }
   }
@@ -476,6 +495,7 @@ export async function sendPrintProofReadyEmail(order: OrderNotificationOrder) {
   const subject = `Printvoorbeeld klaar voor order ${order.order_number}`
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const html = emailLayout({
+    dropdownSettings,
     title: 'Printvoorbeeld klaar voor beoordeling',
     preheader: `Het printvoorbeeld voor order ${order.order_number} staat klaar.`,
     intro: [
@@ -509,7 +529,7 @@ export async function sendPrintProofReadyEmail(order: OrderNotificationOrder) {
     .filter(Boolean)
     .join('\n')
 
-  return sendMail({
+  return sendBusinessMail('proof_ready', order, {
     to: order.customer_email,
     replyTo: order.store_manager_email,
     subject,
@@ -524,6 +544,8 @@ export async function sendPrintProofReviewedEmail(
   status: 'approved' | 'rejected',
   feedback?: string
 ) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+
   if (!to) {
     return { skipped: true, reason: 'Geen printafdeling-mailadres aanwezig.' }
   }
@@ -537,6 +559,7 @@ export async function sendPrintProofReviewedEmail(
   const statusValue = isApproved ? 'Goedgekeurd door klant' : 'Afgewezen door klant'
   const feedbackText = feedback?.trim()
   const html = emailLayout({
+    dropdownSettings,
     title: isApproved ? 'Printvoorbeeld goedgekeurd' : 'Printvoorbeeld afgewezen',
     preheader: `Het printvoorbeeld voor order ${order.order_number} is ${isApproved ? 'goedgekeurd' : 'afgewezen'}.`,
     intro: [
@@ -563,7 +586,7 @@ export async function sendPrintProofReviewedEmail(
     `Winkel: ${storeName}`,
     `Naam: ${order.club_name}`,
     `Beoordeling klant: ${statusValue}`,
-    `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status) : 'Niet van toepassing'}`,
+    `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status, dropdownSettings) : 'Niet van toepassing'}`,
     `Deadline: ${formatDate(order.deadline)}`,
     `Uitleverdatum: ${formatDate(order.delivery_date)}`,
     '',
@@ -581,7 +604,7 @@ export async function sendPrintProofReviewedEmail(
     .filter(Boolean)
     .join('\n')
 
-  return sendMail({
+  return sendBusinessMail(isApproved ? 'proof_approved' : 'proof_rejected', order, {
     to,
     replyTo: order.store_manager_email,
     subject,
@@ -594,6 +617,8 @@ export async function sendPrintOrderCreatedEmail(
   to: string,
   order: OrderNotificationOrder
 ) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+
   if (!to) {
     return { skipped: true, reason: 'Geen printafdeling-mailadres aanwezig.' }
   }
@@ -602,6 +627,7 @@ export async function sendPrintOrderCreatedEmail(
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const subject = `Nieuwe printopdracht voor order ${order.order_number}`
   const html = emailLayout({
+    dropdownSettings,
     title: 'Nieuwe printopdracht',
     preheader: `Order ${order.order_number} bevat printwerk voor ${order.club_name}.`,
     intro: [
@@ -615,7 +641,7 @@ export async function sendPrintOrderCreatedEmail(
         : 'Er zijn geen aanvullende printinstructies ingevuld.',
     ],
     statusLabel: 'Printstatus',
-    statusValue: order.print_status ? translatePrintStatus(order.print_status) : 'Nieuw',
+    statusValue: order.print_status ? translatePrintStatus(order.print_status, dropdownSettings) : 'Nieuw',
     order,
     storeName,
     trackingUrl: order.order_detail_url ?? trackingUrl,
@@ -630,7 +656,7 @@ export async function sendPrintOrderCreatedEmail(
     `Ordernummer: ${order.order_number}`,
     `Winkel: ${storeName}`,
     `Naam: ${order.club_name}`,
-    `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status) : 'Nieuw'}`,
+    `Printstatus: ${order.print_status ? translatePrintStatus(order.print_status, dropdownSettings) : 'Nieuw'}`,
     `Leverancier logo's: ${order.print_supplier?.trim() || '-'}`,
     `Deadline: ${formatDate(order.deadline)}`,
     `Uitleverdatum: ${formatDate(order.delivery_date)}`,
@@ -649,7 +675,7 @@ export async function sendPrintOrderCreatedEmail(
     .filter(Boolean)
     .join('\n')
 
-  return sendMail({
+  return sendBusinessMail('print_created', order, {
     to,
     replyTo: order.store_manager_email,
     subject,
@@ -662,6 +688,8 @@ export async function sendOrderManagerOrderCreatedEmail(
   to: string,
   order: OrderNotificationOrder
 ) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+
   if (!to) {
     return { skipped: true, reason: 'Geen bestelverantwoordelijke-mailadres aanwezig.' }
   }
@@ -670,6 +698,7 @@ export async function sendOrderManagerOrderCreatedEmail(
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const subject = `Nieuwe artikelbestelling voor order ${order.order_number}`
   const html = emailLayout({
+    dropdownSettings,
     title: 'Nieuwe artikelbestelling',
     preheader: `Order ${order.order_number} moet worden besteld door de bestelverantwoordelijke.`,
     intro: [
@@ -693,7 +722,7 @@ export async function sendOrderManagerOrderCreatedEmail(
     `Ordernummer: ${order.order_number}`,
     `Winkel: ${storeName}`,
     `Naam: ${order.club_name}`,
-    `Artikelenstatus: ${translateArticleStatus(order.article_status)}`,
+    `Artikelenstatus: ${translateArticleStatus(order.article_status, dropdownSettings)}`,
     `Deadline: ${formatDate(order.deadline)}`,
     `Uitleverdatum: ${formatDate(order.delivery_date)}`,
     '',
@@ -707,7 +736,7 @@ export async function sendOrderManagerOrderCreatedEmail(
     .filter(Boolean)
     .join('\n')
 
-  return sendMail({
+  return sendBusinessMail('purchase_created', order, {
     to,
     replyTo: order.store_manager_email,
     subject,
@@ -720,6 +749,8 @@ export async function sendStoreManagerArticleOrderCreatedEmail(
   to: string,
   order: OrderNotificationOrder
 ) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+
   if (!to) {
     return { skipped: true, reason: 'Geen hoofdverantwoordelijke winkel-mailadres aanwezig.' }
   }
@@ -728,6 +759,7 @@ export async function sendStoreManagerArticleOrderCreatedEmail(
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const subject = `Artikelen bestellen voor order ${order.order_number}`
   const html = emailLayout({
+    dropdownSettings,
     title: 'Artikelen bestellen',
     preheader: `Order ${order.order_number} moet door de winkel worden besteld.`,
     intro: [
@@ -751,7 +783,7 @@ export async function sendStoreManagerArticleOrderCreatedEmail(
     `Ordernummer: ${order.order_number}`,
     `Winkel: ${storeName}`,
     `Naam: ${order.club_name}`,
-    `Artikelenstatus: ${translateArticleStatus(order.article_status)}`,
+    `Artikelenstatus: ${translateArticleStatus(order.article_status, dropdownSettings)}`,
     `Deadline: ${formatDate(order.deadline)}`,
     `Uitleverdatum: ${formatDate(order.delivery_date)}`,
     '',
@@ -765,7 +797,7 @@ export async function sendStoreManagerArticleOrderCreatedEmail(
     .filter(Boolean)
     .join('\n')
 
-  return sendMail({
+  return sendBusinessMail('store_created', order, {
     to,
     replyTo: order.store_manager_email,
     subject,
@@ -775,6 +807,8 @@ export async function sendStoreManagerArticleOrderCreatedEmail(
 }
 
 export async function sendArticleOrderReminderEmail(to: string, order: OrderNotificationOrder) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+
   if (!to) {
     return { skipped: true, reason: 'Geen verantwoordelijke voor artikelbestelling aanwezig.' }
   }
@@ -783,6 +817,7 @@ export async function sendArticleOrderReminderEmail(to: string, order: OrderNoti
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const subject = `Reminder: artikelen bestellen voor order ${order.order_number}`
   const html = emailLayout({
+    dropdownSettings,
     title: 'Reminder artikelen bestellen',
     preheader: `Order ${order.order_number} staat al 3 dagen open zonder dat artikelen besteld zijn.`,
     intro: [
@@ -814,7 +849,7 @@ export async function sendArticleOrderReminderEmail(to: string, order: OrderNoti
     .filter(Boolean)
     .join('\n')
 
-  return sendMail({
+  return sendBusinessMail('article_order', order, {
     to,
     replyTo: order.store_manager_email,
     subject,
@@ -824,6 +859,8 @@ export async function sendArticleOrderReminderEmail(to: string, order: OrderNoti
 }
 
 export async function sendLogoOrderReminderEmail(to: string, order: OrderNotificationOrder) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+
   if (!to) {
     return { skipped: true, reason: 'Geen verantwoordelijke voor logobestelling aanwezig.' }
   }
@@ -832,6 +869,7 @@ export async function sendLogoOrderReminderEmail(to: string, order: OrderNotific
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const subject = `Reminder: logo's bestellen voor order ${order.order_number}`
   const html = emailLayout({
+    dropdownSettings,
     title: "Reminder logo's bestellen",
     preheader: `Order ${order.order_number} staat al 5 dagen open zonder dat logo's besteld zijn.`,
     intro: [
@@ -863,7 +901,7 @@ export async function sendLogoOrderReminderEmail(to: string, order: OrderNotific
     .filter(Boolean)
     .join('\n')
 
-  return sendMail({
+  return sendBusinessMail('logo_order', order, {
     to,
     replyTo: order.store_manager_email,
     subject,
@@ -873,6 +911,8 @@ export async function sendLogoOrderReminderEmail(to: string, order: OrderNotific
 }
 
 export async function sendArticleArrivalReminderEmail(to: string, order: OrderNotificationOrder) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+
   if (!to) {
     return { skipped: true, reason: 'Geen verantwoordelijke voor artikelopvolging aanwezig.' }
   }
@@ -881,6 +921,7 @@ export async function sendArticleArrivalReminderEmail(to: string, order: OrderNo
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
   const subject = `Reminder: artikelen nog niet binnen voor order ${order.order_number}`
   const html = emailLayout({
+    dropdownSettings,
     title: 'Reminder artikelen opvolgen',
     preheader: `Order ${order.order_number} staat al 3 weken op besteld zonder ontvangst op locatie.`,
     intro: [
@@ -912,7 +953,7 @@ export async function sendArticleArrivalReminderEmail(to: string, order: OrderNo
     .filter(Boolean)
     .join('\n')
 
-  return sendMail({
+  return sendBusinessMail('article_arrival', order, {
     to,
     replyTo: order.store_manager_email,
     subject,
@@ -922,6 +963,8 @@ export async function sendArticleArrivalReminderEmail(to: string, order: OrderNo
 }
 
 export async function sendArticleDeliveryReminderEmail(to: string, order: OrderNotificationOrder) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+
   if (!to) {
     return { skipped: true, reason: 'Geen verantwoordelijke voor artikellevering aanwezig.' }
   }
@@ -931,6 +974,7 @@ export async function sendArticleDeliveryReminderEmail(to: string, order: OrderN
   const expectedDate = formatDate(order.expected_article_delivery_date)
   const subject = `Reminder: verwachte artikellevering voor order ${order.order_number}`
   const html = emailLayout({
+    dropdownSettings,
     title: 'Reminder verwachte artikellevering',
     preheader: `Order ${order.order_number} heeft een verwachte artikellevering op ${expectedDate}.`,
     intro: [
@@ -962,7 +1006,7 @@ export async function sendArticleDeliveryReminderEmail(to: string, order: OrderN
     .filter(Boolean)
     .join('\n')
 
-  return sendMail({
+  return sendBusinessMail('article_delivery', order, {
     to,
     replyTo: order.store_manager_email,
     subject,

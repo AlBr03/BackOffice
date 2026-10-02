@@ -1,6 +1,6 @@
 # Gebruikershandleiding INTERSPORT Backoffice
 
-Versie: 9 september 2026  
+Versie: 2 oktober 2026  
 Doelgroep: winkels, hoofdkantoor, bestelverantwoordelijken, printafdeling, beheerders en klanten
 
 ## 1. Doel van de backoffice
@@ -34,8 +34,10 @@ Welke informatie en functies beschikbaar zijn, wordt bepaald door de rol van de 
 | Instellingen openen | Nee | Nee | Ja | Ja | Nee | Ja |
 | Accounts en rollen beheren | Nee | Nee | Ja | Ja | Nee | Ja |
 | Winkels beheren | Nee | Nee | Ja | Ja | Nee | Ja |
+| Bedrijfsinstellingen en keuzelijsten beheren | Nee | Nee | Ja | Nee | Nee | Ja |
+| Eigen dashboard en notificaties instellen | Ja | Ja | Ja | Ja | Ja | Ja |
 
-> Let op: in de huidige inrichting heeft de rol **Bestelverantwoordelijke** dezelfde brede systeemrechten als Hoofdkantoor en Beheerder. Deze rol kan dus ook accounts, rollen, winkels en instellingen beheren.
+> De rol **Bestelverantwoordelijke** kan accounts, rollen, winkels en bestaande instellingen beheren. Bedrijfsinstellingen, keuzelijsten en hun wijzigingshistorie zijn uitsluitend beschikbaar voor **Hoofdkantoor** en **Beheerder**.
 
 ### 2.1 Nog niet toegewezen
 
@@ -215,7 +217,7 @@ Wanneer **Artikel niet direct op voorraad** wordt aangevinkt, kunnen ook worden 
 Vink **Inclusief printwerk** aan wanneer printwerk nodig is. Daarna worden aanvullende velden zichtbaar:
 
 - **Logo's / actie**:
-  - Bestellen;
+  - Bestellen en drukvoorbeeld;
   - Aanwezig;
   - Klant levert aan;
   - Niet nodig.
@@ -409,8 +411,10 @@ Automatische e-mails worden alleen verstuurd als de benodigde ontvanger en maili
 
 Het systeem controleert dagelijks welke herinneringen nodig zijn. Iedere herinnering wordt maximaal één keer verstuurd wanneer een ontvanger is gevonden.
 
+De onderstaande termijnen en ontvangers zijn de standaardinstellingen. Hoofdkantoor en Beheerder kunnen reminders inschakelen of uitschakelen en termijnen en ontvangers aanpassen via **Instellingen → Bedrijfsinstellingen → Reminders**. Bestaande orders behouden een reeds ingevulde eigen termijn voor de verwachte levering.
+
 - **Artikelen nog niet besteld**: na drie dagen in status Nieuw, naar de gekozen bestelverantwoordelijke.
-- **Logo's nog niet besteld**: na vijf dagen bij een printorder met logoactie Bestellen en printstatus Nieuw, naar de printafdeling.
+- **Logo's nog niet besteld**: na vijf dagen bij een printorder met logoactie Bestellen en drukvoorbeeld en printstatus Nieuw, naar de printafdeling.
 - **Bestelde artikelen nog niet binnen**: 21 dagen nadat de artikelenstatus Besteld is geworden, naar de gekozen bestelverantwoordelijke.
 - **Verwachte artikellevering nadert**: bij een niet-direct-voorradig artikel, op het ingestelde aantal dagen vóór de verwachte leverdatum, naar de gekozen bestelverantwoordelijke.
 
@@ -455,9 +459,49 @@ Als er gekoppelde gebruikers of orders bestaan, blokkeert het systeem het verwij
 
 Onder **Weergave** kan worden gekozen tussen lichte en donkere modus. De keuze wordt op het gebruikte apparaat onthouden.
 
+### Keuzelijsten
+
+Beschikbaar voor **Hoofdkantoor** en **Beheerder** via **Profielmenu → Instellingen → Keuzelijsten**.
+
+- Pas namen, volgorde en zichtbaarheid aan voor artikelenstatus, printstatus, bestellen door, printvoorbeeld/logoactie, gebruikersrollen en het dashboardfilter voor bedrukking.
+- Voeg bij printvoorbeeld/logoactie nieuwe vrije opties toe. Vul ook de naam en uitleg in die de klant op de bestelstatuspagina ziet.
+- Nieuwe vrije opties starten geen automatische reminders of verzoeken om logo's aan te leveren. Gebruik daarvoor de bestaande workflowopties.
+- Beheer winkelopties via **Instellingen → Winkels**.
+- Sla wijzigingen op met **Keuzelijsten opslaan**. Open of herlaad een pagina om de actuele opties te zien.
+
+De interne werking van statussen, rollen en bestelverantwoordelijkheden blijft behouden. Verplichte opties kunnen niet worden verborgen. Opgeslagen opties worden verborgen in plaats van verwijderd; bestaande orders en accounts behouden hun gekozen optie. Als een andere beheerder tegelijk wijzigingen heeft opgeslagen, herlaad dan de pagina voordat je opnieuw wijzigt en opslaat.
+
+Bekijk wijzigingen eerst via **Voorbeeld bekijken** en sla ze daarna op. Via **Wijzigingshistorie** kun je zien wie wanneer iets heeft aangepast en een eerdere versie als concept terugzetten. **Standaardkeuzelijsten als concept herstellen** zet de oorspronkelijke namen, volgorde en zichtbaarheid terug; opgeslagen vrije opties blijven behouden, maar worden verborgen.
+
+### Bedrijfsinstellingen
+
+Beschikbaar voor **Hoofdkantoor** en **Beheerder** via **Profielmenu → Instellingen → Bedrijfsinstellingen**.
+
+- **Bedrijf en winkels**: stel de communicatienaam, contactgegevens, adres, openingstijden en mailhandtekening in. Contactgegevens verschijnen op de klantpagina. De bedrijfsnaam verschijnt in de applicatie en klantmails; de merkkleur wordt in klantmails gebruikt. Winkelgegevens overschrijven de bedrijfsgegevens waar ze zijn ingevuld. Wijzig de naam van een winkel in de keuzelijsten via het bestaande winkelbeheer.
+- **Leveranciers**: beheer artikel- en printleveranciers met contactgegevens. Actieve leveranciers verschijnen als suggesties in orderformulieren. Bestaande orders behouden hun opgeslagen leverancier; vrije invoer blijft mogelijk. Deactiveer een leverancier in plaats van deze te verwijderen. Kies eerst een andere orderdefault als een leverancier nog als standaard wordt gebruikt.
+- **Orderdefaults**: kies de standaardleveranciers, bestelverantwoordelijkheid en het aantal dagen vóór verwachte levering voor nieuwe orders. Via de winkeldetails kun je per winkel andere defaults instellen. Bestaande orders worden niet aangepast.
+- **Reminders**: stel per reminder de termijn, ontvangers en aan/uit-keuze in. Winkelverantwoordelijken ontvangen uitsluitend reminders voor hun eigen winkel; de printafdeling uitsluitend voor printorders. Een eigen termijn op een bestaande order blijft leidend voor de leveringsherinnering.
+- **Mailtemplates**: pas het onderwerp en de berichttekst per gebeurtenis aan en schakel mails afzonderlijk in of uit. Lege velden behouden de bestaande standaardtekst. Gebruik de getoonde placeholders, bijvoorbeeld `{{order_number}}`, `{{customer}}`, `{{store}}` en `{{tracking_url}}`. Het systeem voegt ordergegevens en contactinformatie toe. Het mailvoorbeeld gebruikt dezelfde opmaak als de echte mail, maar verstuurt niets.
+- **Verplichte ordervelden**: bepaal welke aanvullende velden bij nieuwe orders of bij een bepaalde statuswijziging moeten zijn ingevuld. Winkel, klantnaam en productregels blijven verplicht. Printvelden gelden alleen voor printorders; de verwachte artikellevering alleen als artikelen niet op voorraad zijn. Vul ontbrekende gegevens via **Order bewerken** aan voordat je de status wijzigt.
+- **Notificaties per rol**: bepaal welke ordergebeurtenissen in het notificatiemenu verschijnen en voor welke rollen. De bestaande toegang tot orders blijft van toepassing.
+
+Gebruik **Voorbeeld bekijken** voordat je opslaat. De wijzigingshistorie vermeldt wie wanneer gedeelde instellingen heeft gewijzigd. Je kunt een eerdere versie of de standaardinstellingen als concept herstellen, controleren en opnieuw opslaan. Opgeslagen leveranciers blijven bij herstel behouden; ontbrekende leveranciers worden gedeactiveerd. Gelijktijdige wijzigingen van een andere beheerder worden niet ongemerkt overschreven.
+
+### Mijn voorkeuren
+
+Iedere ingelogde medewerker kan via **Profielmenu → Mijn voorkeuren** de eigen weergave instellen:
+
+- lichte of donkere modus;
+- standaardfilters voor artikelenstatus, printstatus en printwerk;
+- sortering van het dashboard;
+- zichtbare kolommen, waarbij de orderkolom altijd blijft staan;
+- notificatie-events die de medewerker zelf wil ontvangen.
+
+Deze voorkeuren gelden alleen voor het eigen account. De kleurmodus wordt ook op het gebruikte apparaat onthouden. Een persoonlijke notificatiekeuze kan een bedrijfsregel of toegangsbeperking niet verruimen. Met **Wissen** op het dashboard worden de filters voor die weergave leeggemaakt. De opgeslagen standaardfilters worden bij het opnieuw openen van het dashboard weer gebruikt.
+
 ### Mail
 
-De pagina **Mail** toont uitsluitend of de benodigde serverinstellingen aanwezig zijn. Geheime waarden en wachtwoorden worden niet weergegeven. Instellingen kunnen op deze pagina niet inhoudelijk worden gewijzigd.
+De pagina **Mail** toont of de benodigde serverinstellingen aanwezig zijn. Geheime waarden en wachtwoorden worden niet weergegeven. Onderwerpen, teksten en mailhandtekeningen zijn aanpasbaar via **Bedrijfsinstellingen**; de technische mailverbinding wordt via de serverconfiguratie beheerd.
 
 ### Koppelingen
 

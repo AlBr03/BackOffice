@@ -1,17 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { isStoreLikeRole, ORDER_MANAGER_ROLE, STORE_MANAGER_ROLE, STORE_ROLE } from '@/lib/roles'
+import { ConfiguredSelect } from '@/components/dropdown-provider'
 
-const ROLE_OPTIONS = [
-  { value: 'pending', label: 'Nog niet toegewezen' },
-  { value: STORE_ROLE, label: 'Winkel' },
-  { value: STORE_MANAGER_ROLE, label: 'Hoofdverantwoordelijke winkel' },
-  { value: 'office', label: 'Hoofdkantoor' },
-  { value: ORDER_MANAGER_ROLE, label: 'Bestelverantwoordelijke' },
-  { value: 'print', label: 'Printafdeling' },
-  { value: 'admin', label: 'Beheerder' },
-]
+import { useEffect, useState } from 'react'
+import { isStoreLikeRole } from '@/lib/roles'
 
 type Account = {
   id: string
@@ -213,7 +205,7 @@ export function AccountsManagement() {
             minLength={8}
             required
           />
-          <select
+          <ConfiguredSelect dropdown="role"
             value={newAccount.role}
             onChange={(e) =>
               updateNewAccount({
@@ -221,13 +213,7 @@ export function AccountsManagement() {
                 store_id: isStoreLikeRole(e.target.value) ? newAccount.store_id : '',
               })
             }
-          >
-            {ROLE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+           />
           <select
             value={newAccount.store_id}
             onChange={(e) => updateNewAccount({ store_id: e.target.value })}
@@ -251,10 +237,10 @@ export function AccountsManagement() {
           <section key={account.id} className="ui-card">
             <div style={{ display: 'grid', gap: 12 }}>
               <div>
-                <div style={{ fontWeight: 800, color: '#082D78' }}>
+                <div style={{ fontWeight: 800, color: 'var(--heading-color)' }}>
                   {account.full_name || 'Naam nog niet ingevuld'}
                 </div>
-                <div style={{ color: '#5b6b84' }}>{account.email}</div>
+                <div style={{ color: 'var(--text-soft)' }}>{account.email}</div>
               </div>
 
               <div
@@ -267,7 +253,7 @@ export function AccountsManagement() {
                   placeholder="Volledige naam"
                 />
 
-                <select
+                <ConfiguredSelect dropdown="role"
                   value={account.role ?? ''}
                   onChange={(e) =>
                     updateAccount(account.id, {
@@ -277,13 +263,7 @@ export function AccountsManagement() {
                         : null,
                     })
                   }
-                >
-                  {ROLE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                 />
 
                 <select
                   value={account.store_id ?? ''}
@@ -311,7 +291,7 @@ export function AccountsManagement() {
                   onClick={() => deleteAccount(account)}
                   disabled={deletingId === account.id || savingId === account.id}
                   className="ui-subtle-button"
-                  style={{ color: '#b00012', background: '#fff1f2' }}
+                  style={{ color: 'var(--error-text)', background: 'var(--error-background)' }}
                 >
                   {deletingId === account.id ? 'Verwijderen...' : 'Verwijderen'}
                 </button>

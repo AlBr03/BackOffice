@@ -1,9 +1,11 @@
+import { loadBusinessSettingsForSystem as loadBusinessSettings } from '@/lib/business-settings-server'
+import { reminderKinds } from '@/lib/reminder-rules'
+import type { BusinessSettings } from '@/lib/business-settings'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPublicAppUrl } from '@/lib/public-url'
 import {
   ORDER_MANAGER_ROLE,
-  PRINT_ROLE,
   STORE_MANAGER_ROLE,
 } from '@/lib/roles'
 import {
@@ -15,7 +17,6 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-const DAY_MS = 24 * 60 * 60 * 1000
 
 type ReminderKind = 'article_order' | 'logo_order' | 'article_arrival' | 'article_delivery'
 
@@ -74,31 +75,6 @@ function isAuthorized(request: NextRequest) {
   return bearerToken === secret || headerToken === secret
 }
 
-function isOlderThan(value: string | null | undefined, days: number, now: Date) {
-  if (!value) return false
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return false
-
-  return date.getTime() <= now.getTime() - days * DAY_MS
-}
-
-function isDeliveryReminderDue(order: ReminderOrder, now: Date) {
-  if (
-    !order.article_out_of_stock ||
-    !order.expected_article_delivery_date ||
-    order.article_delivery_reminder_sent_at
-  ) {
-    return false
-  }
-
-  const expectedDate = new Date(order.expected_article_delivery_date)
-  if (Number.isNaN(expectedDate.getTime())) return false
-
-  const daysBefore = Math.max(0, order.article_delivery_reminder_days_before ?? 2)
-  return expectedDate.getTime() - daysBefore * DAY_MS <= now.getTime()
-}
-
 function getSkippedResult(reason: string) {
   return {
     total: 0,
@@ -110,6 +86,7 @@ function getSkippedResult(reason: string) {
 }
 
 async function getRoleEmails(role: string, storeId?: string | null) {
+  if (role === STORE_MANAGER_ROLE && !storeId) return []
   const admin = createAdminClient()
   let query = admin
     .from('profiles')
@@ -154,50 +131,7 @@ async function getArticleResponsibleEmails(order: ReminderOrder) {
   return []
 }
 
-function getReminderKinds(order: ReminderOrder, now: Date): ReminderKind[] {
-  const kinds: ReminderKind[] = []
-  const articleStatus = order.article_status ?? 'new'
-  const printStatus = order.print_status ?? 'new'
-
-  if (
-    articleStatus === 'new' &&
-    order.article_order_responsibility !== 'not_needed' &&
-    !order.article_order_reminder_sent_at &&
-    isOlderThan(order.created_at, 3, now)
-  ) {
-    kinds.push('article_order')
-  }
-
-  if (
-    order.has_print &&
-    order.logo_action === 'bestellen' &&
-    printStatus === 'new' &&
-    !order.logo_order_reminder_sent_at &&
-    isOlderThan(order.created_at, 5, now)
-  ) {
-    kinds.push('logo_order')
-  }
-
-  if (
-    articleStatus === 'ordered' &&
-    !order.article_arrival_reminder_sent_at &&
-    isOlderThan(order.article_ordered_at, 21, now)
-  ) {
-    kinds.push('article_arrival')
-  }
-
-  if (
-    articleStatus !== 'at_location' &&
-    articleStatus !== 'completed' &&
-    isDeliveryReminderDue(order, now)
-  ) {
-    kinds.push('article_delivery')
-  }
-
-  return kinds
-}
-
-async function sendReminder(kind: ReminderKind, order: ReminderOrder) {
+async function sendReminder(kind: ReminderKind, order: ReminderOrder, settings: BusinessSettings) {
   const appUrl = getPublicAppUrl()
   const storeManagerEmail = await getStoreManagerEmail(order.store_id)
   const notificationOrder = {
@@ -205,10 +139,8 @@ async function sendReminder(kind: ReminderKind, order: ReminderOrder) {
     store_manager_email: storeManagerEmail,
     order_detail_url: appUrl ? `${appUrl}/dashboard/orders/${order.id}` : null,
   }
-  const emails =
-    kind === 'logo_order'
-      ? await getRoleEmails(PRINT_ROLE)
-      : await getArticleResponsibleEmails(order)
+  const recipients = settings.reminders[kind].recipients.filter((recipient) => recipient !== 'print' || order.has_print)
+  const emails = Array.from(new Set((await Promise.all(recipients.map((recipient) => recipient === 'responsible' ? getArticleResponsibleEmails(order) : getRoleEmails(recipient, recipient === 'store_manager' ? order.store_id : undefined)))).flat()))
 
   if (emails.length === 0) {
     return getSkippedResult('Geen verantwoordelijke ontvanger gevonden.')
@@ -282,6 +214,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Geen toegang.' }, { status: 401 })
   }
 
+  const { settings } = await loadBusinessSettings()
   const now = new Date()
   const admin = createAdminClient()
   const { data: orders, error } = await admin
@@ -344,10 +277,10 @@ export async function POST(request: NextRequest) {
   }> = []
 
   for (const order of (orders ?? []) as ReminderOrder[]) {
-    const kinds = getReminderKinds(order, now)
+    const kinds = reminderKinds(order, now, settings)
 
     for (const kind of kinds) {
-      const result = await sendReminder(kind, order)
+      const result = await sendReminder(kind, order, settings)
       summaries.push({
         orderId: order.id,
         orderNumber: order.order_number,

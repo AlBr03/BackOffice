@@ -1,7 +1,7 @@
 export const LOGO_ACTION_OPTIONS = [
   {
     value: 'bestellen',
-    label: 'Bestellen',
+    label: 'Bestellen en drukvoorbeeld',
     customerLabel: "Logo's worden besteld",
     customerDescription: "De winkel verwerkt het bestellen van de benodigde logo's.",
   },
@@ -27,9 +27,14 @@ export const LOGO_ACTION_OPTIONS = [
 
 export type LogoAction = (typeof LOGO_ACTION_OPTIONS)[number]['value']
 
-export function getLogoAction(value?: string | null) {
+export function getLogoAction(value?: string | null, options: readonly {
+  value: string
+  label: string
+  customerLabel?: string
+  customerDescription?: string
+}[] = LOGO_ACTION_OPTIONS) {
   return (
-    LOGO_ACTION_OPTIONS.find((option) => option.value === value) ?? {
+    options.find((option) => option.value === value) ?? {
       value: value ?? '',
       label: value ?? '-',
       customerLabel: value ?? '-',

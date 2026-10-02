@@ -1,12 +1,10 @@
 'use client'
 
+import { ConfiguredSelect } from '@/components/dropdown-provider'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  ARTICLE_STATUS_OPTIONS,
-  PRINT_STATUS_OPTIONS,
-  getInitialPrintStatus,
-} from '@/lib/order-status'
+import { getInitialPrintStatus } from '@/lib/order-status'
 
 export function StatusForm({
   orderId,
@@ -97,20 +95,14 @@ export function StatusForm({
           style={{
             display: 'block',
             marginBottom: 8,
-            color: '#5b6b84',
+            color: 'var(--text-soft)',
             fontWeight: 600,
           }}
         >
           Artikelenstatus
         </label>
 
-        <select value={articleStatus} onChange={(e) => setArticleStatus(e.target.value)}>
-          {ARTICLE_STATUS_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <ConfiguredSelect dropdown="article_status" value={articleStatus} onChange={(e) => setArticleStatus(e.target.value)} />
       </div>
       ) : null}
 
@@ -120,29 +112,23 @@ export function StatusForm({
             style={{
               display: 'block',
               marginBottom: 8,
-              color: '#5b6b84',
+              color: 'var(--text-soft)',
               fontWeight: 600,
             }}
           >
             Printstatus
           </label>
 
-          <select
+          <ConfiguredSelect dropdown="print_status"
             value={printStatus ?? 'new'}
             onChange={(e) => setPrintStatus(e.target.value)}
-          >
-            {PRINT_STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+           />
         </div>
       ) : (
         <div
           style={{
-            background: '#eef3fb',
-            color: '#164196',
+            background: 'var(--info-background)',
+            color: 'var(--link-color)',
             padding: 14,
             borderRadius: 12,
             fontWeight: 600,
@@ -162,8 +148,8 @@ export function StatusForm({
             margin: 0,
             color:
               message.includes('succesvol') || message.includes('niet gewijzigd')
-                ? '#167c3a'
-                : '#b00012',
+                ? 'var(--success-text)'
+                : 'var(--error-text)',
             fontWeight: 600,
           }}
         >

@@ -94,10 +94,10 @@ export function HeaderProfileMenu({ role }: { role?: string | null }) {
               top: 'calc(100% + 12px)',
               right: 0,
               minWidth: 220,
-              background: 'white',
+              background: 'var(--popover-background)',
               borderRadius: 18,
               padding: 10,
-              border: '1px solid #d9e2f0',
+              border: '1px solid var(--border)',
               boxShadow: '0 18px 36px rgba(8,45,120,0.18)',
               zIndex: 20,
             }}
@@ -108,7 +108,7 @@ export function HeaderProfileMenu({ role }: { role?: string | null }) {
                 fontSize: 12,
                 fontWeight: 800,
                 letterSpacing: 1.1,
-                color: '#5b6b84',
+                color: 'var(--text-soft)',
               }}
             >
               PROFIEL
@@ -120,8 +120,8 @@ export function HeaderProfileMenu({ role }: { role?: string | null }) {
                 onClick={() => setIsOpen(false)}
                 style={{
                   display: 'block',
-                  background: '#f8faff',
-                  color: '#164196',
+                  background: 'var(--surface-alt)',
+                  color: 'var(--link-color)',
                   borderRadius: 12,
                   padding: '12px 14px',
                   textDecoration: 'none',
@@ -133,6 +133,8 @@ export function HeaderProfileMenu({ role }: { role?: string | null }) {
               </Link>
             ) : null}
 
+            <Link href="/dashboard/preferences" onClick={() => setIsOpen(false)} className="ui-link-button" style={{ display: 'block', marginBottom: 8 }}>Mijn voorkeuren</Link>
+
             <button
               type="button"
               onClick={onLogout}
@@ -140,8 +142,8 @@ export function HeaderProfileMenu({ role }: { role?: string | null }) {
               style={{
                 width: '100%',
                 textAlign: 'left',
-                background: '#f8faff',
-                color: '#164196',
+                background: 'var(--surface-alt)',
+                color: 'var(--link-color)',
                 borderRadius: 12,
                 padding: '12px 14px',
               }}

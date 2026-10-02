@@ -1,5 +1,10 @@
 'use client'
 
+import { useBusinessSettings } from '@/components/business-provider'
+import type { ColumnKey } from '@/lib/business-settings'
+
+import { DropdownLabel } from '@/components/dropdown-provider'
+
 import Link from 'next/link'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -7,8 +12,6 @@ import { parseProductDescription } from '@/lib/order-fields'
 import {
   getArticleStatusStyle,
   getPrintStatusStyle,
-  translateArticleStatus,
-  translatePrintStatus,
 } from '@/lib/order-status'
 
 type OrderRow = {
@@ -51,6 +54,9 @@ export function DashboardLiveTable({
   showStoreColumn?: boolean
 }) {
   const router = useRouter()
+  const { personal } = useBusinessSettings()
+  const showColumn = (key: ColumnKey) => personal.dashboard.columns.includes(key) && (key !== 'store' || showStoreColumn !== false)
+  const columnCount = personal.dashboard.columns.filter((key) => showColumn(key)).length
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -71,20 +77,20 @@ export function DashboardLiveTable({
         <thead>
           <tr>
             <th>Order</th>
-            {showStoreColumn !== false ? (
+            {showColumn('store') ? (
               <th>Winkel</th>
             ) : null}
-            <th>Klant</th>
-            <th>Product</th>
-            <th>Aantal</th>
-            <th>Print</th>
-            <th>Status</th>
+            {showColumn('customer') ? (<th>Klant</th>) : null}
+            {showColumn('product') ? (<th>Product</th>) : null}
+            {showColumn('quantity') ? (<th>Aantal</th>) : null}
+            {showColumn('print') ? (<th>Print</th>) : null}
+            {showColumn('status') ? (<th>Status</th>) : null}
           </tr>
         </thead>
         <tbody>
           {orders.length === 0 ? (
             <tr>
-              <td colSpan={showStoreColumn !== false ? 7 : 6} style={{ color: '#5b6b84' }}>
+              <td colSpan={columnCount} style={{ color: 'var(--text-soft)' }}>
                 Geen orders gevonden.
               </td>
             </tr>
@@ -107,35 +113,35 @@ export function DashboardLiveTable({
                       {order.order_number}
                     </Link>
                   </td>
-                  {showStoreColumn !== false ? (
+                  {showColumn('store') ? (
                     <td>{getStoreName(order.stores)}</td>
                   ) : null}
-                  <td>{order.club_name}</td>
-                  <td>
+                  {showColumn('customer') ? (<td>{order.club_name}</td>) : null}
+                  {showColumn('product') ? (<td>
                     <div style={{ fontWeight: 600 }}>{primaryProduct?.productCode || '-'}</div>
-                    <div style={{ color: '#5b6b84', fontSize: 13 }}>
+                    <div style={{ color: 'var(--text-soft)', fontSize: 13 }}>
                       {primaryProduct?.product ?? '-'}
                       {primaryProduct?.size ? `, maat ${primaryProduct.size}` : ''}
                     </div>
                     {extraProducts > 0 ? (
-                      <div style={{ color: '#5b6b84', fontSize: 13 }}>
+                      <div style={{ color: 'var(--text-soft)', fontSize: 13 }}>
                         + {extraProducts} extra product{extraProducts > 1 ? 'en' : ''}
                       </div>
                     ) : null}
-                  </td>
-                  <td>{order.quantity}</td>
-                  <td>
+                  </td>) : null}
+                  {showColumn('quantity') ? (<td>{order.quantity}</td>) : null}
+                  {showColumn('print') ? (<td>
                     {order.has_print ? (
-                      <span className="ui-pill" style={{ background: '#ffe9eb', color: '#b00012' }}>
+                      <span className="ui-pill" style={{ background: 'var(--error-background)', color: 'var(--error-text)' }}>
                         Ja
                       </span>
                     ) : (
-                      <span className="ui-pill" style={{ background: '#eef3fb', color: '#164196' }}>
+                      <span className="ui-pill" style={{ background: 'var(--info-background)', color: 'var(--link-color)' }}>
                         Nee
                       </span>
                     )}
-                  </td>
-                  <td>
+                  </td>) : null}
+                  {showColumn('status') ? (<td>
                     <div style={{ display: 'grid', gap: 8 }}>
                       <span
                         className="ui-pill"
@@ -144,7 +150,7 @@ export function DashboardLiveTable({
                           color: getArticleStatusStyle(order.article_status).color,
                         }}
                       >
-                        Artikelen: {translateArticleStatus(order.article_status)}
+                        Artikelen: {<DropdownLabel dropdown="article_status" value={order.article_status} />}
                       </span>
                       {order.has_print ? (
                         <span
@@ -154,11 +160,11 @@ export function DashboardLiveTable({
                             color: getPrintStatusStyle(order.print_status).color,
                           }}
                         >
-                          Print: {translatePrintStatus(order.print_status)}
+                          Print: {<DropdownLabel dropdown="print_status" value={order.print_status} />}
                         </span>
                       ) : null}
                     </div>
-                  </td>
+                  </td>) : null}
                 </tr>
               )
             })

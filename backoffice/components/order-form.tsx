@@ -1,5 +1,11 @@
 'use client'
 
+import { SupplierField } from '@/components/supplier-field'
+import { useBusinessSettings } from '@/components/business-provider'
+import { orderDefaults, defaultSupplierName, missingRequiredFields, FIELD_NAMES } from '@/lib/business-settings'
+
+import { ConfiguredSelect } from '@/components/dropdown-provider'
+
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -11,8 +17,6 @@ import {
 } from '@/lib/order-fields'
 import { deriveLegacyStatus, getInitialPrintStatus } from '@/lib/order-status'
 import { isStoreLikeRole } from '@/lib/roles'
-import { ARTICLE_ORDER_RESPONSIBILITY_OPTIONS } from '@/lib/article-order-responsibility'
-import { LOGO_ACTION_OPTIONS } from '@/lib/logo-action'
 
 type StoreOption = {
   id: string
@@ -28,6 +32,8 @@ export function OrderForm({
   storeId?: string | null
   stores: StoreOption[]
 }) {
+  const { business } = useBusinessSettings()
+  const defaults = orderDefaults(business, storeId)
   const router = useRouter()
   const supabase = createClient()
   const submitLockRef = useRef(false)
@@ -43,12 +49,12 @@ export function OrderForm({
   const [wefactInvoiceReference, setWefactInvoiceReference] = useState('')
   const [wefactInvoiceUrl, setWefactInvoiceUrl] = useState('')
   const [logoAction, setLogoAction] = useState('')
-  const [articleOrderResponsibility, setArticleOrderResponsibility] = useState('order_manager')
-  const [supplier, setSupplier] = useState('')
+  const [articleOrderResponsibility, setArticleOrderResponsibility] = useState<string>(defaults.responsibility)
+  const [supplier, setSupplier] = useState(defaultSupplierName(business, defaults.supplier))
   const [articleOutOfStock, setArticleOutOfStock] = useState(false)
   const [expectedArticleDeliveryDate, setExpectedArticleDeliveryDate] = useState('')
-  const [articleDeliveryReminderDaysBefore, setArticleDeliveryReminderDaysBefore] = useState(2)
-  const [printSupplier, setPrintSupplier] = useState('')
+  const [articleDeliveryReminderDaysBefore, setArticleDeliveryReminderDaysBefore] = useState(defaults.reminderDays)
+  const [printSupplier, setPrintSupplier] = useState(defaultSupplierName(business, defaults.printSupplier))
   const [productLines, setProductLines] = useState([createEmptyProductLine()])
   const [printInstructions, setPrintInstructions] = useState('')
   const [hasPrint, setHasPrint] = useState(false)
@@ -57,6 +63,16 @@ export function OrderForm({
   const [notes, setNotes] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  function changeStore(nextId: string) {
+    const previous = orderDefaults(business, selectedStoreId)
+    const next = orderDefaults(business, nextId)
+    setSelectedStoreId(nextId)
+    if (supplier === defaultSupplierName(business, previous.supplier)) setSupplier(defaultSupplierName(business, next.supplier))
+    if (printSupplier === defaultSupplierName(business, previous.printSupplier)) setPrintSupplier(defaultSupplierName(business, next.printSupplier))
+    if (articleOrderResponsibility === previous.responsibility) setArticleOrderResponsibility(next.responsibility)
+    if (articleDeliveryReminderDaysBefore === previous.reminderDays) setArticleDeliveryReminderDaysBefore(next.reminderDays)
+  }
 
   function updateProductLine(
     index: number,
@@ -112,6 +128,8 @@ export function OrderForm({
     submitLockRef.current = true
     setIsSubmitting(true)
     setError(null)
+    const missing = missingRequiredFields(business, { customer_email: customerEmail, accepted_by: acceptedBy, supplier, print_supplier: printSupplier, logo_action: logoAction, print_instructions: printInstructions, deadline, delivery_date: deliveryDate, expected_article_delivery_date: expectedArticleDeliveryDate, has_print: hasPrint, article_out_of_stock: articleOutOfStock })
+    if (missing.length) { setError('Vul de verplichte velden in: ' + missing.map((field) => FIELD_NAMES[field]).join(', ')); submitLockRef.current = false; setIsSubmitting(false); return }
 
     if (!selectedStoreId) {
       setError('Selecteer een winkel.')
@@ -246,7 +264,7 @@ export function OrderForm({
             <label className="ui-label">Winkel</label>
             <select
               value={selectedStoreId}
-              onChange={(e) => setSelectedStoreId(e.target.value)}
+              onChange={(e) => changeStore(e.target.value)}
               required
             >
               <option value="">Selecteer een winkel</option>
@@ -271,7 +289,7 @@ export function OrderForm({
             onChange={(e) => setCustomerEmail(e.target.value)}
             placeholder="E-mailadres klant"
             type="email"
-          />
+           required={business.required.create.includes('customer_email')} />
         </div>
 
         <div className="ui-grid-two">
@@ -279,12 +297,12 @@ export function OrderForm({
             value={acceptedBy}
             onChange={(e) => setAcceptedBy(e.target.value)}
             placeholder="Aangenomen door medewerker"
-          />
+           required={business.required.create.includes('accepted_by')} />
           <div />
         </div>
 
         <div style={{ display: 'grid', gap: 12 }}>
-          <div style={{ color: '#5b6b84', fontWeight: 700, fontSize: 14 }}>Wefact offerte</div>
+          <div style={{ color: 'var(--text-soft)', fontWeight: 700, fontSize: 14 }}>Wefact offerte</div>
           <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
             <input
               value={wefactQuoteReference}
@@ -301,7 +319,7 @@ export function OrderForm({
         </div>
 
         <div style={{ display: 'grid', gap: 12 }}>
-          <div style={{ color: '#5b6b84', fontWeight: 700, fontSize: 14 }}>Wefact factuur</div>
+          <div style={{ color: 'var(--text-soft)', fontWeight: 700, fontSize: 14 }}>Wefact factuur</div>
           <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
             <input
               value={wefactInvoiceReference}
@@ -409,23 +427,13 @@ export function OrderForm({
         <h3 className="ui-section-title">Besteldetails</h3>
 
         <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
-          <select
+          <ConfiguredSelect dropdown="article_order_responsibility"
             value={articleOrderResponsibility}
             onChange={(e) => setArticleOrderResponsibility(e.target.value)}
             aria-label="Bestellen door"
-          >
-            {ARTICLE_ORDER_RESPONSIBILITY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+           />
 
-          <input
-            value={supplier}
-            onChange={(e) => setSupplier(e.target.value)}
-            placeholder="Leverancier"
-          />
+          <SupplierField kind="article" value={supplier} onChange={setSupplier} required={business.required.create.includes('supplier')} />
         </div>
 
         <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -441,18 +449,18 @@ export function OrderForm({
         {articleOutOfStock ? (
           <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
             <div>
-              <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+              <label style={{ display: 'block', marginBottom: 8, color: 'var(--text-soft)', fontWeight: 600 }}>
                 Verwachte levering
               </label>
               <input
                 value={expectedArticleDeliveryDate}
                 onChange={(e) => setExpectedArticleDeliveryDate(e.target.value)}
                 type="date"
-              />
+               required={business.required.create.includes('expected_article_delivery_date')} />
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+              <label style={{ display: 'block', marginBottom: 8, color: 'var(--text-soft)', fontWeight: 600 }}>
                 Reminder dagen vooraf
               </label>
               <input
@@ -486,26 +494,18 @@ export function OrderForm({
           <h3 className="ui-section-title">Printdetails</h3>
 
           <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
-            <select value={logoAction} onChange={(e) => setLogoAction(e.target.value)}>
+            <ConfiguredSelect dropdown="logo_action" value={logoAction} onChange={(e) => setLogoAction(e.target.value)} required={business.required.create.includes('logo_action')} >
             <option value="">Logo&apos;s / actie</option>
-            {LOGO_ACTION_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-            </select>
+            </ConfiguredSelect>
 
-            <input
-              value={printSupplier}
-              onChange={(e) => setPrintSupplier(e.target.value)}
-              placeholder="Leverancier logo's"
-            />
+            <SupplierField kind="print" value={printSupplier} onChange={setPrintSupplier} required={business.required.create.includes('print_supplier')} />
           </div>
 
           <textarea
             value={printInstructions}
             onChange={(e) => setPrintInstructions(e.target.value)}
             placeholder="Printinstructies"
+            required={business.required.create.includes('print_instructions')}
             rows={5}
           />
         </section>
@@ -516,21 +516,21 @@ export function OrderForm({
 
         <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
-            <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+            <label style={{ display: 'block', marginBottom: 8, color: 'var(--text-soft)', fontWeight: 600 }}>
               Deadline
             </label>
-            <input value={deadline} onChange={(e) => setDeadline(e.target.value)} type="date" />
+            <input value={deadline} onChange={(e) => setDeadline(e.target.value)} type="date"  required={business.required.create.includes('deadline')} />
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+            <label style={{ display: 'block', marginBottom: 8, color: 'var(--text-soft)', fontWeight: 600 }}>
               Datum uitlevering
             </label>
             <input
               value={deliveryDate}
               onChange={(e) => setDeliveryDate(e.target.value)}
               type="date"
-            />
+             required={business.required.create.includes('delivery_date')} />
           </div>
         </div>
 
@@ -547,7 +547,7 @@ export function OrderForm({
       </button>
 
       {error ? (
-        <p style={{ color: '#b00012', margin: 0, fontWeight: 600 }}>{error}</p>
+        <p style={{ color: 'var(--error-text)', margin: 0, fontWeight: 600 }}>{error}</p>
       ) : null}
     </form>
   )

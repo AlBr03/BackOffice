@@ -103,15 +103,15 @@ export function PublicPrintProofApprovalForm({
         gap: 14,
         padding: 18,
         borderRadius: 18,
-        background: '#f8faff',
-        border: '1px solid #e6edf7',
+        background: 'var(--surface-alt)',
+        border: '1px solid var(--border)',
       }}
     >
       <div>
-        <div style={{ fontWeight: 800, color: '#082D78', marginBottom: 4 }}>
+        <div style={{ fontWeight: 800, color: 'var(--heading-color)', marginBottom: 4 }}>
           Printvoorbeeld beoordelen
         </div>
-        <div style={{ color: '#5b6b84', lineHeight: 1.5 }}>
+        <div style={{ color: 'var(--text-soft)', lineHeight: 1.5 }}>
           Controleer het printvoorbeeld hieronder. Keur het goed of geef door wat aangepast moet worden.
         </div>
       </div>
@@ -125,8 +125,8 @@ export function PublicPrintProofApprovalForm({
               minHeight: 220,
               aspectRatio: '4 / 3',
               borderRadius: 16,
-              background: '#ffffff',
-              border: '1px solid #d9e2f0',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               boxShadow: '0 10px 24px rgba(8,45,120,0.08)',
             }}
           >
@@ -165,7 +165,7 @@ export function PublicPrintProofApprovalForm({
                   display: 'grid',
                   placeItems: 'center',
                   padding: 18,
-                  color: '#5b6b84',
+                  color: 'var(--text-soft)',
                   textAlign: 'center',
                 }}
               >
@@ -195,8 +195,8 @@ export function PublicPrintProofApprovalForm({
                     justifySelf: 'end',
                     padding: '8px 12px',
                     borderRadius: 999,
-                    background: 'white',
-                    color: '#082D78',
+                    background: 'var(--surface)',
+                    color: 'var(--heading-color)',
                     fontWeight: 800,
                     boxShadow: '0 6px 16px rgba(8,45,120,0.16)',
                   }}
@@ -207,7 +207,7 @@ export function PublicPrintProofApprovalForm({
             ) : null}
           </div>
 
-          <div style={{ color: '#5b6b84', fontSize: 13 }}>
+          <div style={{ color: 'var(--text-soft)', fontSize: 13 }}>
             {previewFile.fileName}
           </div>
         </div>
@@ -219,8 +219,8 @@ export function PublicPrintProofApprovalForm({
           width: 'fit-content',
           padding: '7px 11px',
           borderRadius: 999,
-          background: choice === 'approved' ? '#e8f7ee' : choice === 'rejected' ? '#fff1f2' : '#eef3fb',
-          color: choice === 'approved' ? '#167c3a' : choice === 'rejected' ? '#b00012' : '#164196',
+          background: choice === 'approved' ? 'var(--success-background)' : choice === 'rejected' ? 'var(--error-background)' : 'var(--info-background)',
+          color: choice === 'approved' ? 'var(--success-text)' : choice === 'rejected' ? 'var(--error-text)' : 'var(--link-color)',
           fontWeight: 800,
         }}
       >
@@ -251,8 +251,8 @@ export function PublicPrintProofApprovalForm({
         </button>
       </div>
 
-      {message ? <div style={{ color: '#167c3a', fontWeight: 700 }}>{message}</div> : null}
-      {error ? <div style={{ color: '#b00012', fontWeight: 700 }}>{error}</div> : null}
+      {message ? <div style={{ color: 'var(--success-text)', fontWeight: 700 }}>{message}</div> : null}
+      {error ? <div style={{ color: 'var(--error-text)', fontWeight: 700 }}>{error}</div> : null}
     </div>
   )
 }

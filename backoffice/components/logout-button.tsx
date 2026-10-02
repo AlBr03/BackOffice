@@ -27,8 +27,8 @@ export function LogoutButton() {
       onClick={onLogout}
       disabled={isLoggingOut}
       style={{
-        background: '#eef3fb',
-        color: '#164196',
+        background: 'var(--info-background)',
+        color: 'var(--link-color)',
       }}
     >
       {isLoggingOut ? 'Uitloggen...' : 'Uitloggen'}

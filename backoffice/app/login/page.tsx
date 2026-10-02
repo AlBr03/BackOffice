@@ -35,11 +35,11 @@ export default function LoginPage() {
         style={{
           width: '100%',
           maxWidth: 430,
-          background: 'white',
+          background: 'var(--surface)',
           padding: 28,
           borderRadius: 18,
           boxShadow: '0 8px 28px rgba(8,45,120,0.10)',
-          border: '1px solid #d9e2f0',
+          border: '1px solid var(--border)',
         }}
       >
         <div style={{ marginBottom: 20 }}>
@@ -54,8 +54,8 @@ export default function LoginPage() {
           >
             INTERSPORT
           </div>
-          <h1 style={{ margin: 0, color: '#082D78' }}>Inloggen</h1>
-          <p style={{ margin: '8px 0 0 0', color: '#5b6b84' }}>
+          <h1 style={{ margin: 0, color: 'var(--heading-color)' }}>Inloggen</h1>
+          <p style={{ margin: '8px 0 0 0', color: 'var(--text-soft)' }}>
             Log in op het backoffice dashboard
           </p>
         </div>
@@ -74,17 +74,17 @@ export default function LoginPage() {
             type="password"
           />
           <button type="submit">Inloggen</button>
-          {error ? <p style={{ color: '#b00012', margin: 0 }}>{error}</p> : null}
+          {error ? <p style={{ color: 'var(--error-text)', margin: 0 }}>{error}</p> : null}
         </form>
 
-        <div style={{ marginTop: 18, color: '#5b6b84' }}>
+        <div style={{ marginTop: 18, color: 'var(--text-soft)' }}>
           Nog geen account? <Link href="/register">Maak een account aan</Link>
         </div>
 
         <div
           style={{
             marginTop: 20,
-            color: '#98a3b3',
+            color: 'var(--text-soft)',
             fontSize: 11,
             lineHeight: 1.45,
             textAlign: 'center',

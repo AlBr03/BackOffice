@@ -1,5 +1,9 @@
 'use client'
 
+import { SupplierField } from '@/components/supplier-field'
+
+import { ConfiguredSelect } from '@/components/dropdown-provider'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -13,11 +17,7 @@ import {
 } from '@/lib/order-fields'
 import { deriveLegacyStatus, getInitialPrintStatus } from '@/lib/order-status'
 import { isStoreLikeRole } from '@/lib/roles'
-import {
-  ARTICLE_ORDER_RESPONSIBILITY_OPTIONS,
-  getArticleOrderResponsibility,
-} from '@/lib/article-order-responsibility'
-import { LOGO_ACTION_OPTIONS } from '@/lib/logo-action'
+import { getArticleOrderResponsibility } from '@/lib/article-order-responsibility'
 
 type StoreOption = {
   id: string
@@ -339,7 +339,7 @@ export function OrderEditForm({
         </div>
 
         <div style={{ display: 'grid', gap: 12 }}>
-          <div style={{ color: '#5b6b84', fontWeight: 700, fontSize: 14 }}>Wefact offerte</div>
+          <div style={{ color: 'var(--text-soft)', fontWeight: 700, fontSize: 14 }}>Wefact offerte</div>
           <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
             <input
               value={wefactQuoteReference}
@@ -356,7 +356,7 @@ export function OrderEditForm({
         </div>
 
         <div style={{ display: 'grid', gap: 12 }}>
-          <div style={{ color: '#5b6b84', fontWeight: 700, fontSize: 14 }}>Wefact factuur</div>
+          <div style={{ color: 'var(--text-soft)', fontWeight: 700, fontSize: 14 }}>Wefact factuur</div>
           <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
             <input
               value={wefactInvoiceReference}
@@ -464,23 +464,13 @@ export function OrderEditForm({
         <h3 className="ui-section-title">Besteldetails</h3>
 
         <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
-          <select
+          <ConfiguredSelect dropdown="article_order_responsibility"
             value={articleOrderResponsibility}
             onChange={(e) => setArticleOrderResponsibility(e.target.value)}
             aria-label="Bestellen door"
-          >
-            {ARTICLE_ORDER_RESPONSIBILITY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+           />
 
-          <input
-            value={supplier}
-            onChange={(e) => setSupplier(e.target.value)}
-            placeholder="Leverancier"
-          />
+          <SupplierField kind="article" value={supplier} onChange={setSupplier} />
         </div>
 
         <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -496,7 +486,7 @@ export function OrderEditForm({
         {articleOutOfStock ? (
           <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
             <div>
-              <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+              <label style={{ display: 'block', marginBottom: 8, color: 'var(--text-soft)', fontWeight: 600 }}>
                 Verwachte levering
               </label>
               <input
@@ -507,7 +497,7 @@ export function OrderEditForm({
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+              <label style={{ display: 'block', marginBottom: 8, color: 'var(--text-soft)', fontWeight: 600 }}>
                 Reminder dagen vooraf
               </label>
               <input
@@ -541,20 +531,11 @@ export function OrderEditForm({
           <h3 className="ui-section-title">Printdetails</h3>
 
           <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
-            <select value={logoAction} onChange={(e) => setLogoAction(e.target.value)}>
+            <ConfiguredSelect dropdown="logo_action" value={logoAction} onChange={(e) => setLogoAction(e.target.value)}>
             <option value="">Logo&apos;s / actie</option>
-            {LOGO_ACTION_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-            </select>
+            </ConfiguredSelect>
 
-            <input
-              value={printSupplier}
-              onChange={(e) => setPrintSupplier(e.target.value)}
-              placeholder="Leverancier logo's"
-            />
+            <SupplierField kind="print" value={printSupplier} onChange={setPrintSupplier} />
           </div>
 
           <textarea
@@ -571,14 +552,14 @@ export function OrderEditForm({
 
         <div className="ui-mobile-grid-two" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
-            <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+            <label style={{ display: 'block', marginBottom: 8, color: 'var(--text-soft)', fontWeight: 600 }}>
               Deadline
             </label>
             <input value={deadline} onChange={(e) => setDeadline(e.target.value)} type="date" />
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: 8, color: '#5b6b84', fontWeight: 600 }}>
+            <label style={{ display: 'block', marginBottom: 8, color: 'var(--text-soft)', fontWeight: 600 }}>
               Datum uitlevering
             </label>
             <input
@@ -608,8 +589,8 @@ export function OrderEditForm({
             router.push(`/dashboard/orders/${order.id}`)
           }}
           style={{
-            background: '#eef3fb',
-            color: '#164196',
+            background: 'var(--info-background)',
+            color: 'var(--link-color)',
           }}
         >
           Annuleren
@@ -617,7 +598,7 @@ export function OrderEditForm({
       </div>
 
       {error ? (
-        <p style={{ color: '#b00012', margin: 0, fontWeight: 600 }}>{error}</p>
+        <p style={{ color: 'var(--error-text)', margin: 0, fontWeight: 600 }}>{error}</p>
       ) : null}
     </form>
   )

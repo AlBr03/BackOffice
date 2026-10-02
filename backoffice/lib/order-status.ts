@@ -1,3 +1,5 @@
+import type { DropdownSettings } from './dropdown-settings'
+
 export const ARTICLE_STATUS_OPTIONS = [
   { value: 'new', label: 'Nieuw' },
   { value: 'ordered', label: 'Besteld' },
@@ -15,11 +17,13 @@ export const PRINT_STATUS_OPTIONS = [
 export type ArticleStatus = (typeof ARTICLE_STATUS_OPTIONS)[number]['value']
 export type PrintStatus = (typeof PRINT_STATUS_OPTIONS)[number]['value']
 
-export function translateArticleStatus(status?: string | null) {
+export function translateArticleStatus(status?: string | null, settings?: DropdownSettings) {
+  if (settings) return settings.article_status.find((option) => option.value === status)?.label ?? status ?? '-'
   return ARTICLE_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status ?? '-'
 }
 
-export function translatePrintStatus(status?: string | null) {
+export function translatePrintStatus(status?: string | null, settings?: DropdownSettings) {
+  if (settings) return settings.print_status.find((option) => option.value === status)?.label ?? status ?? '-'
   if (!status) return '-'
   return PRINT_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status
 }
@@ -27,26 +31,26 @@ export function translatePrintStatus(status?: string | null) {
 export function getArticleStatusStyle(status?: string | null) {
   switch (status) {
     case 'completed':
-      return { background: '#e8f7ee', color: '#167c3a' }
+      return { background: 'var(--success-background)', color: 'var(--success-text)' }
     case 'at_location':
-      return { background: '#eef3fb', color: '#164196' }
+      return { background: 'var(--info-background)', color: 'var(--link-color)' }
     case 'ordered':
-      return { background: '#fff8e8', color: '#8a6514' }
+      return { background: 'var(--warning-background)', color: 'var(--warning-text)' }
     default:
-      return { background: '#f4f6f8', color: '#42526b' }
+      return { background: 'var(--surface-alt)', color: 'var(--text-soft)' }
   }
 }
 
 export function getPrintStatusStyle(status?: string | null) {
   switch (status) {
     case 'completed':
-      return { background: '#e8f7ee', color: '#167c3a' }
+      return { background: 'var(--success-background)', color: 'var(--success-text)' }
     case 'logos_at_location':
-      return { background: '#eef3fb', color: '#164196' }
+      return { background: 'var(--info-background)', color: 'var(--link-color)' }
     case 'logos_ordered':
-      return { background: '#fff1f2', color: '#b00012' }
+      return { background: 'var(--error-background)', color: 'var(--error-text)' }
     default:
-      return { background: '#f4f6f8', color: '#42526b' }
+      return { background: 'var(--surface-alt)', color: 'var(--text-soft)' }
   }
 }
 

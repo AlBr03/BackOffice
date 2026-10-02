@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { SettingsShell } from '@/components/settings-shell'
+import { DropdownManagementAccess } from '@/components/dropdown-provider'
 
 const cards = [
+  { href: '/dashboard/settings/business', title: 'Bedrijfsinstellingen', description: 'Beheer reminders, mailtemplates, leveranciers, orderdefaults, bedrijfsgegevens en verplichte velden.' },
   {
     href: '/dashboard/settings/appearance',
     title: 'Weergave',
@@ -16,6 +18,11 @@ const cards = [
     href: '/dashboard/settings/stores',
     title: 'Winkels',
     description: 'Voeg winkels toe, wijzig namen en houd de locatiestructuur netjes bij.',
+  },
+  {
+    href: '/dashboard/settings/dropdowns',
+    title: 'Keuzelijsten',
+    description: 'Beheer dropdownopties, namen en volgorde als beheerder of hoofdkantoor.',
   },
   {
     href: '/dashboard/settings/mail',
@@ -44,7 +51,8 @@ export default function SettingsPage() {
           gap: 20,
         }}
       >
-        {cards.map((card) => (
+        {cards.map((card) => {
+          const link = (
           <Link
             key={card.href}
             href={card.href}
@@ -53,9 +61,13 @@ export default function SettingsPage() {
           >
             <div className="ui-section-title" style={{ fontSize: 22 }}>{card.title}</div>
             <div className="ui-text-muted">{card.description}</div>
-            <div style={{ color: 'var(--intersport-blue)', fontWeight: 700 }}>Openen</div>
+            <div style={{ color: 'var(--link-color)', fontWeight: 700 }}>Openen</div>
           </Link>
-        ))}
+          )
+          return ['/dashboard/settings/dropdowns', '/dashboard/settings/business'].includes(card.href)
+            ? <DropdownManagementAccess key={card.href}>{link}</DropdownManagementAccess>
+            : link
+        })}
       </section>
 
       <section className="ui-card" style={{ display: 'grid', gap: 14 }}>
