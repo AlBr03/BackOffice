@@ -34,6 +34,16 @@ Printdetails staan in orderinvoer, orderbewerking, orderdetails, het afdrukbare 
 
 Tests: `node --test tests/personalisation.test.mjs tests/business-settings.test.mjs tests/dropdown-settings.test.mjs`. Controleer na migratie op een testdatabase de aantallenvalidatie, RLS voor winkel/hoofdkantoor/printafdeling, rollback bij ongeldige artikelvervanging en een goedkeuring vanuit een verouderde klantpagina. De lokale tests gebruiken mocks; SQL en afdrukken moeten daarnaast in de doelomgeving worden gecontroleerd.
 
+## Wachtwoord vergeten
+
+Het inlogscherm verwijst naar `/forgot-password`. Supabase Auth verstuurt een herstellink, `/auth/recovery` wisselt de eenmalige code om voor een sessie en `/reset-password` laat de gebruiker een nieuw wachtwoord kiezen. Er is geen databasemigratie nodig.
+
+Stel in Supabase **Authentication → URL Configuration** de juiste Site URL in en voeg `https://<app-domein>/auth/recovery` toe aan de toegestane Redirect URLs. Voeg voor lokaal testen ook `http://localhost:3000/auth/recovery` toe. Configureer de mailbezorging onder Supabase Auth; de bestaande Nodemailer/ordermailinstellingen sturen geen herstelmails.
+
+De standaard herstelmail moet `{{ .ConfirmationURL }}` gebruiken. De PKCE-code vereist dat de link wordt geopend in dezelfde browser als de aanvraag. Voor links die ook in een andere browser werken, kan het Supabase **Reset Password**-template deze link gebruiken: `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery`. De callback ondersteunt beide varianten, met een vaste bestemming en een melding bij verlopen of gebruikte links.
+
+Controleer de regels en callback met `node --test tests/password-recovery.test.mjs`. Test vervolgens in de doelomgeving een echte herstelmail, een verlopen/gebruikt exemplaar en inloggen met het nieuwe wachtwoord. De configuratie en mailbezorging zijn niet vanuit deze workspace gewijzigd.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

@@ -123,6 +123,10 @@ De track-&-tracelink geeft rechtstreeks toegang tot de publieke orderpagina. Dee
 
 ## 3. Inloggen en uitloggen
 
+**Wachtwoord vergeten?** Klik op deze link op het inlogscherm en vul het e-mailadres van je account in. Als het account bestaat, ontvang je een herstellink. Controleer ook je spammap. Open de link in dezelfde browser waarin je de aanvraag hebt gedaan, kies een nieuw wachtwoord van minimaal acht tekens en vul dit tweemaal in. Log daarna opnieuw in met je nieuwe wachtwoord.
+
+Is de link verlopen, al gebruikt of in een andere browser geopend? Vraag via **Nieuwe herstellink aanvragen** een nieuwe e-mail aan. De beheerder moet de herstelmail en het applicatiedomein in Supabase Auth hebben ingesteld.
+
 ### Inloggen
 
 1. Open de backoffice.

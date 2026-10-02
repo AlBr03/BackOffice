@@ -78,6 +78,10 @@ export default function LoginPage() {
         </form>
 
         <div style={{ marginTop: 18, color: 'var(--text-soft)' }}>
+          <Link href="/forgot-password">Wachtwoord vergeten?</Link>
+        </div>
+
+        <div style={{ marginTop: 18, color: 'var(--text-soft)' }}>
           Nog geen account? <Link href="/register">Maak een account aan</Link>
         </div>
 
