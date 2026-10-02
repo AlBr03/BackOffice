@@ -184,6 +184,12 @@ Na het opslaan wordt automatisch een uniek zescijferig ordernummer aangemaakt (b
 
 ### 5.1 Klantgegevens
 
+**Klantgesprekken:** onderaan de trackingpagina en de interne orderdetailpagina staat **Vraag over deze bestelling**. Open het gesprek om berichten te lezen en een vraag of antwoord te versturen. Medewerkers zien de knop **Toewijzing opslaan** voor een team, medewerker en gespreksstatus. Alleen medewerkers die toegang hebben tot de order kunnen worden gekozen. De betrokken winkel behandelt nieuwe gesprekken standaard; hoofdkantoor kan ze overdragen, bijvoorbeeld aan de printafdeling bij printorders.
+
+Een antwoord markeert het gesprek als **Beantwoord**. Kies **Gesloten** wanneer de vraag is afgehandeld. Een nieuw klantbericht heropent het gesprek automatisch. De klant krijgt bij een antwoord een e-mail met een link naar de trackingpagina, als een klantmailadres aanwezig is. De toegewezen medewerker of het team krijgt een mail bij een klantvraag. Ongelezen berichten worden aangegeven met **Nieuw bericht** en interne meldingen verschijnen als **Klantgesprek**.
+
+Berichten zijn tekst zonder bijlagen, maximaal 4000 tekens. Oudere berichten kunnen met **Oudere berichten laden** worden opgehaald. Om verkeer te beperken, wordt alleen een geopend gesprek bijgewerkt; het controleren stopt zodra de pagina verborgen is. Wacht minimaal 15 seconden tussen klantberichten; maximaal 20 per uur zijn toegestaan. Als het opslaan lukt maar de mailmelding niet, blijft het bericht zichtbaar in het gesprek.
+
 - **Winkel**: verplicht; bij winkelrollen automatisch de gekoppelde winkel.
 - **Naam klant / vereniging**: verplicht.
 - **E-mailadres klant**: optioneel, maar noodzakelijk voor automatische klantmails.

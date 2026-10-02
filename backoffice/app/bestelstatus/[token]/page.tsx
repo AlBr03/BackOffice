@@ -1,3 +1,4 @@
+import { OrderConversation } from '@/components/order-conversation'
 import { PersonalisationTable } from '@/components/personalisation-table'
 import type { Personalisation } from '@/lib/personalisation'
 import { loadDropdownSettings } from '@/lib/dropdown-settings-server'
@@ -783,6 +784,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           </div>
         </div>
       </section>
+      <OrderConversation identifier={token} customer />
     </div>
   )
 }

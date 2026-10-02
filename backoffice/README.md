@@ -52,6 +52,20 @@ De status-API stuurt bij aankomst een interne mail naar medewerkers van de betro
 
 Controleer dit gedrag met `node --test tests/status-email-policy.test.mjs`. De tests controleren klantonderdrukking, behoud van de ophaalvoorwaarden, andere statuswijzigingen en interne ontvangers per winkel.
 
+## Klantgesprekken per order
+
+Stel `NEXT_PUBLIC_APP_URL` in op het openbare applicatiedomein en configureer de bestaande mailprovider. Deze basis-URL wordt gebruikt voor de tracking- en orderlinks in berichtmeldingen. Medewerkers die al persoonlijke notificatievoorkeuren hebben opgeslagen, kunnen **Klantgesprek** inschakelen onder **Mijn voorkeuren**.
+
+Voer `supabase/migrations/20261002150000_order_conversations.sql` uit voordat deze versie wordt uitgerold. Er worden gesprekken, tekstberichten en leesmarkeringen toegevoegd. De tabellen en schrijffunctie zijn uitsluitend toegankelijk via het serveraccount; de API controleert bij elk verzoek de medewerkerssessie of de trackingtoken en beperkt toegang tot de bijbehorende order.
+
+De klant kan een vraag stellen op de trackingpagina; medewerkers antwoorden op de orderdetailpagina. Gesprekken kunnen aan een team of toegankelijke medewerker worden toegewezen en hebben de status Open, Beantwoord of Gesloten. Een nieuw klantbericht heropent een gesloten gesprek. De standaardontvanger is de betrokken winkel; als er niemand beschikbaar is, wordt hoofdkantoor/beheer gebruikt. Een toegewezen medewerker krijgt voorrang op het team. Bij overdracht van een nog onbeantwoorde vraag wordt de nieuwe ontvanger geïnformeerd.
+
+Mailtemplates **Nieuwe klantvraag (intern)** en **Antwoord op klantvraag (klant)** zijn afzonderlijk instelbaar. In-appmeldingen gebruiken **Klantgesprek** in de bedrijfs- en persoonlijke notificatievoorkeuren. E-mails bevatten een melding en een link, geen berichtinhoud. Zonder klantmailadres blijft het antwoord op de trackingpagina beschikbaar. Een mailfout maakt een opgeslagen bericht niet ongedaan.
+
+Een gesloten paneel haalt één keer alleen metadata op. Berichten worden uitsluitend bij openen geladen, maximaal 50 per verzoek. Een geopend paneel controleert elke 30 seconden op nieuwe berichten, uitsluitend zolang de pagina zichtbaar is. Historie wordt op verzoek geladen. Er zijn geen WebSockets of bijlagen. Klanten kunnen maximaal 20 berichten per uur versturen met minimaal 15 seconden tussen twee berichten; herhaalde inzendingen gebruiken hetzelfde berichtnummer en maken geen dubbel bericht of dubbele mail.
+
+Gedragstests: `node --test tests/order-conversation.test.mjs`. Controleer daarnaast in een testdatabase RLS/RPC-rechten, berichtenlimieten, idempotente gelijktijdige inzending, leesmarkeringen, toewijzing en heropening. Controleer in de browser verborgen-tab/gesloten-paneelverkeer en echte mailbezorging. De lokale API-tests gebruiken mocks; de migratie is niet automatisch uitgevoerd. Berichten blijven bewaard bij de order en worden bij orderverwijdering mee verwijderd.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

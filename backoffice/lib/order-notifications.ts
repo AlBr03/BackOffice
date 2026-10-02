@@ -377,6 +377,15 @@ export async function sendInternalArrivalEmail(to: string, order: OrderNotificat
   })
 }
 
+export async function sendConversationEmail(to: string, order: OrderNotificationOrder, customer: boolean) {
+  const url = customer ? getPublicOrderTrackingUrl(order.tracking_token) : order.order_detail_url
+  const text = `${customer ? 'Er staat een antwoord op uw vraag klaar.' : 'Er is een nieuw klantbericht voor deze order.'}\n\nOrder: ${order.order_number}\nKlant: ${order.club_name}\nWinkel: ${getStoreName(order.stores)}\n\n${url ? `Open het gesprek via:\n${url}#order-conversation` : 'Open de order om het gesprek te bekijken.'}`
+  return sendBusinessMail(customer ? 'conversation_reply' : 'conversation_question',order,{
+    to, subject: `${customer ? 'Antwoord op uw vraag' : 'Nieuw klantbericht'} — order ${order.order_number}`,
+    text, html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif">${escapeHtml(text)}</div>`,
+  })
+}
+
 export function shouldSendOrderReadyForPickupEmail(order: OrderNotificationOrder) {
   return (
     order.article_status === 'at_location' &&

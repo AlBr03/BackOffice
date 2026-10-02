@@ -1,3 +1,4 @@
+import { OrderConversation } from '@/components/order-conversation'
 import { ProductionOverview } from '@/components/production-overview'
 import { PersonalisationTable } from '@/components/personalisation-table'
 import type { Personalisation } from '@/lib/personalisation'
@@ -1004,6 +1005,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
           </div>
         </section>
       </div>
+      <OrderConversation identifier={order.id} />
     </OrderDetailLiveShell>
   )
 }

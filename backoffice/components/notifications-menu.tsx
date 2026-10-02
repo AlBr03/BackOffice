@@ -39,6 +39,8 @@ function formatDateTime(value: string | null) {
 
 function getNotificationLabel(actionType: string | null) {
   switch (actionType) {
+    case 'conversation_message':
+      return 'Klantgesprek'
     case 'created':
       return 'Order aangemaakt'
     case 'order_updated':
