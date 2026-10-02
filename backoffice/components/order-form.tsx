@@ -1,5 +1,8 @@
 'use client'
 
+import { PersonalisationEditor } from '@/components/personalisation-editor'
+import { personalisationError, type Personalisation } from '@/lib/personalisation'
+
 import { SupplierField } from '@/components/supplier-field'
 import { useBusinessSettings } from '@/components/business-provider'
 import { orderDefaults, defaultSupplierName, missingRequiredFields, FIELD_NAMES } from '@/lib/business-settings'
@@ -99,6 +102,11 @@ export function OrderForm({
     )
   }
 
+  function updatePersonalisation(index: number, value: Personalisation) {
+    if (value.rows.length || value.instructions.trim()) setHasPrint(true)
+    setProductLines(current => current.map((line, i) => i === index ? { ...line, personalisation: value } : line))
+  }
+
   function addProductLine() {
     setProductLines((currentLines) => [...currentLines, createEmptyProductLine()])
   }
@@ -142,6 +150,8 @@ export function OrderForm({
       data: { user },
     } = await supabase.auth.getUser()
 
+    const printError = productLines.map(line => personalisationError(line.personalisation, line.quantity)).find(Boolean)
+    if (printError) { setError(printError); submitLockRef.current = false; setIsSubmitting(false); return }
     const normalizedProductLines = normalizeProductLines(productLines)
     const productDescription = serializeProductLines(normalizedProductLines)
 
@@ -204,6 +214,7 @@ export function OrderForm({
           quantity: line.quantity,
           product_code: line.productCode || null,
           size: line.size || null,
+          personalisation: line.personalisation ?? null,
         }))
       ),
       supabase.from('order_activity_log').insert({
@@ -372,7 +383,8 @@ export function OrderForm({
         </div>
 
         {productLines.map((line, index) => (
-          <div key={index} className="ui-product-row">
+          <div key={index}>
+          <div className="ui-product-row">
             <input
               value={line.productCode}
               onChange={(e) => updateProductLine(index, 'productCode', e.target.value)}
@@ -417,6 +429,8 @@ export function OrderForm({
                 Verwijder
               </button>
             </div>
+          </div>
+          <PersonalisationEditor value={line.personalisation} size={line.size} quantity={line.quantity} onChange={value => updatePersonalisation(index, value)} />
           </div>
         ))}
       </section>

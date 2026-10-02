@@ -188,6 +188,14 @@ Na het opslaan wordt automatisch een uniek zescijferig ordernummer aangemaakt (b
 
 ### 5.2 Producten
 
+Per artikel en maat kan een **personalisatietabel** worden toegevoegd. Gebruik bijvoorbeeld aparte productregels voor shirts in maat S en M. Open **Personalisatie toevoegen / bewerken** en voeg per kledingstuk initialen, rugnummer, naam en printnotities toe. Identieke prints mogen samen op één regel met een gezamenlijk aantal. Artikelen zonder persoonlijke print moeten ook meetellen: alle tabelregels samen moeten precies het aantal van de productregel vormen.
+
+Gedeelde instructies zoals een clublogo links op de borst staan boven de tabel. Met **Extra kolom toevoegen** kunnen aanvullende gegevens worden opgeslagen, zoals printkleur of plaatsing. Kolomnamen en celwaarden zijn bewerkbaar; bij het verwijderen van een extra kolom worden ook de bijbehorende waarden verwijderd. Alle kolommen zijn zichtbaar voor de klant via de persoonlijke trackinglink.
+
+Via **Plakken vanuit Excel** kunnen tabgescheiden regels worden toegevoegd. De volgorde is: Maat, Aantal, Initialen, Rugnummer, Naam, Printnotities, gevolgd door de extra kolommen in de getoonde volgorde. Een kopregel met Maat of Size is toegestaan. Alle geplakte regels moeten dezelfde maat hebben als de gekozen productregel. Rugnummers zoals `07` behouden hun voorloopnul.
+
+De tabellen blijven bewerkbaar via **Order bewerken** en staan op de orderdetailpagina. De printafdeling ziet daar ook een **Productieoverzicht** met een afdrukknop. De klant ziet de personalisatie naast de goedkeuring van het drukvoorbeeld. Wijzigingen aan artikelen of printinstructies maken een eerdere goedkeuring ongeldig; een klant die nog een verouderde pagina open heeft, moet deze vernieuwen en opnieuw controleren.
+
 Iedere productregel kan bevatten:
 
 - artikelcode;

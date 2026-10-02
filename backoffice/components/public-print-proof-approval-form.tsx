@@ -27,11 +27,13 @@ export function PublicPrintProofApprovalForm({
   initialStatus,
   initialFeedback,
   previewFile,
+  personalisationVersion,
 }: {
   token: string
   initialStatus?: string | null
   initialFeedback?: string | null
   previewFile?: PreviewFile
+  personalisationVersion: number
 }) {
   const router = useRouter()
   const [choice, setChoice] = useState<PrintProofStatus>(
@@ -67,6 +69,7 @@ export function PublicPrintProofApprovalForm({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          personalisationVersion,
           status: action,
           feedback: action === 'rejected' ? trimmedFeedback : null,
         }),

@@ -745,3 +745,24 @@ td {
     padding: 11px 12px;
   }
 }
+/* Personalisation stays readable in either theme and on production printouts. */
+.personalisation-editor, .personalisation-summary { margin-top: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.personalisation-editor summary { cursor: pointer; font-weight: 700; }
+.personalisation-scroll { overflow-x: auto; max-width: 100%; }
+.personalisation-table { width: 100%; border-collapse: collapse; text-align: left; }
+.personalisation-table th, .personalisation-table td { padding: 8px; border: 1px solid var(--border); vertical-align: top; white-space: pre-wrap; }
+.personalisation-table th { background: var(--surface-alt); }
+.personalisation-table input { min-width: 95px; }
+.personalisation-table caption { text-align: left; padding: 8px 0; font-weight: 600; }
+.personalisation-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 12px 0; }
+@media print {
+  body:has(.production-overview) *:not(:has(.production-overview)):not(.production-overview):not(.production-overview *) { display: none !important; }
+  body:has(.production-overview), body *:has(.production-overview) { display: block !important; width: auto !important; padding: 0 !important; margin: 0 !important; }
+  .production-overview { width: 100%; background: white !important; color: black !important; border: 0 !important; }
+  .production-overview .production-print-button { display: none; }
+  .production-overview .personalisation-scroll { overflow: visible; }
+  .production-overview .personalisation-table { font-size: 10pt; }
+  .production-overview .personalisation-table th, .production-overview .personalisation-table td { background: white; color: black; border-color: #777; overflow-wrap: anywhere; }
+  .production-overview thead { display: table-header-group; }
+  .production-overview tr { break-inside: avoid; }
+}

@@ -122,6 +122,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     | {
         status?: unknown
         feedback?: unknown
+        personalisationVersion?: unknown
       }
     | undefined
   const status = body?.status
@@ -148,6 +149,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     .select(
       `
       id,
+      personalisation_version,
       order_number,
       tracking_token,
       club_name,
@@ -186,6 +188,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
     )
   }
 
+  if (!Number.isInteger(body?.personalisationVersion) || body?.personalisationVersion !== order.personalisation_version) {
+    return NextResponse.json({ error: 'De printdetails zijn gewijzigd. Vernieuw de pagina en controleer de personalisatie opnieuw.' }, { status: 409 })
+  }
+
   const { data: printPreviewFiles } = await supabase
     .from('order_files')
     .select('id')
@@ -200,7 +206,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     )
   }
 
-  const { error: updateError } = await supabase
+  const { data: updatedOrder, error: updateError } = await supabase
     .from('orders')
     .update({
       print_proof_status: status,
@@ -208,9 +214,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
       print_proof_responded_at: new Date().toISOString(),
     })
     .eq('id', order.id)
+    .eq('personalisation_version', order.personalisation_version)
+    .select('id')
+    .maybeSingle()
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 400 })
+  }
+  if (!updatedOrder) {
+    return NextResponse.json({ error: 'De printdetails zijn gewijzigd. Vernieuw de pagina en controleer de personalisatie opnieuw.' }, { status: 409 })
   }
 
   await supabase.from('order_activity_log').insert({

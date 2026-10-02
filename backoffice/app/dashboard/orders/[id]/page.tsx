@@ -1,3 +1,6 @@
+import { ProductionOverview } from '@/components/production-overview'
+import { PersonalisationTable } from '@/components/personalisation-table'
+import type { Personalisation } from '@/lib/personalisation'
 import { loadDropdownSettings } from '@/lib/dropdown-settings-server'
 import { dropdownLabel } from '@/lib/dropdown-settings'
 import Link from 'next/link'
@@ -76,6 +79,7 @@ const ORDER_DETAIL_SELECT = `
     product,
     quantity,
     product_code,
+    personalisation,
     size
   ),
   stores (
@@ -120,6 +124,7 @@ const ORDER_DETAIL_SELECT_WITHOUT_PRINT_PROOF = `
     product,
     quantity,
     product_code,
+    personalisation,
     size
   ),
   stores (
@@ -156,6 +161,7 @@ const ORDER_DETAIL_SELECT_LEGACY = `
     product,
     quantity,
     product_code,
+    personalisation,
     size
   ),
   stores (
@@ -502,6 +508,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
         quantity: item.quantity,
         productCode: item.product_code ?? '',
         size: item.size ?? '',
+        personalisation: item.personalisation as Personalisation | null,
       }))
     : parseProductDescription(order.product_description, order.quantity)
 
@@ -646,11 +653,13 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     <InfoField label="Omschrijving" value={line.product} />
                     <InfoField label="Maat" value={line.size || '-'} />
                     <InfoField label="Aantal" value={line.quantity} />
+                    <div style={{ gridColumn: '1 / -1' }}><PersonalisationTable value={line.personalisation} size={line.size} quantity={line.quantity} /></div>
                   </div>
                 ))}
               </div>
             </div>
 
+            {order.has_print ? <ProductionOverview number={order.order_number} customer={order.club_name} instructions={order.print_instructions} lines={productLines} /> : null}
             <div className="ui-card">
               <h2 className="ui-section-title" style={{ marginBottom: 18 }}>
                 Besteldetails

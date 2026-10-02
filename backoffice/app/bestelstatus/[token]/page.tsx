@@ -1,3 +1,5 @@
+import { PersonalisationTable } from '@/components/personalisation-table'
+import type { Personalisation } from '@/lib/personalisation'
 import { loadDropdownSettings } from '@/lib/dropdown-settings-server'
 import { dropdownLabel } from '@/lib/dropdown-settings'
 import { StoreContactDetails } from '@/components/store-contact-details'
@@ -88,6 +90,7 @@ function getStoreName(stores?: { name?: string | null } | { name?: string | null
 const ORDER_TRACKING_SELECT = `
   store_id,
   order_number,
+  personalisation_version,
   club_name,
   article_status,
   print_status,
@@ -110,6 +113,7 @@ const ORDER_TRACKING_SELECT = `
     product,
     quantity,
     product_code,
+    personalisation,
     size
   ),
   order_files (
@@ -130,6 +134,7 @@ const ORDER_TRACKING_SELECT = `
 const ORDER_TRACKING_SELECT_WITHOUT_PRINT_PROOF = `
   store_id,
   order_number,
+  personalisation_version,
   club_name,
   article_status,
   print_status,
@@ -149,6 +154,7 @@ const ORDER_TRACKING_SELECT_WITHOUT_PRINT_PROOF = `
     product,
     quantity,
     product_code,
+    personalisation,
     size
   ),
   order_files (
@@ -221,6 +227,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
         quantity: item.quantity,
         productCode: item.product_code ?? '',
         size: item.size ?? '',
+        personalisation: item.personalisation as Personalisation | null,
       }))
     : parseProductDescription(order.product_description, order.quantity)
   const publicPrintFiles = (order.order_files ?? [])
@@ -385,8 +392,12 @@ export default async function OrderTrackingPage({ params }: PageProps) {
               </div>
             )}
             {hasPrintPreview ? (
+              <>
+              <div><h3>Controleer ook de personalisatie per artikel</h3>{productLines.map((line, i) => <div key={i}><strong>{line.productCode} {line.product}</strong><PersonalisationTable value={line.personalisation} size={line.size} quantity={line.quantity} /></div>)}</div>
               <PublicPrintProofApprovalForm
+                key={order.personalisation_version}
                 token={token}
+                personalisationVersion={order.personalisation_version}
                 initialStatus={order.print_proof_status}
                 initialFeedback={order.print_proof_feedback}
                 previewFile={
@@ -399,6 +410,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                     : null
                 }
               />
+              </>
             ) : null}
           </div>
         </section>
@@ -740,6 +752,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                   <div style={{ color: 'var(--text-soft)' }}>
                     Maat: {line.size || '-'} - Aantal: {line.quantity}
                   </div>
+                  <PersonalisationTable value={line.personalisation} size={line.size} quantity={line.quantity} />
                 </div>
               ))}
             </div>

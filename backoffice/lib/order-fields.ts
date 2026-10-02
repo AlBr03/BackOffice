@@ -1,4 +1,7 @@
+import type { Personalisation } from './personalisation'
+
 export type ProductLine = {
+  personalisation?: Personalisation | null
   product: string
   quantity: number
   productCode: string
@@ -71,6 +74,7 @@ export function serializeProductLines(lines: ProductLine[]) {
 
 export function normalizeProductLine(line: ProductLine): ProductLine {
   return {
+    personalisation: line.personalisation,
     product: line.product.trim(),
     quantity: Number.isFinite(line.quantity) && line.quantity > 0 ? line.quantity : 1,
     productCode: line.productCode.trim(),

@@ -42,6 +42,7 @@ const ORDER_EDIT_SELECT = `
     product,
     quantity,
     product_code,
+    personalisation,
     size
   )
 `
@@ -69,6 +70,7 @@ const ORDER_EDIT_SELECT_LEGACY = `
     product,
     quantity,
     product_code,
+    personalisation,
     size
   )
 `

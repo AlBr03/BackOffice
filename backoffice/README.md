@@ -26,6 +26,14 @@ Voer `supabase/migrations/20261002130000_six_digit_order_numbers.sql` uit voorda
 
 De database reserveert bestaande zescijferige nummers en voorkomt dubbele nummers met een unieke index. De reeks loopt tot `999999`, wordt nooit hergebruikt en kan gaten bevatten na mislukte invoer. Plan een opvolgende nummeringsstrategie voordat deze reeks uitgeput raakt. Controleer na migratie op een testdatabase ook gelijktijdige invoer vanuit twee sessies; beide orders moeten verschillende zescijferige nummers krijgen.
 
+## Personalisatie per artikel
+
+Voer `supabase/migrations/20261002140000_order_item_personalisation.sql` uit voordat deze versie wordt uitgerold. Bestaande beveiligings-, orderveld- en drukvoorbeeldmigraties zijn vereist. De migratie voegt een optionele personalisatietabel per artikelregel toe, controleert aantallen en celwaarden in de database en biedt `replace_order_items` voor het atomair opslaan van ordergegevens en artikelen met de bestaande RLS-rechten.
+
+Printdetails staan in orderinvoer, orderbewerking, orderdetails, het afdrukbare productieoverzicht en de klantgoedkeuring. Extra kolommen en hun waarden zijn ook zichtbaar voor de klant via diens trackinglink. Artikelwijzigingen en wijzigingen in gedeelde printinstructies maken eerdere goedkeuringen ongeldig. Goedkeuring gebruikt een revisiecontrole, zodat een verouderde klantpagina geen gewijzigde details kan goedkeuren.
+
+Tests: `node --test tests/personalisation.test.mjs tests/business-settings.test.mjs tests/dropdown-settings.test.mjs`. Controleer na migratie op een testdatabase de aantallenvalidatie, RLS voor winkel/hoofdkantoor/printafdeling, rollback bij ongeldige artikelvervanging en een goedkeuring vanuit een verouderde klantpagina. De lokale tests gebruiken mocks; SQL en afdrukken moeten daarnaast in de doelomgeving worden gecontroleerd.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

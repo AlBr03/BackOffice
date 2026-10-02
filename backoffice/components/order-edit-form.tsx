@@ -1,5 +1,8 @@
 'use client'
 
+import { PersonalisationEditor } from '@/components/personalisation-editor'
+import { personalisationError, type Personalisation } from '@/lib/personalisation'
+
 import { SupplierField } from '@/components/supplier-field'
 
 import { ConfiguredSelect } from '@/components/dropdown-provider'
@@ -53,6 +56,7 @@ type OrderData = {
   notes: string | null
   store_id: string
   order_items?: {
+    personalisation?: Personalisation | null
     product: string
     quantity: number
     product_code: string | null
@@ -105,6 +109,7 @@ export function OrderEditForm({
           quantity: item.quantity,
           productCode: item.product_code ?? '',
           size: item.size ?? '',
+          personalisation: item.personalisation,
         }))
       : parseProductDescription(order.product_description, order.quantity)
   )
@@ -139,6 +144,11 @@ export function OrderEditForm({
         }
       })
     )
+  }
+
+  function updatePersonalisation(index: number, value: Personalisation) {
+    if (value.rows.length || value.instructions.trim()) setHasPrint(true)
+    setProductLines(current => current.map((line, i) => i === index ? { ...line, personalisation: value } : line))
   }
 
   function addProductLine() {
@@ -176,6 +186,8 @@ export function OrderEditForm({
       return
     }
 
+    const printError = productLines.map(line => personalisationError(line.personalisation, line.quantity)).find(Boolean)
+    if (printError) { setError(printError); setIsSaving(false); return }
     const normalizedProductLines = normalizeProductLines(productLines)
     const productDescription = serializeProductLines(normalizedProductLines)
 
@@ -194,9 +206,7 @@ export function OrderEditForm({
       order.expected_article_delivery_date === expectedArticleDeliveryDate &&
       (order.article_delivery_reminder_days_before ?? 2) === articleDeliveryReminderDaysBefore
 
-    const { error: updateError } = await supabase
-      .from('orders')
-      .update({
+    const orderChanges = {
         store_id: selectedStoreId,
         club_name: clubName,
         accepted_by: acceptedBy || null,
@@ -229,49 +239,14 @@ export function OrderEditForm({
         deadline: deadline || null,
         delivery_date: deliveryDate || null,
         notes: notes.trim() || null,
-      })
-      .eq('id', order.id)
-
-    if (updateError) {
-      setError(updateError.message)
-      setIsSaving(false)
-      return
-    }
-
-    const { error: deleteItemsError } = await supabase
-      .from('order_items')
-      .delete()
-      .eq('order_id', order.id)
-
-    if (deleteItemsError) {
-      setError(deleteItemsError.message)
-      setIsSaving(false)
-      return
-    }
-
-    const [{ error: insertItemsError }, { error: activityError }] = await Promise.all([
-      supabase.from('order_items').insert(
-        normalizedProductLines.map((line) => ({
-          order_id: order.id,
-          product: line.product,
-          quantity: line.quantity,
-          product_code: line.productCode || null,
-          size: line.size || null,
-        }))
-      ),
-      supabase.from('order_activity_log').insert({
-        order_id: order.id,
-        action_type: 'order_updated',
-        description: 'Ordergegevens bijgewerkt',
-        performed_by: user?.id ?? null,
-      }),
-    ])
-
-    if (insertItemsError) {
-      setError(insertItemsError.message)
-      setIsSaving(false)
-      return
-    }
+      }
+    const { error: insertItemsError } = await supabase.rpc('replace_order_items', {
+      p_order_id: order.id,
+      p_changes: orderChanges,
+      p_items: normalizedProductLines.map(line => ({ product: line.product, quantity: line.quantity, product_code: line.productCode || null, size: line.size || null, personalisation: line.personalisation ?? null })),
+    })
+    if (insertItemsError) { setError(insertItemsError.message); setIsSaving(false); return }
+    const { error: activityError } = await supabase.from('order_activity_log').insert({ order_id: order.id, action_type: 'order_updated', description: 'Ordergegevens en personalisatie bijgewerkt', performed_by: user?.id ?? null })
 
     if (activityError) {
       setError(activityError.message)
@@ -411,7 +386,8 @@ export function OrderEditForm({
         </div>
 
         {productLines.map((line, index) => (
-          <div key={index} className="ui-product-row">
+          <div key={index}>
+          <div className="ui-product-row">
             <input
               value={line.productCode}
               onChange={(e) => updateProductLine(index, 'productCode', e.target.value)}
@@ -456,6 +432,8 @@ export function OrderEditForm({
                 Verwijder
               </button>
             </div>
+          </div>
+          <PersonalisationEditor value={line.personalisation} size={line.size} quantity={line.quantity} onChange={value => updatePersonalisation(index, value)} />
           </div>
         ))}
       </section>
