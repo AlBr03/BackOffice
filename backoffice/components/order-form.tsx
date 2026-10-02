@@ -142,7 +142,6 @@ export function OrderForm({
       data: { user },
     } = await supabase.auth.getUser()
 
-    const orderNumber = `ORD-${Date.now()}`
     const normalizedProductLines = normalizeProductLines(productLines)
     const productDescription = serializeProductLines(normalizedProductLines)
 
@@ -156,7 +155,6 @@ export function OrderForm({
     const { data: insertedOrder, error: insertError } = await supabase
       .from('orders')
       .insert({
-        order_number: orderNumber,
         store_id: selectedStoreId,
         club_name: clubName,
         accepted_by: acceptedBy || null,

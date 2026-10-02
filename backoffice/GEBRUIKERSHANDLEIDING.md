@@ -175,7 +175,7 @@ De rollen Winkel, Hoofdverantwoordelijke winkel, Hoofdkantoor, Bestelverantwoord
 6. Vul indien nodig de voorraad-, print- en leveringsinformatie in.
 7. Kies **Order opslaan**.
 
-Na het opslaan wordt automatisch een uniek ordernummer aangemaakt en opent de orderdetailpagina.
+Na het opslaan wordt automatisch een uniek zescijferig ordernummer aangemaakt (bijvoorbeeld `100001`) en opent de orderdetailpagina. Dit nummer kan ook als leveranciersreferentie worden gebruikt. Bestaande orders behouden hun eerdere ordernummer. Nummers worden centraal toegewezen voor alle winkels en worden nooit hergebruikt; er kunnen gaten in de nummering zitten.
 
 ### 5.1 Klantgegevens
 

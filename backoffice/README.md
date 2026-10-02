@@ -20,6 +20,12 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Zescijferige ordernummers
+
+Voer `supabase/migrations/20261002130000_six_digit_order_numbers.sql` uit voordat de bijgewerkte orderinvoer wordt uitgerold. De bestaande beveiligingsmigraties moeten al zijn uitgevoerd (schema `app_private`). Nieuwe orders krijgen centraal een nummer vanaf `100001`, zonder prefix. Bestaande nummers, interne UUIDs en trackinglinks blijven behouden. Ook oude browsertabs krijgen bij invoegen de nieuwe nummering.
+
+De database reserveert bestaande zescijferige nummers en voorkomt dubbele nummers met een unieke index. De reeks loopt tot `999999`, wordt nooit hergebruikt en kan gaten bevatten na mislukte invoer. Plan een opvolgende nummeringsstrategie voordat deze reeks uitgeput raakt. Controleer na migratie op een testdatabase ook gelijktijdige invoer vanuit twee sessies; beide orders moeten verschillende zescijferige nummers krijgen.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
