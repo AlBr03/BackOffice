@@ -222,7 +222,8 @@ Kies bij **Bestellen door** één van de volgende opties:
 
 - **Bestellen door inkoop**: de bestelverantwoordelijke is verantwoordelijk en ontvangt de betreffende mails en herinneringen.
 - **Bestellen door winkel**: de hoofdverantwoordelijke van de gekoppelde winkel is verantwoordelijk.
-- **Niet bestellen**: de artikelen hoeven niet te worden besteld.
+- **Niet bestellen/Op voorraad**: de artikelen hoeven niet te worden besteld of zijn op voorraad.
+- **Besteld door verkoper**: de artikelen zijn al besteld door de verkoper.
 
 Daarnaast kan een leverancier worden ingevuld.
 

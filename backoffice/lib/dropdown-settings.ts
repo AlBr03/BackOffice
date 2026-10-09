@@ -121,7 +121,11 @@ export function mergeDropdownSettings(input: unknown): DropdownSettings {
   const record = input as Record<string, unknown>
   const merged = {} as DropdownSettings
   for (const key of DROPDOWN_KEYS) {
-    const saved = Array.isArray(record[key]) ? record[key] as DropdownOption[] : []
+    const saved = (Array.isArray(record[key]) ? record[key] as DropdownOption[] : []).map(option =>
+      key === 'article_order_responsibility' && option?.value === 'not_needed' && option.label === 'Niet bestellen'
+        ? { ...option, label: 'Niet bestellen/Op voorraad' }
+        : option
+    )
     merged[key] = [...saved, ...defaults[key].filter((option) => !saved.some((item) => item?.value === option.value))]
   }
   try { return validateDropdownSettings(merged) } catch { return defaults }

@@ -14,7 +14,7 @@ export type FieldKey = keyof typeof FIELD_NAMES
 export type ColumnKey = keyof typeof COLUMN_NAMES
 export type Role = typeof ROLES[number]
 export type Recipient = typeof RECIPIENTS[number]
-export type OrderDefaults = { supplier: string; printSupplier: string; responsibility: 'order_manager' | 'store_manager' | 'not_needed'; reminderDays: number }
+export type OrderDefaults = { supplier: string; printSupplier: string; responsibility: 'order_manager' | 'store_manager' | 'not_needed' | 'ordered_by_seller'; reminderDays: number }
 export type ContactDetails = { name: string; email: string; phone: string; address: string; openingHours: string; signature: string }
 export type BusinessSettings = {
   company: ContactDetails & { brandColor: string }
@@ -67,7 +67,7 @@ function contact(value: unknown): ContactDetails {
 }
 function defaults(value: unknown): OrderDefaults {
   const row = record(value)
-  if (!['order_manager', 'store_manager', 'not_needed'].includes(String(row.responsibility))) throw new Error('Ongeldige bestelverantwoordelijkheid.')
+  if (!['order_manager', 'store_manager', 'not_needed', 'ordered_by_seller'].includes(String(row.responsibility))) throw new Error('Ongeldige bestelverantwoordelijkheid.')
   return { supplier: text(row.supplier, 100), printSupplier: text(row.printSupplier, 100), responsibility: row.responsibility as OrderDefaults['responsibility'], reminderDays: days(row.reminderDays) }
 }
 export function renderTemplate(template: string, values: Partial<Record<typeof TEMPLATE_VARIABLES[number], string>>): string {

@@ -13,9 +13,15 @@ export const ARTICLE_ORDER_RESPONSIBILITY_OPTIONS = [
   },
   {
     value: 'not_needed',
-    label: 'Niet bestellen',
-    shortLabel: 'Niet bestellen',
-    description: 'Artikelen hoeven niet besteld te worden.',
+    label: 'Niet bestellen/Op voorraad',
+    shortLabel: 'Niet bestellen/Op voorraad',
+    description: 'Artikelen hoeven niet besteld te worden of zijn op voorraad.',
+  },
+  {
+    value: 'ordered_by_seller',
+    label: 'Besteld door verkoper',
+    shortLabel: 'Besteld door verkoper',
+    description: 'Artikelen zijn al besteld door de verkoper.',
   },
 ] as const
 
@@ -39,6 +45,7 @@ export function getArticleOrderResponsibilityStyle(value?: string | null) {
         color: '#7a4b00',
       }
     case 'not_needed':
+    case 'ordered_by_seller':
       return {
         background: '#eef3fb',
         color: '#41516a',

@@ -296,12 +296,18 @@ export function OrderEditForm({
             placeholder="Naam klant / vereniging"
             required
           />
+          <div>
           <input
             value={customerEmail}
             onChange={(e) => setCustomerEmail(e.target.value)}
-            placeholder="E-mailadres klant"
+            placeholder="E-mailadressen klant"
+            aria-label="E-mailadressen klant"
+            aria-describedby="customer-email-help"
             type="email"
+            multiple
           />
+          <small id="customer-email-help">Meerdere e-mailadressen? Scheid ze met een komma.</small>
+          </div>
         </div>
 
         <div className="ui-grid-two">

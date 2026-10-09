@@ -125,13 +125,9 @@ async function sendMailWithMicrosoftGraph({ to, subject, text, html, replyTo }: 
             contentType: html ? 'HTML' : 'Text',
             content: html ?? text,
           },
-          toRecipients: [
-            {
-              emailAddress: {
-                address: to,
-              },
-            },
-          ],
+          toRecipients: to.split(',').map(address => address.trim()).filter(Boolean).map(address => ({
+            emailAddress: { address },
+          })),
           replyTo: [
             {
               emailAddress: {
