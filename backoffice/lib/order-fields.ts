@@ -1,6 +1,7 @@
 import type { Personalisation } from './personalisation'
 
 export type ProductLine = {
+  supplierAvailableDate?: string
   personalisation?: Personalisation | null
   product: string
   quantity: number
@@ -16,6 +17,7 @@ export function createEmptyProductLine(): ProductLine {
     quantity: 1,
     productCode: '',
     size: '',
+    supplierAvailableDate: '',
   }
 }
 
@@ -44,6 +46,7 @@ export function parseProductDescription(
         quantity: Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1,
         productCode: productCode.trim(),
         size: size.trim(),
+        supplierAvailableDate: isLegacyLine ? '' : (parts[4] ?? '').trim(),
       }
     })
     .filter((line) => line.product)
@@ -67,7 +70,7 @@ export function serializeProductLines(lines: ProductLine[]) {
     .map(normalizeProductLine)
     .filter((line) => line.product)
     .map((line) =>
-      [line.productCode, line.product, line.size, String(line.quantity)].join(PRODUCT_LINE_SEPARATOR)
+      [line.productCode, line.product, line.size, String(line.quantity), ...(line.supplierAvailableDate ? [line.supplierAvailableDate] : [])].join(PRODUCT_LINE_SEPARATOR)
     )
     .join('\n')
 }
@@ -75,6 +78,7 @@ export function serializeProductLines(lines: ProductLine[]) {
 export function normalizeProductLine(line: ProductLine): ProductLine {
   return {
     personalisation: line.personalisation,
+    supplierAvailableDate: line.supplierAvailableDate?.trim() ?? '',
     product: line.product.trim(),
     quantity: Number.isFinite(line.quantity) && line.quantity > 0 ? line.quantity : 1,
     productCode: line.productCode.trim(),

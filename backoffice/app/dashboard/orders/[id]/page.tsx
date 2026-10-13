@@ -80,6 +80,7 @@ const ORDER_DETAIL_SELECT = `
     product,
     quantity,
     product_code,
+    supplier_available_date,
     personalisation,
     size
   ),
@@ -125,6 +126,7 @@ const ORDER_DETAIL_SELECT_WITHOUT_PRINT_PROOF = `
     product,
     quantity,
     product_code,
+    supplier_available_date,
     personalisation,
     size
   ),
@@ -162,6 +164,7 @@ const ORDER_DETAIL_SELECT_LEGACY = `
     product,
     quantity,
     product_code,
+    supplier_available_date,
     personalisation,
     size
   ),
@@ -509,6 +512,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
         quantity: item.quantity,
         productCode: item.product_code ?? '',
         size: item.size ?? '',
+        supplierAvailableDate: item.supplier_available_date ?? '',
         personalisation: item.personalisation as Personalisation | null,
       }))
     : parseProductDescription(order.product_description, order.quantity)
@@ -653,6 +657,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     <InfoField label="Artikelcode" value={line.productCode || '-'} />
                     <InfoField label="Omschrijving" value={line.product} />
                     <InfoField label="Maat" value={line.size || '-'} />
+                    <InfoField label="Verwacht beschikbaar bij leverancier" value={line.supplierAvailableDate ? formatDate(line.supplierAvailableDate) : 'Nog niet bekend'} />
                     <InfoField label="Aantal" value={line.quantity} />
                     <div style={{ gridColumn: '1 / -1' }}><PersonalisationTable value={line.personalisation} size={line.size} quantity={line.quantity} /></div>
                   </div>

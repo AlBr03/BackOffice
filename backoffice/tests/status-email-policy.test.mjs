@@ -36,9 +36,30 @@ test('other transitions are still mailed even while the other workflow is at loc
 test('legacy customer notification calls also suppress arrival status messages', async () => {
   assert.equal((await mail.sendOrderStatusChangedEmail({ ...initial, print_status: 'logos_at_location' }, 'Op locatie')).skipped, true)
 })
-test('internal arrival recipients exclude other stores, include print for print orders and deduplicate addresses', async () => {
+
+test('internal arrival emails use the branded layout with an escaped summary and staff link', async () => {
+  sent.length = 0
+  const url = 'https://app.example/dashboard/orders/order-id'
+  await mail.sendInternalArrivalEmail('admin@example.invalid', {
+    ...initial,
+    order_detail_url: url,
+    stores: { name: 'Testwinkel' },
+    order_items: [{ product: 'Teamshirt', product_code: 'SHIRT-1', size: 'S', quantity: 2 }],
+  }, 'Printstatus gewijzigd <test>')
+  const { event, message } = sent[0]
+  assert.equal(event, 'internal_arrival')
+  assert.equal(message.to, 'admin@example.invalid')
+  assert.match(message.html, /<!doctype html>/i)
+  assert.match(message.html, /Printstatus gewijzigd &lt;test&gt;/)
+  assert.ok(message.html.includes(`href="${url}"`))
+  assert.match(message.html, /Bekijk order in backoffice/)
+  assert.match(message.html, /SHIRT-1/)
+  assert.match(message.html, /Teamshirt/)
+  assert.ok(message.text.includes(url))
+})
+test('internal arrival recipients exclude administrators and other stores, include print for print orders and deduplicate addresses', async () => {
   const deliveries = []
-  const profiles = [{ id: 'own', role: 'store', store_id: 'store-a' }, { id: 'other', role: 'store_manager', store_id: 'store-b' }, { id: 'office', role: 'office', store_id: null }, { id: 'duplicate', role: 'admin', store_id: null }, { id: 'print', role: 'print', store_id: null }]
+  const profiles = [{ id: 'own', role: 'store', store_id: 'store-a' }, { id: 'other', role: 'store_manager', store_id: 'store-b' }, { id: 'office', role: 'office', store_id: null }, { id: 'duplicate', role: 'order_manager', store_id: null }, { id: 'administrator', role: 'admin', store_id: null }, { id: 'print', role: 'print', store_id: null }]
   const client = { from() { return { select() { return this }, async in(key, roles) { return { data: profiles.filter(p => roles.includes(p.role)), error: null } } } }, auth: { admin: { async getUserById(id) { return { data: { user: { email: id === 'duplicate' ? 'OFFICE@example.invalid' : id + '@example.invalid' } }, error: null } } } } }
   const { notifyInternalArrival } = load('lib/internal-arrival-notifications.ts', {
     'server-only': {}, '@/lib/supabase/admin': { createAdminClient: () => client },

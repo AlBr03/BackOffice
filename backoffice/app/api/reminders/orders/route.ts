@@ -86,6 +86,8 @@ function getSkippedResult(reason: string) {
 }
 
 async function getRoleEmails(role: string, storeId?: string | null) {
+  // Older saved reminder settings may still include the administrator role.
+  if (role === 'admin') return []
   if (role === STORE_MANAGER_ROLE && !storeId) return []
   const admin = createAdminClient()
   let query = admin

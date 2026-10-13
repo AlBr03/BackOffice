@@ -114,6 +114,7 @@ const ORDER_TRACKING_SELECT = `
     product,
     quantity,
     product_code,
+    supplier_available_date,
     personalisation,
     size
   ),
@@ -155,6 +156,7 @@ const ORDER_TRACKING_SELECT_WITHOUT_PRINT_PROOF = `
     product,
     quantity,
     product_code,
+    supplier_available_date,
     personalisation,
     size
   ),
@@ -228,6 +230,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
         quantity: item.quantity,
         productCode: item.product_code ?? '',
         size: item.size ?? '',
+        supplierAvailableDate: item.supplier_available_date ?? '',
         personalisation: item.personalisation as Personalisation | null,
       }))
     : parseProductDescription(order.product_description, order.quantity)
@@ -753,6 +756,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                   <div style={{ color: 'var(--text-soft)' }}>
                     Maat: {line.size || '-'} - Aantal: {line.quantity}
                   </div>
+                  <p>Verwacht beschikbaar bij leverancier: {formatDate(line.supplierAvailableDate)}</p>
                   <PersonalisationTable value={line.personalisation} size={line.size} quantity={line.quantity} />
                 </div>
               ))}

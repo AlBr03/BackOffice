@@ -20,6 +20,12 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Beschikbaarheid per artikel
+
+Voer `supabase/migrations/20261013120000_order_item_supplier_availability.sql` uit vóór uitrol. Deze migratie vereist de bestaande personalisatiemigratie en voegt een optionele datum `supplier_available_date` toe aan elke artikelregel. Medewerkers kunnen deze invullen bij aanmaken of bewerken; medewerkers en klanten zien de datum bij het artikel. Het betreft verwachte beschikbaarheid bij de leverancier, niet de aankomst bij de winkel. De bestaande orderbrede leverdatum en reminders blijven apart werken. Wijzigingen van alleen deze datum maken een printgoedkeuring niet ongeldig.
+
+Controleer met `node --test tests/supplier-availability.test.mjs`. Test daarnaast op een testdatabase twee verschillende datums, aanpassen en leegmaken, dubbele artikelregels, ongeldige datums (rollback), winkeltoegang en behoud van printgoedkeuring bij een datumwijziging.
+
 ## Zescijferige ordernummers
 
 Voer `supabase/migrations/20261002130000_six_digit_order_numbers.sql` uit voordat de bijgewerkte orderinvoer wordt uitgerold. De bestaande beveiligingsmigraties moeten al zijn uitgevoerd (schema `app_private`). Nieuwe orders krijgen centraal een nummer vanaf `100001`, zonder prefix. Bestaande nummers, interne UUIDs en trackinglinks blijven behouden. Ook oude browsertabs krijgen bij invoegen de nieuwe nummering.

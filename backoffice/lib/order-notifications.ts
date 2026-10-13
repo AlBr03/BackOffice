@@ -369,10 +369,25 @@ export async function sendOrderStatusChangedEmail(
 }
 
 export async function sendInternalArrivalEmail(to: string, order: OrderNotificationOrder, changeSummary: string) {
+  const { settings: dropdownSettings } = await loadDropdownSettings()
+  const storeName = getStoreName(order.stores)
+  const html = emailLayout({
+    dropdownSettings,
+    title: 'Aankomst op locatie',
+    preheader: `Aankomstmelding voor order ${order.order_number}`,
+    intro: ['Er is een aankomst geregistreerd voor deze order.', changeSummary],
+    statusLabel: 'Melding',
+    statusValue: 'Aankomst op locatie',
+    order,
+    storeName,
+    trackingUrl: order.order_detail_url ?? null,
+    ctaLabel: 'Bekijk order in backoffice',
+    footerNote: 'Dit is een interne melding voor medewerkers. Bekijk de order in de backoffice voor de verdere afhandeling.',
+  })
   const text = `Order ${order.order_number}\n${getStoreName(order.stores)}\n${order.club_name}\n\n${changeSummary}\n\n${formatItems(order.order_items)}\n\n${order.order_detail_url ?? ''}`
   return sendBusinessMail('internal_arrival', order, {
     to, subject: `Aankomst op locatie — order ${order.order_number}`,
-    text, html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif">${escapeHtml(text)}</div>`,
+    text, html,
     replyTo: order.store_manager_email,
   })
 }

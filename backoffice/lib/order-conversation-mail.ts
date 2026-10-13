@@ -25,11 +25,11 @@ export async function notifyConversationMessage(order: MailOrder, fromCustomer: 
     }
     const result = await query
     if (result.error) throw new Error('Ontvangers konden niet worden geladen.')
-    return (result.data ?? []).filter(p => canAccessConversation(p,order))
+    return (result.data ?? []).filter(p => p.role !== 'admin' && canAccessConversation(p,order))
   }
   let recipients = thread.assigned_user ? await candidates([],thread.assigned_user) : []
-  if (!recipients.length) recipients = await candidates(thread.team === 'print' ? ['print'] : thread.team === 'office' ? ['office','order_manager','admin'] : ['store','store_manager'])
-  if (!recipients.length) recipients = await candidates(['office','admin'])
+  if (!recipients.length) recipients = await candidates(thread.team === 'print' ? ['print'] : thread.team === 'office' ? ['office','order_manager'] : ['store','store_manager'])
+  if (!recipients.length) recipients = await candidates(['office'])
   const addresses = await Promise.all(recipients.map(async p => {
     const result = await admin.auth.admin.getUserById(p.id)
     if (result.error) throw new Error('Ontvanger kon niet worden geladen.')

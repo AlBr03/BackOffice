@@ -56,6 +56,7 @@ type OrderData = {
   notes: string | null
   store_id: string
   order_items?: {
+    supplier_available_date?: string | null
     personalisation?: Personalisation | null
     product: string
     quantity: number
@@ -109,6 +110,7 @@ export function OrderEditForm({
           quantity: item.quantity,
           productCode: item.product_code ?? '',
           size: item.size ?? '',
+          supplierAvailableDate: item.supplier_available_date ?? '',
           personalisation: item.personalisation,
         }))
       : parseProductDescription(order.product_description, order.quantity)
@@ -123,7 +125,7 @@ export function OrderEditForm({
 
   function updateProductLine(
     index: number,
-    field: 'product' | 'quantity' | 'productCode' | 'size',
+    field: 'product' | 'quantity' | 'productCode' | 'size' | 'supplierAvailableDate',
     value: string
   ) {
     setProductLines((currentLines) =>
@@ -243,7 +245,7 @@ export function OrderEditForm({
     const { error: insertItemsError } = await supabase.rpc('replace_order_items', {
       p_order_id: order.id,
       p_changes: orderChanges,
-      p_items: normalizedProductLines.map(line => ({ product: line.product, quantity: line.quantity, product_code: line.productCode || null, size: line.size || null, personalisation: line.personalisation ?? null })),
+      p_items: normalizedProductLines.map(line => ({ product: line.product, quantity: line.quantity, product_code: line.productCode || null, size: line.size || null, supplier_available_date: line.supplierAvailableDate || null, personalisation: line.personalisation ?? null })),
     })
     if (insertItemsError) { setError(insertItemsError.message); setIsSaving(false); return }
     const { error: activityError } = await supabase.from('order_activity_log').insert({ order_id: order.id, action_type: 'order_updated', description: 'Ordergegevens en personalisatie bijgewerkt', performed_by: user?.id ?? null })
@@ -439,6 +441,11 @@ export function OrderEditForm({
               </button>
             </div>
           </div>
+          <label style={{ display: 'grid', gap: 6, margin: '8px 16px' }}>
+            Verwacht beschikbaar bij leverancier
+            <input type="date" value={line.supplierAvailableDate ?? ''} onChange={e => updateProductLine(index, 'supplierAvailableDate', e.target.value)} />
+            <small>Optioneel per artikel. Dit is geen bevestigde leverdatum bij de winkel.</small>
+          </label>
           <PersonalisationEditor value={line.personalisation} size={line.size} quantity={line.quantity} onChange={value => updatePersonalisation(index, value)} />
           </div>
         ))}

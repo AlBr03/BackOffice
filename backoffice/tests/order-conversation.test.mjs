@@ -125,7 +125,7 @@ test('employee assignment lists exclude other stores and assignment notifies the
 
 function conversationMailer(assignment = { assigned_user: null,team: 'store' }) {
   const deliveries = []
-  const profiles = [{ id: 'own',role: 'store',store_id: 'store-a' },{ id: 'other',role: 'store',store_id: 'store-b' },{ id: 'office',role: 'office',store_id: null },{ id: 'print',role: 'print',store_id: null }]
+  const profiles = [{ id: 'own',role: 'store',store_id: 'store-a' },{ id: 'other',role: 'store',store_id: 'store-b' },{ id: 'office',role: 'office',store_id: null },{ id: 'print',role: 'print',store_id: null },{ id: 'administrator',role: 'admin',store_id: null }]
   const admin = { from() {
     let roles, id, store
     return { select() { return this }, in(key,value) { roles = value; return this }, eq(key,value) { if (key === 'id') id = value; if (key === 'store_id') store = value; return this }, async single() { return { data: assignment,error: null } }, then(resolve) { return Promise.resolve({ data: profiles.filter(p => (!roles || roles.includes(p.role)) && (!id || p.id === id) && (!store || p.store_id === store)),error: null }).then(resolve) } }
@@ -151,4 +151,15 @@ test('reply emails go only to the order customer; answers remain available witho
   assert.equal(mailer.deliveries[0].customer,true)
   assert.equal((await mailer.notifyConversationMessage({ ...order,customer_email: null },false)).skipped,true)
   assert.equal(mailer.deliveries.length,1)
+})
+
+test('administrators are excluded from team mail and explicit assignments', async () => {
+  for (const assignment of [
+    { team: 'office', assigned_user: null },
+    { team: 'office', assigned_user: 'administrator' },
+  ]) {
+    const mailer = conversationMailer(assignment)
+    await mailer.notifyConversationMessage(order, true)
+    assert.deepEqual(mailer.deliveries.map(d => d.to), ['office@example.invalid'])
+  }
 })

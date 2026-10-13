@@ -79,7 +79,7 @@ export function OrderForm({
 
   function updateProductLine(
     index: number,
-    field: 'product' | 'quantity' | 'productCode' | 'size',
+    field: 'product' | 'quantity' | 'productCode' | 'size' | 'supplierAvailableDate',
     value: string
   ) {
     setProductLines((currentLines) =>
@@ -214,6 +214,7 @@ export function OrderForm({
           quantity: line.quantity,
           product_code: line.productCode || null,
           size: line.size || null,
+          supplier_available_date: line.supplierAvailableDate || null,
           personalisation: line.personalisation ?? null,
         }))
       ),
@@ -436,6 +437,11 @@ export function OrderForm({
               </button>
             </div>
           </div>
+          <label style={{ display: 'grid', gap: 6, margin: '8px 16px' }}>
+            Verwacht beschikbaar bij leverancier
+            <input type="date" value={line.supplierAvailableDate ?? ''} onChange={e => updateProductLine(index, 'supplierAvailableDate', e.target.value)} />
+            <small>Optioneel per artikel. Dit is geen bevestigde leverdatum bij de winkel.</small>
+          </label>
           <PersonalisationEditor value={line.personalisation} size={line.size} quantity={line.quantity} onChange={value => updatePersonalisation(index, value)} />
           </div>
         ))}
