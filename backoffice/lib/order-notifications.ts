@@ -191,7 +191,7 @@ function emailLayout({
             </tr>
             <tr>
               <td style="padding: 28px;">
-                ${htmlParagraphs(intro)}
+                <!-- email-intro:start -->${htmlParagraphs(intro)}<!-- email-intro:end -->
 
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 20px 0; background: #f7f9fc; border: 1px solid #e1e7f0; border-radius: 10px;">
                   <tr>

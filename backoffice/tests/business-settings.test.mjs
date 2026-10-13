@@ -121,6 +121,39 @@ test('personal preferences validate sorting/filter values and preserve the order
 })
 
 const mail = load('lib/email-settings.ts')
+test('custom status wording preserves the branded order layout and internal arrival link', async () => {
+  const settings = defaults()
+  settings.company.name = 'Onze winkel'
+  settings.company.brandColor = '#123456'
+  settings.emails.status_changed.body = 'Beste {{customer}}, uw update kost $&.'
+  settings.emails.internal_arrival.body = 'Interne update voor {{customer}}'
+  const order = { order_number: 'ORD-1', club_name: '<Club>', customer_email: 'customer@example.com', article_status: 'ordered', print_status: 'new', has_print: true, notes: null, deadline: null, delivery_date: null, order_detail_url: 'https://example.com/dashboard/orders/1', order_items: [{ product: 'Teamshirt', quantity: 2, product_code: 'SHIRT-1', size: 'M' }] }
+  const messages = []
+  const notifications = load('lib/order-notifications.ts', {
+    '@/lib/dropdown-settings-server': { loadDropdownSettings: async () => ({ settings: dropdownDefaults() }) },
+    '@/lib/send-business-mail': { sendBusinessMail: async (event, current, original) => {
+      const values = mail.emailTemplateValues(settings, current, 'https://example.com/track/1')
+      messages.push(mail.configuredEmail(settings, event, values, original))
+      return { skipped: false }
+    } },
+  })
+  await notifications.sendOrderStatusChangedEmail(order, 'Status gewijzigd')
+  await notifications.sendInternalArrivalEmail('staff@example.com', order, 'Artikelen ontvangen')
+  for (const message of messages) {
+    assert.match(message.html, /<!doctype html>/i)
+    assert.match(message.html, /background: #123456;/)
+    assert.match(message.html, />Onze winkel<\/div>/)
+    assert.match(message.html, /Bestelde producten/)
+    assert.match(message.html, /SHIRT-1/)
+    assert.match(message.html, /&lt;Club&gt;/)
+    assert.doesNotMatch(message.html, /<Club>/)
+  }
+  assert.match(messages[0].html, /\$&amp;/)
+  assert.match(messages[0].html, /Nieuwe status/)
+  assert.match(messages[1].html, /href="https:\/\/example.com\/dashboard\/orders\/1"/)
+  assert.match(messages[1].html, /Bekijk order in backoffice/)
+})
+
 test('custom emails resolve placeholders, use store contact overrides and escape HTML', () => {
   const settings = defaults()
   settings.company.signature = 'Bedankt, {{company}}'
