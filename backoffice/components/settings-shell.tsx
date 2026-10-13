@@ -3,6 +3,7 @@ import { DropdownManagementAccess } from '@/components/dropdown-provider'
 
 const NAV_ITEMS = [
   { href: '/dashboard/settings', label: 'Overzicht' },
+  { href: '/dashboard/settings/personal', label: 'Mijn voorkeuren' },
   { href: '/dashboard/settings/appearance', label: 'Weergave' },
   { href: '/dashboard/settings/accounts', label: 'Accounts' },
   { href: '/dashboard/settings/stores', label: 'Winkels' },

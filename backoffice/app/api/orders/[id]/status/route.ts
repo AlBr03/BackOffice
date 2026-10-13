@@ -241,7 +241,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   let internalMail: Awaited<ReturnType<typeof notifyInternalArrival>> | { failed: number; reason: string } | null = null
   if (hasArrivalChange(order, notificationOrder)) {
-    try { internalMail = await notifyInternalArrival(notificationOrder, changeSummary) }
+    try { internalMail = await notifyInternalArrival(notificationOrder, changeSummary, order) }
     catch { internalMail = { failed: 1, reason: 'Status bijgewerkt, maar interne aankomstmail kon niet worden verstuurd.' } }
   }
   return NextResponse.json({ ok: true, changeSummary, mail: mailResult, internalMail })

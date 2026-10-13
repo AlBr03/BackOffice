@@ -59,8 +59,9 @@ test('internal arrival emails use the branded layout with an escaped summary and
 })
 test('internal arrival recipients exclude administrators and other stores, include print for print orders and deduplicate addresses', async () => {
   const deliveries = []
+  const lookedUp = []
   const profiles = [{ id: 'own', role: 'store', store_id: 'store-a' }, { id: 'other', role: 'store_manager', store_id: 'store-b' }, { id: 'office', role: 'office', store_id: null }, { id: 'duplicate', role: 'order_manager', store_id: null }, { id: 'administrator', role: 'admin', store_id: null }, { id: 'print', role: 'print', store_id: null }]
-  const client = { from() { return { select() { return this }, async in(key, roles) { return { data: profiles.filter(p => roles.includes(p.role)), error: null } } } }, auth: { admin: { async getUserById(id) { return { data: { user: { email: id === 'duplicate' ? 'OFFICE@example.invalid' : id + '@example.invalid' } }, error: null } } } } }
+  const client = { from() { return { select() { return this }, async in(key, roles) { return { data: profiles.filter(p => roles.includes(p.role)), error: null } } } }, auth: { admin: { async getUserById(id) { lookedUp.push(id); return { data: { user: { email: id === 'duplicate' ? 'OFFICE@example.invalid' : id + '@example.invalid' } }, error: null } } } } }
   const { notifyInternalArrival } = load('lib/internal-arrival-notifications.ts', {
     'server-only': {}, '@/lib/supabase/admin': { createAdminClient: () => client },
     '@/lib/public-url': { getPublicAppUrl: () => 'https://app.example' },
@@ -73,4 +74,14 @@ test('internal arrival recipients exclude administrators and other stores, inclu
   deliveries.length = 0
   await notifyInternalArrival({ ...initial, has_print: false }, 'Aankomst')
   assert.equal(deliveries.some(d => d.to.startsWith('print')), false)
+  deliveries.length = 0
+  lookedUp.length = 0
+  await notifyInternalArrival({ ...initial, print_status: 'logos_at_location' }, 'Printstatus gewijzigd', initial)
+  assert.ok(!lookedUp.includes('duplicate'))
+  // This address belongs to the purchasing role (and is shared with office).
+  // Excluding purchasing must not exclude independently eligible office recipients.
+  assert.ok(deliveries.some(d => d.to === 'office@example.invalid'))
+  lookedUp.length = 0
+  await notifyInternalArrival({ ...initial, article_status: 'at_location', print_status: 'logos_at_location' }, 'Artikelenstatus gewijzigd | Printstatus gewijzigd', initial)
+  assert.ok(lookedUp.includes('duplicate'))
 })

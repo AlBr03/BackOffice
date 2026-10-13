@@ -156,7 +156,7 @@ export function missingRequiredFields(settings: BusinessSettings, order: Record<
   return fields.filter((field) => !(['print_supplier', 'logo_action', 'print_instructions'].includes(field) && !order.has_print) && !(field === 'expected_article_delivery_date' && !order.article_out_of_stock) && !String(order[field] ?? '').trim())
 }
 export function visibleNotificationEvents(settings: BusinessSettings, personal: PersonalSettings, role: string) {
-  return (Object.keys(EVENT_NAMES) as EventKey[]).filter((key) => settings.notifications[key].enabled && (settings.notifications[key].roles as readonly string[]).includes(role) && personal.notifications.includes(key))
+  return (Object.keys(EVENT_NAMES) as EventKey[]).filter((key) => !(role === 'order_manager' && (key.startsWith('print_proof_') || key === 'customer_logo_uploaded')) && settings.notifications[key].enabled && (settings.notifications[key].roles as readonly string[]).includes(role) && personal.notifications.includes(key))
 }
 export function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!)

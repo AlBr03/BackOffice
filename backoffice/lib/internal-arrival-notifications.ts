@@ -4,9 +4,10 @@ import { sendInternalArrivalEmail, sendOrderCreatedEmail } from '@/lib/order-not
 import { getPublicAppUrl } from '@/lib/public-url'
 
 type ArrivalOrder = Parameters<typeof sendOrderCreatedEmail>[0] & { id: string; store_id: string | null }
-export async function notifyInternalArrival(order: ArrivalOrder, summary: string) {
+export async function notifyInternalArrival(order: ArrivalOrder, summary: string, previous?: Pick<ArrivalOrder, 'article_status'>) {
   const admin = createAdminClient()
-  const roles = ['store', 'store_manager', 'office', 'order_manager', ...(order.has_print ? ['print'] : [])]
+  const articleArrival = previous ? previous.article_status !== order.article_status && order.article_status === 'at_location' : !summary.startsWith('Printstatus')
+  const roles = ['store', 'store_manager', 'office', ...(articleArrival ? ['order_manager'] : []), ...(order.has_print ? ['print'] : [])]
   const { data: profiles, error } = await admin.from('profiles').select('id, role, store_id').in('role', roles)
   if (error) throw new Error('Interne ontvangers konden niet worden opgehaald.')
   const relevant = (profiles ?? []).filter(p => !['store', 'store_manager'].includes(p.role) || (!!order.store_id && p.store_id === order.store_id))

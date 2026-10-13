@@ -10,6 +10,17 @@ const personalDefaults = () => rules.defaultPersonalSettings()
 const dropdownDefaults = load('lib/dropdown-settings.ts').defaultDropdownSettings
 const storeId = '00000000-0000-4000-8000-000000000001'
 
+test('order managers cannot opt into print proof or logo notifications', () => {
+  const business = defaults(), personal = personalDefaults()
+  const events = rules.visibleNotificationEvents(business, personal, 'order_manager')
+  assert.ok(events.includes('status_changed'))
+  assert.ok(events.includes('created'))
+  for (const event of ['customer_logo_uploaded', 'print_proof_ready', 'print_proof_approved', 'print_proof_rejected']) {
+    assert.ok(!events.includes(event))
+    assert.ok(rules.visibleNotificationEvents(business, personal, 'print').includes(event))
+  }
+})
+
 test('standard business rules preserve current reminder timings, permissions and order defaults', () => {
   const settings = rules.validateBusinessSettings(defaults())
   assert.equal(settings.reminders.article_order.days, 3)

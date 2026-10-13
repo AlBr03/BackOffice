@@ -3,6 +3,7 @@ import { SettingsShell } from '@/components/settings-shell'
 import { DropdownManagementAccess } from '@/components/dropdown-provider'
 
 const cards = [
+  { href: '/dashboard/settings/personal', title: 'Mijn voorkeuren', description: 'Bewaar jouw notificatievoorkeuren, dashboardfilters, kolommen en kleurmodus.' },
   { href: '/dashboard/settings/business', title: 'Bedrijfsinstellingen', description: 'Beheer reminders, mailtemplates, leveranciers, orderdefaults, bedrijfsgegevens en verplichte velden.' },
   {
     href: '/dashboard/settings/appearance',

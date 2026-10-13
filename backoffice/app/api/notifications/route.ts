@@ -128,6 +128,12 @@ export async function GET() {
     countQuery = countQuery.gt('created_at', lastSeenAt)
   }
 
+  // Legacy status events share one action type; print-only summaries start with Printstatus.
+  // Mixed changes start with Artikelenstatus and remain relevant to purchasing.
+  if (profile.role === 'order_manager') {
+    countQuery = countQuery.or('action_type.neq.status_changed,description.is.null,description.not.ilike.Printstatus*')
+  }
+
   if (profile.role === 'print') {
     countQuery = countQuery.eq('orders.has_print', true)
   }
@@ -150,6 +156,10 @@ export async function GET() {
 
   if (lastSeenAt) {
     activityQuery = activityQuery.gt('created_at', lastSeenAt)
+  }
+
+  if (profile.role === 'order_manager') {
+    activityQuery = activityQuery.or('action_type.neq.status_changed,description.is.null,description.not.ilike.Printstatus*')
   }
 
   if (profile.role === 'print') {

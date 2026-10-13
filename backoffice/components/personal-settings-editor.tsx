@@ -16,7 +16,6 @@ export function PersonalSettingsEditor({ initialSettings }: { initialSettings: P
     event.preventDefault(); setError(null)
     try {
       const normalized = validatePersonalSettings(settings)
-      if (!preview) { setPreview(true); return }
       setSaving(true)
       const response = await fetch('/api/settings/personal', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(normalized) })
       const result = await response.json()
@@ -40,6 +39,6 @@ export function PersonalSettingsEditor({ initialSettings }: { initialSettings: P
     <fieldset disabled={saving} className="ui-card" style={{ display: 'grid', gap: 14 }}><legend>Mijn notificaties</legend>{(Object.keys(EVENT_NAMES) as EventKey[]).map((key) => <label key={key} style={{ display: 'inline-flex', gap: 8 }}><input style={{ width: 'auto' }} type="checkbox" checked={settings.notifications.includes(key)} onChange={(event) => change((draft) => { draft.notifications = event.target.checked ? [...draft.notifications, key] : draft.notifications.filter((entry) => entry !== key) })} />{EVENT_NAMES[key]}</label>)}</fieldset>
     {preview ? <section className="ui-card"><h2 className="ui-section-title">Voorbeeld van jouw dashboard</h2><p>{SORT_NAMES[settings.dashboard.sort]} · {settings.mode === 'dark' ? 'Donkere modus' : 'Lichte modus'}</p><div className="ui-scroll-x"><table className="ui-table"><thead><tr>{(Object.keys(COLUMN_NAMES) as ColumnKey[]).filter((key) => settings.dashboard.columns.includes(key)).map((key) => <th key={key}>{COLUMN_NAMES[key]}</th>)}</tr></thead><tbody><tr>{(Object.keys(COLUMN_NAMES) as ColumnKey[]).filter((key) => settings.dashboard.columns.includes(key)).map((key) => <td key={key}>{{ order: 'ORD-VOORBEELD', store: 'Voorbeeldwinkel', customer: 'Voorbeeldvereniging', product: 'Teamshirt', quantity: '10', print: 'Ja', status: 'Nieuw' }[key]}</td>)}</tr></tbody></table></div><p>{settings.notifications.length} notificatie-events geselecteerd.</p></section> : null}
     {error ? <div role="alert" className="ui-message ui-message-error">{error}</div> : null}{message ? <div role="status" className="ui-message ui-message-success">{message}</div> : null}
-    <button type="submit" disabled={saving}>{saving ? 'Opslaan...' : preview ? 'Voorkeuren opslaan' : 'Voorbeeld bekijken'}</button>
+    <div className="ui-actions"><button type="button" disabled={saving} onClick={() => setPreview(true)}>Voorbeeld bekijken</button><button type="submit" disabled={saving}>{saving ? 'Opslaan...' : 'Voorkeuren opslaan'}</button></div>
   </form>
 }
