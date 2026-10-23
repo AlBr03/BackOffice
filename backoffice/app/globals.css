@@ -571,6 +571,31 @@ td {
   gap: 8px;
 }
 
+.ui-article-code-field,
+.ui-article-code-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ui-article-code-field input { min-width: 0; flex: 1; }
+.ui-article-code-value { white-space: nowrap; }
+.ui-code-copy { position: relative; flex-shrink: 0; }
+.ui-code-copy-button { display: grid; place-items: center; min-width: 32px; min-height: 36px; padding: 6px; }
+.ui-code-copy-status:not(:empty) { position: absolute; z-index: 5; top: 100%; right: 0; width: 220px; padding: 8px; border: 1px solid var(--text-soft); border-radius: 8px; background: var(--surface, white); color: var(--text, #172b45); font-size: 12px; white-space: normal; }
+.ui-product-total { display: flex; justify-content: space-between; gap: 16px; padding: 16px; border-top: 2px solid rgba(125, 146, 182, 0.24); }
+.ui-products-scroll { overflow-x: auto; }
+.ui-products-table { width: 100%; border-collapse: collapse; text-align: left; }
+.ui-products-table th, .ui-products-table td { padding: 12px 8px; vertical-align: top; }
+.ui-products-table thead { border-bottom: 2px solid rgba(125, 146, 182, 0.24); color: var(--text-soft); }
+.ui-products-table thead th { font-size: 12px; text-transform: uppercase; }
+.ui-products-table th:nth-child(3), .ui-products-table td:nth-child(3) { text-align: center; }
+.ui-products-table th:last-child, .ui-products-table td:last-child:not([colspan]) { text-align: right; white-space: nowrap; }
+.ui-products-table .ui-product-extra td { padding-top: 0; border-bottom: 1px solid rgba(125, 146, 182, 0.2); font-size: 13px; }
+.ui-products-table tfoot { border-top: 2px solid rgba(125, 146, 182, 0.24); font-weight: 800; }
+.ui-visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
 .ui-product-row-action {
   min-height: 42px;
   padding: 0 14px;

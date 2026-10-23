@@ -11,7 +11,7 @@ export function PersonalisationEditor({ value, size, quantity, onChange }: { val
   function cell(row: number, key: string, text: string, extra = false) {
     onChange({ ...p, rows: p.rows.map((r, i) => i !== row ? r : extra ? { ...r, extra: { ...r.extra, [key]: text } } : { ...r, [key]: key === 'quantity' ? Number(text) : text }) })
   }
-  return <details className="personalisation-editor" open={p.rows.length > 0 || !!p.instructions || undefined}>
+  return <details className="personalisation-editor">
     <summary>Personalisatie toevoegen / bewerken — maat {size || 'onbekend'}</summary>
     <p>Eén regel per persoonlijk artikel; identieke prints mogen een gezamenlijk aantal hebben. Neem ook artikelen zonder persoonlijke print op. Extra kolommen zijn zichtbaar voor de klant.</p>
     <label>Gedeelde printinstructies<textarea value={p.instructions} maxLength={4000} onChange={e => onChange({ ...p, instructions: e.target.value })} /></label>

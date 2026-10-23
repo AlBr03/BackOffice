@@ -1,5 +1,6 @@
 'use client'
 
+import { CopyArticleCodeButton } from '@/components/copy-article-code-button'
 import { PersonalisationEditor } from '@/components/personalisation-editor'
 import { personalisationError, type Personalisation } from '@/lib/personalisation'
 
@@ -395,12 +396,16 @@ export function OrderEditForm({
 
         {productLines.map((line, index) => (
           <div key={index}>
-          <div className="ui-product-row">
+          <div className="ui-product-row" style={{ gridTemplateColumns: `minmax(${Math.min(30, Math.max(16, ...productLines.map(item => item.productCode.length + 7)))}ch, 1.1fr) minmax(0, 2fr) minmax(60px, 0.6fr) 90px auto` }}>
+            <div className="ui-article-code-field">
             <input
+              aria-label={`Artikelcode regel ${index + 1}`}
               value={line.productCode}
               onChange={(e) => updateProductLine(index, 'productCode', e.target.value)}
               placeholder="Artikelcode"
             />
+            <CopyArticleCodeButton code={line.productCode} />
+            </div>
             <input
               value={line.product}
               onChange={(e) => updateProductLine(index, 'product', e.target.value)}
@@ -449,6 +454,10 @@ export function OrderEditForm({
           <PersonalisationEditor value={line.personalisation} size={line.size} quantity={line.quantity} onChange={value => updatePersonalisation(index, value)} />
           </div>
         ))}
+        <div className="ui-product-total" aria-live="polite">
+          <span>Totaal aantal artikelen</span>
+          <strong>{productLines.reduce((sum, line) => sum + (Number.isFinite(line.quantity) && line.quantity > 0 ? line.quantity : 0), 0)} stuks</strong>
+        </div>
       </section>
 
       <section className="ui-card-soft ui-form-section">

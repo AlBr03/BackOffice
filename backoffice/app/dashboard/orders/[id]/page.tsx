@@ -1,5 +1,7 @@
 import { OrderConversation } from '@/components/order-conversation'
 import { ProductionOverview } from '@/components/production-overview'
+import { Fragment } from 'react'
+import { CopyArticleCodeButton } from '@/components/copy-article-code-button'
 import { PersonalisationTable } from '@/components/personalisation-table'
 import type { Personalisation } from '@/lib/personalisation'
 import { loadDropdownSettings } from '@/lib/dropdown-settings-server'
@@ -644,24 +646,28 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 Producten
               </h2>
 
-              <div style={{ display: 'grid', gap: 12 }}>
-                {productLines.map((line, index) => (
-                  <div
-                    key={`${line.product}-${index}`}
-                    className="ui-product-row"
-                    style={{
-                      gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 2fr) minmax(0, 0.8fr) 100px',
-                      gap: 16,
-                    }}
-                  >
-                    <InfoField label="Artikelcode" value={line.productCode || '-'} />
-                    <InfoField label="Omschrijving" value={line.product} />
-                    <InfoField label="Maat" value={line.size || '-'} />
-                    <InfoField label="Verwacht beschikbaar bij leverancier" value={line.supplierAvailableDate ? formatDate(line.supplierAvailableDate) : 'Nog niet bekend'} />
-                    <InfoField label="Aantal" value={line.quantity} />
-                    <div style={{ gridColumn: '1 / -1' }}><PersonalisationTable value={line.personalisation} size={line.size} quantity={line.quantity} /></div>
-                  </div>
-                ))}
+              <div className="ui-products-scroll">
+                <table className="ui-products-table">
+                  <caption className="ui-visually-hidden">Bestelde producten</caption>
+                  <thead><tr><th scope="col">Artikelcode</th><th scope="col">Omschrijving</th><th scope="col">Maat</th><th scope="col">Aantal</th></tr></thead>
+                  <tbody>
+                    {productLines.map((line, index) => (
+                      <Fragment key={index}>
+                        <tr>
+                          <td><div className="ui-article-code-value"><span>{line.productCode || '-'}</span><CopyArticleCodeButton code={line.productCode || ''} /></div></td>
+                          <td>{line.product}</td>
+                          <td>{line.size || '-'}</td>
+                          <td>{line.quantity}x</td>
+                        </tr>
+                        <tr className="ui-product-extra"><td colSpan={4}>
+                          <div className="ui-text-muted">Verwacht beschikbaar bij leverancier: {line.supplierAvailableDate ? formatDate(line.supplierAvailableDate) : 'Nog niet bekend'}</div>
+                          <PersonalisationTable value={line.personalisation} size={line.size} quantity={line.quantity} />
+                        </td></tr>
+                      </Fragment>
+                    ))}
+                  </tbody>
+                  <tfoot><tr><th scope="row" colSpan={3}>Totaal aantal artikelen</th><td>{productLines.reduce((sum, line) => sum + line.quantity, 0)} stuks</td></tr></tfoot>
+                </table>
               </div>
             </div>
 
