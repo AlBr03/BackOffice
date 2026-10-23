@@ -1,3 +1,4 @@
+import { compareArticleCodes } from '@/lib/order-fields'
 import { loadDropdownSettings } from '@/lib/dropdown-settings-server'
 import type { DropdownSettings } from '@/lib/dropdown-settings'
 import { sendBusinessMail } from '@/lib/send-business-mail'
@@ -67,7 +68,7 @@ function formatItems(items?: OrderNotificationItem[] | null) {
     return '- Geen productregels gevonden'
   }
 
-  return items
+  return [...items].sort((a, b) => compareArticleCodes(a.product_code, b.product_code))
     .map((item) => {
       const productCode = item.product_code || '-'
       const size = item.size || '-'
@@ -103,7 +104,7 @@ function htmlItems(items?: OrderNotificationItem[] | null) {
     return '<tr><td colspan="4" style="padding: 12px 0; color: #5b6472; font-size: 14px;">Geen productregels gevonden</td></tr>'
   }
 
-  return items
+  return [...items].sort((a, b) => compareArticleCodes(a.product_code, b.product_code))
     .map(
       (item) => `
         <tr>

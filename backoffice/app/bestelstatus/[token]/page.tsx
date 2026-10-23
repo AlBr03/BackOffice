@@ -9,7 +9,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { PublicLogoUploadForm } from '@/components/public-logo-upload-form'
 import { PublicPrintProofApprovalForm } from '@/components/public-print-proof-approval-form'
 import { getLogoAction, shouldCustomerUploadLogo } from '@/lib/logo-action'
-import { parseProductDescription } from '@/lib/order-fields'
+import { parseProductDescription, sortProductLines } from '@/lib/order-fields'
 import {
   ARTICLE_STATUS_OPTIONS,
   PRINT_STATUS_OPTIONS,
@@ -224,7 +224,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
   const { settings: dropdownSettings } = await loadDropdownSettings()
   const logoAction = getLogoAction(order.logo_action, dropdownSettings.logo_action)
   const customerShouldUploadLogo = shouldCustomerUploadLogo(order.logo_action)
-  const productLines = order.order_items?.length
+  const productLines = sortProductLines(order.order_items?.length
     ? order.order_items.map((item) => ({
         product: item.product,
         quantity: item.quantity,
@@ -233,7 +233,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
         supplierAvailableDate: item.supplier_available_date ?? '',
         personalisation: item.personalisation as Personalisation | null,
       }))
-    : parseProductDescription(order.product_description, order.quantity)
+    : parseProductDescription(order.product_description, order.quantity))
   const publicPrintFiles = (order.order_files ?? [])
     .filter((file) => !file.file_path.includes('/customer-logos/'))
     .sort((first, second) => {

@@ -9,7 +9,7 @@ test('different supplier dates survive normalisation and description round trips
     { product: 'Polo', productCode: 'POLO', size: 'S', quantity: 2, supplierAvailableDate: '2026-11-01' },
     { product: 'Jas', productCode: 'JAS', size: 'L', quantity: 1, supplierAvailableDate: '2026-12-15' },
   ]
-  assert.deepEqual(fields.parseProductDescription(fields.serializeProductLines(fields.normalizeProductLines(lines))), lines)
+  assert.deepEqual(fields.parseProductDescription(fields.serializeProductLines(fields.normalizeProductLines(lines))), [lines[1], lines[0]])
 })
 
 test('existing lines without dates remain readable and dates can be cleared', () => {

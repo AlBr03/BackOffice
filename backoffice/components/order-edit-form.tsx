@@ -16,6 +16,7 @@ import {
   getTotalQuantity,
   normalizeProductLines,
   parseProductDescription,
+  sortProductLines,
   serializeProductLines,
   type ProductLine,
 } from '@/lib/order-fields'
@@ -105,7 +106,7 @@ export function OrderEditForm({
   )
   const [printSupplier, setPrintSupplier] = useState(order.print_supplier ?? '')
   const [productLines, setProductLines] = useState<ProductLine[]>(
-    order.order_items?.length
+    sortProductLines(order.order_items?.length
       ? order.order_items.map((item) => ({
           product: item.product,
           quantity: item.quantity,
@@ -114,7 +115,7 @@ export function OrderEditForm({
           supplierAvailableDate: item.supplier_available_date ?? '',
           personalisation: item.personalisation,
         }))
-      : parseProductDescription(order.product_description, order.quantity)
+      : parseProductDescription(order.product_description, order.quantity))
   )
   const [printInstructions, setPrintInstructions] = useState(order.print_instructions ?? '')
   const [hasPrint, setHasPrint] = useState(order.has_print ?? false)

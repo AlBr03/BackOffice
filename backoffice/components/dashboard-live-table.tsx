@@ -8,7 +8,7 @@ import { DropdownLabel } from '@/components/dropdown-provider'
 import Link from 'next/link'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { parseProductDescription } from '@/lib/order-fields'
+import { parseProductDescription, sortProductLines } from '@/lib/order-fields'
 import {
   getArticleStatusStyle,
   getPrintStatusStyle,
@@ -96,14 +96,14 @@ export function DashboardLiveTable({
             </tr>
           ) : (
             orders.map((order) => {
-              const productLines = order.order_items?.length
+              const productLines = sortProductLines(order.order_items?.length
                 ? order.order_items.map((item) => ({
                     product: item.product,
                     quantity: item.quantity,
                     productCode: item.product_code ?? '',
                     size: item.size ?? '',
                   }))
-                : parseProductDescription(order.product_description, order.quantity)
+                : parseProductDescription(order.product_description, order.quantity))
               const primaryProduct = productLines[0]
               const extraProducts = productLines.length - 1
               return (

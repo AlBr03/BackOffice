@@ -11,6 +11,20 @@ export type ProductLine = {
 
 const PRODUCT_LINE_SEPARATOR = ' || '
 
+const articleCodeCollator = new Intl.Collator('nl', { numeric: true, sensitivity: 'base' })
+
+export function compareArticleCodes(a?: string | null, b?: string | null) {
+  const left = a?.trim() ?? ''
+  const right = b?.trim() ?? ''
+  if (!left) return right ? 1 : 0
+  if (!right) return -1
+  return articleCodeCollator.compare(left, right)
+}
+
+export function sortProductLines<T extends { productCode: string }>(lines: T[]): T[] {
+  return [...lines].sort((a, b) => compareArticleCodes(a.productCode, b.productCode))
+}
+
 export function createEmptyProductLine(): ProductLine {
   return {
     product: '',
@@ -52,7 +66,7 @@ export function parseProductDescription(
     .filter((line) => line.product)
 
   if (parsedLines.length > 0) {
-    return parsedLines
+    return sortProductLines(parsedLines)
   }
 
   return [
@@ -87,7 +101,7 @@ export function normalizeProductLine(line: ProductLine): ProductLine {
 }
 
 export function normalizeProductLines(lines: ProductLine[]) {
-  return lines.map(normalizeProductLine).filter((line) => line.product)
+  return sortProductLines(lines.map(normalizeProductLine).filter((line) => line.product))
 }
 
 export function getTotalQuantity(lines: ProductLine[]) {

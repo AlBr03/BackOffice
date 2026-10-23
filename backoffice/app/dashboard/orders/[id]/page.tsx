@@ -14,7 +14,7 @@ import { StatusForm } from '@/components/status-form'
 import { OrderDetailLiveShell } from '@/components/order-detail-live-shell'
 import { DeleteOrderButton } from '@/components/delete-order-button'
 import { CopyTrackingLinkButton } from '@/components/copy-tracking-link-button'
-import { parseProductDescription } from '@/lib/order-fields'
+import { parseProductDescription, sortProductLines } from '@/lib/order-fields'
 import {
   getArticleOrderResponsibility,
   getArticleOrderResponsibilityStyle,
@@ -508,7 +508,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
   const { settings: dropdownSettings } = await loadDropdownSettings()
   const logoAction = getLogoAction(order.logo_action, dropdownSettings.logo_action)
   const trackingUrl = getPublicOrderTrackingUrl(order.tracking_token)
-  const productLines = order.order_items?.length
+  const productLines = sortProductLines(order.order_items?.length
     ? order.order_items.map((item) => ({
         product: item.product,
         quantity: item.quantity,
@@ -517,7 +517,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
         supplierAvailableDate: item.supplier_available_date ?? '',
         personalisation: item.personalisation as Personalisation | null,
       }))
-    : parseProductDescription(order.product_description, order.quantity)
+    : parseProductDescription(order.product_description, order.quantity))
 
   return (
     <OrderDetailLiveShell>
